@@ -1,0 +1,7 @@
+.card {
+  transition:0.35s ease-in-out;
+  flex: 1;
+}
+.card:HOVER {
+  flex: 3;
+}
