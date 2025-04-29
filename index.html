@@ -153,6 +153,24 @@
             border: none;
             border-radius: 5px;
         }
+         .enemy.strong {
+            background: purple;
+            width: 25px;
+            height: 25px;
+        }
+        
+        .enemy.elite {
+            background: gold;
+            width: 30px;
+            height: 30px;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -677,6 +695,159 @@ function startWave() {
         setTimeout(() => spawnEnemy(5), 5*1500);
     }
 }
+          function startWave() {
+            if(!gameActive) return;
+            
+            waveInProgress = true;
+            document.getElementById('wave').textContent = currentWave;
+            
+            // Базовая логика волн
+            if(currentWave === 1) {
+                for(let i = 0; i < 3; i++) {
+                    setTimeout(() => spawnEnemy(2), i*2000);
+                }
+            } else if(currentWave === 2) {
+                for(let i = 0; i < 5; i++) {
+                    setTimeout(() => spawnEnemy(2), i*2000);
+                }
+            } else if(currentWave === 3) {
+                for(let i = 0; i < 10; i++) {
+                    setTimeout(() => spawnEnemy(2), i*1500);
+                }
+            } 
+            // Волны 5+ с фиолетовыми врагами
+            else if(currentWave >= 5 && currentWave < 15) {
+                const normalCount = 5 + (currentWave - 5) * 2;
+                const strongCount = Math.floor(currentWave / 5);
+                
+                for(let i = 0; i < normalCount; i++) {
+                    setTimeout(() => spawnEnemy(2), i*1500);
+                }
+                for(let i = 0; i < strongCount; i++) {
+                    setTimeout(() => spawnEnemy(5, 'strong'), (normalCount + i)*2000);
+                }
+            }
+            // Волны 15+ с золотыми врагами
+            else if(currentWave >= 15 && currentWave < 30) {
+                const normalCount = 10 + (currentWave - 15) * 3;
+                const strongCount = 5 + Math.floor(currentWave / 3);
+                const eliteCount = Math.floor(currentWave / 15);
+                
+                for(let i = 0; i < normalCount; i++) {
+                    setTimeout(() => spawnEnemy(2), i*1000);
+                }
+                for(let i = 0; i < strongCount; i++) {
+                    setTimeout(() => spawnEnemy(5, 'strong'), (normalCount + i)*1500);
+                }
+                for(let i = 0; i < eliteCount; i++) {
+                    setTimeout(() => spawnEnemy(10, 'elite'), (normalCount + strongCount + i)*2000);
+                }
+            }
+            // Волны 30+ с усиленными врагами
+            else if(currentWave >= 30) {
+                const normalCount = 20 + (currentWave - 30) * 5;
+                const strongCount = 10 + Math.floor(currentWave / 2);
+                const eliteCount = 10 + Math.floor(currentWave / 3);
+                
+                for(let i = 0; i < normalCount; i++) {
+                    setTimeout(() => spawnEnemy(3), i*800);
+                }
+                for(let i = 0; i < strongCount; i++) {
+                    setTimeout(() => spawnEnemy(8, 'strong'), (normalCount + i)*1000);
+                }
+                for(let i = 0; i < eliteCount; i++) {
+                    setTimeout(() => spawnEnemy(15, 'elite'), (normalCount + strongCount + i)*1200);
+                }
+            }
+            // Обычные волны (4, 6-14 и т.д.)
+            else {
+                const count = 10 + (currentWave - 1) * 3;
+                for(let i = 0; i < count; i++) {
+                    setTimeout(() => spawnEnemy(2 + Math.floor(currentWave/3)), i*1200);
+                }
+            }
+        }
+
+        function spawnEnemy(hp, type = 'normal') {
+            const enemy = {
+                x: 0,
+                y: 4 * tileSize + 10,
+                hp: hp,
+                pathIndex: 0,
+                type: type,
+                speed: type === 'elite' ? 3 : type === 'strong' ? 1.5 : 1
+            };
+            
+            const elem = document.createElement('div');
+            elem.className = `enemy ${type}`;
+            elem.style.left = enemy.x + 'px';
+            elem.style.top = enemy.y + 'px';
+            board.appendChild(elem);
+            enemy.elem = elem;
+            enemies.push(enemy);
+        }
+
+        function gameLoop() {
+            if(!gameActive) return;
+            
+            enemies.forEach((enemy, index) => {
+                const path = document.querySelectorAll('.tile');
+                if(enemy.pathIndex >= path.length - 1) {
+                    enemy.elem.remove();
+                    enemies.splice(index, 1);
+                    endGame();
+                    return;
+                }
+                
+                const target = path[enemy.pathIndex + 1];
+                if(target) {
+                    const targetX = parseInt(target.style.left) + tileSize/2;
+                    const targetY = parseInt(target.style.top) + tileSize/2;
+                    
+                    const dx = targetX - enemy.x;
+                    const dy = targetY - enemy.y;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if(distance < 2) {
+                        enemy.pathIndex++;
+                    } else {
+                        enemy.x += (dx / distance) * enemy.speed;
+                        enemy.y += (dy / distance) * enemy.speed;
+                    }
+                    
+                    enemy.elem.style.left = enemy.x + 'px';
+                    enemy.elem.style.top = enemy.y + 'px';
+                }
+            });
+            
+            attackLogic();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ... (остальные функции без изменений) ...
+
+        function initGame() {
+            money = 100;
+            currentWave = 1; // Теперь точно начинаем с 1 волны
+            enemies = [];
+            towers = [];
+            selectedTower = null;
+            waveInProgress = false;
+            gameActive = true;
+            
+            board.innerHTML = '';
+            createBoard();
+            
+            updateMoney();
+            document.getElementById('wave').textContent = currentWave;
+            document.getElementById('gameOver').style.display = 'none';
+            closeUpgradeMenu();
+            
+            gameLoop();
+            startWave();
+        }
+
+        window.addEventListener('load', initGame);
     </script>
 </body>
 </html>
