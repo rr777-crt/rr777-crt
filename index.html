@@ -1,199 +1,222 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Advanced Tower Defense</title>
+    <title>Ultimate Tower Defense - Рабочая версия</title>
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        
         #gameContainer {
             display: flex;
+            height: 100vh;
         }
         
         #gameBoard {
-            width: 1000px; /* Увеличено для расширенного пути */
-            height: 700px; /* Увеличено для расширенного пути */
-            border: 1px solid black;
+            width: 800px;
+            height: 600px;
+            border: 2px solid #333;
             position: relative;
-            background: #eee;
+            background: #e8f5e9;
+            overflow: hidden;
         }
         
         .tile {
             width: 40px;
             height: 40px;
             position: absolute;
+            box-sizing: border-box;
         }
         
         .path {
-            background: #666;
+            background: #5d4037;
+            border: 1px solid #3e2723;
         }
         
         .start {
-            background: gold;
+            background: #ffd700;
+            border: 2px solid #ffab00;
         }
         
         .end {
-            background: green;
+            background: #4caf50;
+            border: 2px solid #2e7d32;
         }
         
         .enemy {
-            width: 20px;
-            height: 20px;
-            background: red;
             position: absolute;
             border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .enemy.normal {
+            width: 20px;
+            height: 20px;
+            background: #f44336;
+        }
+        
+        .enemy.strong {
+            width: 25px;
+            height: 25px;
+            background: #9c27b0;
+        }
+        
+        .enemy.elite {
+            width: 30px;
+            height: 30px;
+            background: #ff9800;
+            animation: pulse 1s infinite;
+        }
+        
+        .enemy.green {
+            width: 25px;
+            height: 25px;
+            background: #4caf50;
+        }
+        
+        .enemy.boss {
+            width: 40px;
+            height: 40px;
+            background: #f44336;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation: bossPulse 2s infinite;
+        }
+        
+        .enemy.black {
+            width: 20px;
+            height: 20px;
+            background: #000000;
         }
         
         .tower {
-            width: 30px;
-            height: 30px;
             position: absolute;
+            transform: translate(-50%, -50%);
             cursor: pointer;
-            transform: translate(-15px, -15px); /* Центрирование башни */
+            z-index: 10;
         }
         
         .tower.pistol {
-            background: blue;
+            width: 30px;
+            height: 30px;
+            background: #2196f3;
             border-radius: 50%;
+            border: 2px solid #0d47a1;
         }
         
         .tower.swordsman {
-            background: brown;
+            width: 30px;
+            height: 30px;
+            background: #795548;
             clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            border: 2px solid #3e2723;
         }
         
         .tower.sniper {
-            background: purple;
+            width: 30px;
+            height: 30px;
+            background: #673ab7;
+            border-radius: 5px;
+            border: 2px solid #311b92;
+        }
+        
+        .tower.mega {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #ff0000, #ffff00);
+            clip-path: polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%);
+            border: 2px solid #e65100;
         }
         
         .radius {
             position: absolute;
-            border: 1px dashed rgba(0,0,255,0.5);
+            border: 2px dashed rgba(33, 150, 243, 0.5);
             border-radius: 50%;
             pointer-events: none;
-            transform: translate(-50%, -50%); /* Правильное позиционирование */
+            transform: translate(-50%, -50%);
             box-sizing: border-box;
+            z-index: 5;
         }
         
         #shop {
-            padding: 20px;
-            background: #ccc;
             width: 250px;
-        }
-        
-        #upgradeMenu {
-            position: fixed;
-            right: 250px;
-            top: 20px;
-            background: #fff;
             padding: 15px;
-            border: 2px solid #FFB74D;
-            border-radius: 10px;
-            display: none;
-            z-index: 1000;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            background: #e0e0e0;
+            overflow-y: auto;
+            border-left: 2px solid #bdbdbd;
         }
         
         .shop-item {
             margin: 10px 0;
             padding: 12px;
-            border: 2px solid #4CAF50;
+            border: 2px solid #4caf50;
             border-radius: 8px;
-            cursor: pointer;
-            background: linear-gradient(145deg, #81C784, #66BB6A);
+            background: linear-gradient(145deg, #81c784, #66bb6a);
             color: white;
             font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.2s;
         }
-
+        
         .shop-item:hover {
-            background: linear-gradient(145deg, #66BB6A, #4CAF50);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
-
-        #upgradeMenu button {
-            margin: 8px 0;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            background: linear-gradient(145deg, #FFA726, #FB8C00);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            width: 100%;
-        }
-
-        #upgradeMenu button:hover {
-            background: linear-gradient(145deg, #FB8C00, #F57C00);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        
+        #upgradeMenu {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            width: 200px;
+            padding: 15px;
+            background: #fff;
+            border: 2px solid #ff9800;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 100;
         }
         
         #gameOver {
-            position: fixed;
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(0,0,0,0.9);
             color: white;
             padding: 30px;
-            text-align: center;
             border-radius: 10px;
+            text-align: center;
             display: none;
-            z-index: 2000;
+            z-index: 200;
         }
         
-        #gameOver button {
-            padding: 10px 20px;
-            margin-top: 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background: #4CAF50;
-            color: white;
-            border: none;
+        .speed-control {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 50;
+            background: rgba(255,255,255,0.7);
+            padding: 5px;
             border-radius: 5px;
         }
-         .enemy.strong {
-            background: purple;
-            width: 25px;
-            height: 25px;
+        
+        .speed-control button {
+            padding: 5px 10px;
+            margin: 0 3px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
         }
         
-        .enemy.elite {
-            background: gold;
-            width: 30px;
-            height: 30px;
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-          .tower.mega {
-            background: linear-gradient(45deg, #ff0000, #ffff00);
-            clip-path: polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%);
-        }
-        
-        .enemy.green {
-            background: #00ff00;
-            width: 25px;
-            height: 25px;
-        }
-        
-        .enemy.boss {
-            background: #ff0000;
-            width: 40px;
-            height: 40px;
-            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-            animation: bossPulse 2s infinite;
-        }
-        
-        .enemy.black {
-            background: #000000;
-            width: 20px;
-            height: 20px;
+        .speed-control button.active {
+            background: #2e7d32;
+            font-weight: bold;
         }
         
         .boss-health {
@@ -203,34 +226,34 @@
             text-shadow: 1px 1px 2px black;
             transform: translate(-50%, -30px);
             white-space: nowrap;
+            font-size: 12px;
+            z-index: 15;
         }
         
-        .speed-control {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1000;
-        }
-        
-        .speed-control button {
-            padding: 8px 15px;
-            margin: 0 5px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        .speed-control button.active {
-            background: #2E7D32;
+        #moneyDisplay {
+            font-size: 18px;
             font-weight: bold;
+            margin: 10px 0;
+            color: #333;
+        }
+        
+        #waveDisplay {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #333;
+        }
+        
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
         }
         
         @keyframes bossPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
         }
     </style>
 </head>
@@ -253,41 +276,38 @@
                 Урон: 10/5сек<br>
                 Радиус: 100st
             </div>
-            <div id="upgradeMenu">
-                <h4>Улучшение башни</h4>
-                <div id="towerStats"></div>
-                <button onclick="upgradeTower()">Улучшить</button>
-                <button onclick="closeUpgradeMenu()">Закрыть</button>
-            </div>
-            <div style="margin-top: 20px; font-weight: bold;">
-                Деньги: <span id="money">100</span>
-            </div>
-            <div style="font-weight: bold;">
-                Волна: <span id="wave">1</span>
-            </div>
-        </div>
-    </div>
-    
-    <div id="gameOver">
-        <h2>Враги добрались до цели!</h2>
-        <p>Игра окончена</p>
-        <button onclick="restartGame()">Играть снова</button>
-    </div>
-     <div class="speed-control">
-        <button id="speed1x" class="active" onclick="setGameSpeed(1)">1X</button>
-        <button id="speed2x" onclick="setGameSpeed(2)">2X</button>
-    </div>
-    
-    <div id="gameContainer">
-        <!-- ... (остальная разметка магазина) ... -->
             <div class="shop-item" onclick="selectTower('mega', 1500)">
                 МЕГА (1500)<br>
                 Двойной режим:<br>
                 Ближний: 2/0.5сек 5st<br>
                 Дальний: 1/сек 20st
             </div>
+            <div id="moneyDisplay">Деньги: 100</div>
+            <div id="waveDisplay">Волна: 1</div>
+        </div>
+    </div>
+    
+    <div class="speed-control">
+        <button id="speed1x" class="active" onclick="setGameSpeed(1)">1X</button>
+        <button id="speed2x" onclick="setGameSpeed(2)">2X</button>
+    </div>
+    
+    <div id="upgradeMenu">
+        <h4 style="margin-top: 0; color: #ff9800;">Улучшение башни</h4>
+        <div id="towerStats" style="margin-bottom: 10px;"></div>
+        <button onclick="upgradeTower()" style="background: #ff9800; width: 100%;">Улучшить</button>
+        <button onclick="closeUpgradeMenu()" style="background: #9e9e9e; width: 100%; margin-top: 5px;">Закрыть</button>
+    </div>
+    
+    <div id="gameOver">
+        <h2 style="margin-top: 0;">Враги добрались до цели!</h2>
+        <p>Дошло врагов: <span id="enemiesPassed">0</span></p>
+        <p>Достигнутая волна: <span id="finalWave">1</span></p>
+        <button onclick="restartGame()" style="background: #4caf50; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">Играть снова</button>
+    </div>
 
     <script>
+        // Основные переменные
         const board = document.getElementById('gameBoard');
         const tileSize = 40;
         let placingTower = false;
@@ -298,7 +318,12 @@
         let selectedTower = null;
         let waveInProgress = false;
         let gameActive = true;
+        let gameSpeed = 1;
+        let enemiesPassed = 0;
+        let endPosition = {x: 0, y: 0};
+        let pathTiles = [];
 
+        // Типы башен
         const towerTypes = {
             pistol: {
                 type: 'pistol',
@@ -331,11 +356,31 @@
                 upgraded: false,
                 upgradeCost: 1000,
                 upgradedAttackSpeed: 0.4
+            },
+            mega: {
+                type: 'mega',
+                cost: 1500,
+                modes: [
+                    {damage: 2, radius: 50, attackSpeed: 2}, // Ближний бой
+                    {damage: 1, radius: 200, attackSpeed: 1}  // Дальний бой
+                ],
+                currentMode: 0,
+                upgraded: false,
+                upgradeCost: 2000,
+                upgradedModes: [
+                    {damage: 3, radius: 60, attackSpeed: 2.5},
+                    {damage: 2, radius: 250, attackSpeed: 1.2}
+                ]
             }
         };
 
+        // Создание игрового поля с дорожкой
         function createBoard() {
-            // Расширенный путь с изгибами
+            // Очищаем доску
+            board.innerHTML = '';
+            pathTiles = [];
+            
+            // Создаем сложную дорожку с изгибами
             const path = [
                 {x:0, y:4}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4},
                 {x:5, y:5}, {x:5, y:6}, {x:5, y:7}, {x:5, y:8}, {x:5, y:9},
@@ -347,22 +392,30 @@
                 {x:20, y:11}
             ];
             
-            // Создаем дорожку
+            // Создаем тайлы дорожки
             path.forEach((pos, index) => {
                 const tile = document.createElement('div');
                 tile.className = `tile ${index === 0 ? 'start' : index === path.length-1 ? 'end' : 'path'}`;
                 tile.style.left = pos.x * tileSize + 'px';
                 tile.style.top = pos.y * tileSize + 'px';
                 board.appendChild(tile);
+                
+                // Сохраняем позиции дорожки для проверки
+                pathTiles.push({
+                    x: pos.x * tileSize + tileSize/2,
+                    y: pos.y * tileSize + tileSize/2,
+                    elem: tile
+                });
             });
             
             // Запоминаем позицию конечной точки
             endPosition = {
-                x: path[path.length-1].x * tileSize,
-                y: path[path.length-1].y * tileSize
+                x: path[path.length-1].x * tileSize + tileSize/2,
+                y: path[path.length-1].y * tileSize + tileSize/2
             };
         }
 
+        // Выбор башни для размещения
         function selectTower(type, cost) {
             if(!gameActive) return;
             if(money >= cost && !placingTower) {
@@ -372,52 +425,86 @@
             }
         }
 
-        board.addEventListener('click', (e) => {
-            if(!gameActive) return;
-            if(placingTower) {
-                const rect = board.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
+        // Обработчик кликов по игровому полю
+        board.addEventListener('click', function(e) {
+            if(!gameActive || !placingTower) return;
+            
+            const rect = board.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Проверяем, не кликнули ли на дорожку
+            const isOnPath = pathTiles.some(tile => {
+                return Math.abs(x - tile.x) < tileSize/2 && Math.abs(y - tile.y) < tileSize/2;
+            });
+            
+            // Проверяем, не кликнули ли на другую башню
+            const isOnTower = towers.some(tower => {
+                return Math.sqrt(Math.pow(x - tower.x, 2) + Math.pow(y - tower.y, 2) < 30;
+            });
+            
+            if(!isOnPath && !isOnTower) {
+                const tower = {
+                    ...towerTypes[placingTower],
+                    x: x,
+                    y: y,
+                    totalDamage: 0,
+                    lastAttack: 0
+                };
                 
-                // Проверка на дорожку
-                const isPath = [...document.querySelectorAll('.tile')].some(tile => {
-                    const tileX = parseInt(tile.style.left);
-                    const tileY = parseInt(tile.style.top);
-                    return x >= tileX && x <= tileX + tileSize && 
-                           y >= tileY && y <= tileY + tileSize;
-                });
-                
-                // Проверка на другие башни
-                const isTower = towers.some(tower => {
-                    return Math.sqrt(Math.pow(x - tower.x, 2) + Math.pow(y - tower.y, 2)) < 30;
-                });
-                
-                if(!isPath && !isTower) {
-                    const tower = {
-                        ...towerTypes[placingTower],
-                        x: x,
-                        y: y,
-                        totalDamage: 0,
-                        lastAttack: 0
-                    };
-                    towers.push(tower);
-                    placeTower(tower);
-                    placingTower = false;
+                // Для МЕГА башни добавляем текущий режим
+                if(tower.type === 'mega') {
+                    tower.currentMode = 0;
                 }
+                
+                towers.push(tower);
+                placeTower(tower);
+                placingTower = false;
             }
         });
 
+        // Размещение башни на поле
         function placeTower(tower) {
             const elem = document.createElement('div');
             elem.className = `tower ${tower.type}`;
             elem.style.left = tower.x + 'px';
             elem.style.top = tower.y + 'px';
-            elem.onclick = () => showUpgradeMenu(tower);
+            
+            let clickCount = 0;
+            let clickTimer = null;
+            
+            elem.onclick = function(e) {
+                e.stopPropagation();
+                clickCount++;
+                
+                if (clickTimer === null) {
+                    clickTimer = setTimeout(() => {
+                        if (clickCount === 1) {
+                            showUpgradeMenu(tower);
+                        } 
+                        else if (clickCount === 2 && tower.type === 'mega') {
+                            toggleMegaMode(tower);
+                        }
+                        else if (clickCount === 3) {
+                            removeTower(tower);
+                        }
+                        clickCount = 0;
+                        clickTimer = null;
+                    }, 300);
+                }
+            };
             
             const radius = document.createElement('div');
             radius.className = 'radius';
-            radius.style.width = tower.radius*2 + 'px';
-            radius.style.height = tower.radius*2 + 'px';
+            
+            if(tower.type === 'mega') {
+                radius.style.width = tower.modes[tower.currentMode].radius * 2 + 'px';
+                radius.style.height = tower.modes[tower.currentMode].radius * 2 + 'px';
+            } else {
+                radius.style.width = tower.radius * 2 + 'px';
+                radius.style.height = tower.radius * 2 + 'px';
+            }
+            
             radius.style.left = tower.x + 'px';
             radius.style.top = tower.y + 'px';
             
@@ -427,524 +514,29 @@
             tower.radiusElem = radius;
         }
 
-        function spawnEnemy(hp) {
-            const enemy = {
-                x: 0,
-                y: 4 * tileSize + 10,
-                hp: hp,
-                pathIndex: 0
-            };
-            enemies.push(enemy);
+        // Удаление башни
+        function removeTower(tower) {
+            if (!gameActive) return;
             
-            const elem = document.createElement('div');
-            elem.className = 'enemy';
-            elem.style.left = enemy.x + 'px';
-            elem.style.top = enemy.y + 'px';
-            board.appendChild(elem);
-            enemy.elem = elem;
-        }
-
-        function gameLoop() {
-            if(!gameActive) return;
-            
-            // Проверяем, достиг ли кто-то конца
-            enemies.forEach((enemy, index) => {
-                const path = document.querySelectorAll('.tile');
-                if(enemy.pathIndex >= path.length - 1) {
-                    // Враг достиг конца
-                    enemy.elem.remove();
-                    enemies.splice(index, 1);
-                    endGame();
-                    return;
-                }
-                
-                const target = path[enemy.pathIndex + 1];
-                if(target) {
-                    const targetX = parseInt(target.style.left) + tileSize/2;
-                    const targetY = parseInt(target.style.top) + tileSize/2;
-                    
-                    const dx = targetX - enemy.x;
-                    const dy = targetY - enemy.y;
-                    const distance = Math.sqrt(dx*dx + dy*dy);
-                    
-                    if(distance < 2) {
-                        enemy.pathIndex++;
-                    } else {
-                        const speed = 2;
-                        enemy.x += (dx / distance) * speed;
-                        enemy.y += (dy / distance) * speed;
-                    }
-                    
-                    enemy.elem.style.left = enemy.x + 'px';
-                    enemy.elem.style.top = enemy.y + 'px';
-                }
-            });
-            
-            attackLogic();
-            requestAnimationFrame(gameLoop);
-        }
-
-        function attackLogic() {
-            towers.forEach(tower => {
-                // Находим ближайшего врага в радиусе
-                let closestEnemy = null;
-                let minDistance = Infinity;
-                
-                enemies.forEach(enemy => {
-                    const dx = enemy.x - tower.x;
-                    const dy = enemy.y - tower.y;
-                    const distance = Math.sqrt(dx*dx + dy*dy);
-                    
-                    if(distance < tower.radius && distance < minDistance) {
-                        closestEnemy = enemy;
-                        minDistance = distance;
-                    }
-                });
-                
-                // Атакуем ближайшего врага
-                if(closestEnemy && Date.now() - tower.lastAttack > 1000/tower.attackSpeed) {
-                    closestEnemy.hp -= tower.damage;
-                    tower.totalDamage += tower.damage;
-                    tower.lastAttack = Date.now();
-                    
-                    if(closestEnemy.hp <= 0) {
-                        closestEnemy.elem.remove();
-                        enemies.splice(enemies.indexOf(closestEnemy), 1);
-                        money += 10;
-                        updateMoney();
-                    }
-                }
-            });
-            
-            checkWaveCompletion();
-        }
-
-        function checkWaveCompletion() {
-            if(enemies.length === 0 && waveInProgress) {
-                waveInProgress = false;
-                currentWave++;
-                startWave();
-            }
-        }
-
-        function startWave() {
-            if(!gameActive) return;
-            
-            waveInProgress = true;
-            document.getElementById('wave').textContent = currentWave;
-            
-            if(currentWave === 1) {
-                for(let i = 0; i < 3; i++) {
-                    setTimeout(() => spawnEnemy(2), i*2000);
-                }
-            } else if(currentWave === 2) {
-                for(let i = 0; i < 5; i++) {
-                    setTimeout(() => spawnEnemy(2), i*2000);
-                }
-            } else if(currentWave === 3) {
-                for(let i = 0; i < 10; i++) {
-                    setTimeout(() => spawnEnemy(2), i*1500);
-                }
-            } else if(currentWave === 4) {
-                for(let i = 0; i < 15; i++) {
-                    setTimeout(() => spawnEnemy(2), i*1000);
-                }
-            } else if(currentWave === 5) {
-                for(let i = 0; i < 5; i++) {
-                    setTimeout(() => spawnEnemy(2), i*1500);
-                }
-                setTimeout(() => spawnEnemy(5), 5*1500);
-            }
-        }
-
-        function showUpgradeMenu(tower) {
-            if(!gameActive) return;
-            
-            closeUpgradeMenu();
-            selectedTower = tower;
-            const menu = document.getElementById('upgradeMenu');
-            menu.style.display = 'block';
-            
-            let upgradeButton = menu.querySelector('button');
-            upgradeButton.textContent = `Улучшить (${tower.upgradeCost})`;
-            
-            document.getElementById('towerStats').innerHTML = `
-                <strong>${getTowerName(tower.type)}</strong><br>
-                Урон: ${tower.damage}<br>
-                Радиус: ${Math.round(tower.radius/10)}st<br>
-                Скорость: ${(1/tower.attackSpeed).toFixed(1)} атак/сек<br>
-                ${tower.upgraded ? '<span style="color:green">УЛУЧШЕНО</span>' : ''}
-            `;
-        }
-
-        function getTowerName(type) {
-            switch(type) {
-                case 'pistol': return 'Пистолет';
-                case 'swordsman': return 'Мечник';
-                case 'sniper': return 'Снайпер';
-                default: return 'Башня';
-            }
-        }
-
-        function closeUpgradeMenu() {
-            document.getElementById('upgradeMenu').style.display = 'none';
-            selectedTower = null;
-        }
-
-        function upgradeTower() {
-            if(!selectedTower || !gameActive) return;
-            if(selectedTower.upgraded || money < selectedTower.upgradeCost) return;
-            
-            money -= selectedTower.upgradeCost;
+            // Возвращаем 50% стоимости башни
+            const refund = Math.floor(towerTypes[tower.type].cost * 0.5);
+            money += refund;
             updateMoney();
-            selectedTower.upgraded = true;
             
-            switch(selectedTower.type) {
-                case 'pistol':
-                    selectedTower.damage = selectedTower.upgradedDamage;
-                    selectedTower.radius = selectedTower.upgradedRadius;
-                    break;
-                case 'swordsman':
-                    selectedTower.damage = selectedTower.upgradedDamage;
-                    selectedTower.attackSpeed = selectedTower.upgradedAttackSpeed;
-                    break;
-                case 'sniper':
-                    selectedTower.attackSpeed = selectedTower.upgradedAttackSpeed;
-                    break;
-            }
+            // Удаляем элементы из DOM
+            if (tower.elem) tower.elem.remove();
+            if (tower.radiusElem) tower.radiusElem.remove();
             
-            updateTowerVisuals(selectedTower);
-            showUpgradeMenu(selectedTower);
-        }
-
-        function updateTowerVisuals(tower) {
-            if(tower.radiusElem) {
-                tower.radiusElem.style.width = tower.radius*2 + 'px';
-                tower.radiusElem.style.height = tower.radius*2 + 'px';
+            // Удаляем из массива башен
+            towers = towers.filter(t => t !== tower);
+            
+            // Закрываем меню, если удаляем выбранную башню
+            if (selectedTower === tower) {
+                closeUpgradeMenu();
             }
         }
 
-        function updateMoney() {
-            document.getElementById('money').textContent = money;
-        }
-
-        function endGame() {
-            gameActive = false;
-            document.getElementById('gameOver').style.display = 'block';
-        }
-
-        function restartGame() {
-            // Очищаем игровое поле
-            board.innerHTML = '';
-            enemies = [];
-            towers = [];
-            
-            // Сбрасываем параметры
-            money = 100;
-            currentWave = 1;
-            gameActive = true;
-            
-            // Обновляем интерфейс
-            updateMoney();
-            document.getElementById('wave').textContent = currentWave;
-            document.getElementById('gameOver').style.display = 'none';
-            closeUpgradeMenu();
-            
-            // Перезапускаем игру
-            createBoard();
-            startWave();
-            gameLoop();
-        }
-
-        // Инициализация игры
-        function initGame() {
-            money = 100;
-            currentWave = 1;
-            enemies = [];
-            towers = [];
-            selectedTower = null;
-            waveInProgress = false;
-            gameActive = true;
-            
-            board.innerHTML = '';
-            createBoard();
-            
-            updateMoney();
-            document.getElementById('wave').textContent = currentWave;
-            document.getElementById('gameOver').style.display = 'none';
-            closeUpgradeMenu();
-            
-            gameLoop();
-            startWave();
-        }
-
-        window.addEventListener('load', initGame);
-        function placeTower(tower) {
-    const elem = document.createElement('div');
-    elem.className = `tower ${tower.type}`;
-    elem.style.left = tower.x + 'px';
-    elem.style.top = tower.y + 'px';
-    
-    let clickCount = 0;
-    let clickTimer = null;
-    
-    elem.onclick = (e) => {
-        e.stopPropagation();
-        clickCount++;
-        
-        if (clickTimer === null) {
-            clickTimer = setTimeout(() => {
-                if (clickCount === 1) {
-                    showUpgradeMenu(tower);
-                } else if (clickCount === 3) {
-                    removeTower(tower);
-                }
-                clickCount = 0;
-                clickTimer = null;
-            }, 300);
-        }
-    };
-    
-    const radius = document.createElement('div');
-    radius.className = 'radius';
-    radius.style.width = tower.radius*2 + 'px';
-    radius.style.height = tower.radius*2 + 'px';
-    radius.style.left = tower.x + 'px';
-    radius.style.top = tower.y + 'px';
-    
-    board.appendChild(elem);
-    board.appendChild(radius);
-    tower.elem = elem;
-    tower.radiusElem = radius;
-}
-
-function removeTower(tower) {
-    if (!gameActive) return;
-    
-    // Возвращаем 50% стоимости башни
-    const refund = Math.floor(towerTypes[tower.type].cost * 0.5);
-    money += refund;
-    updateMoney();
-    
-    // Удаляем элементы из DOM
-    if (tower.elem) tower.elem.remove();
-    if (tower.radiusElem) tower.radiusElem.remove();
-    
-    // Удаляем из массива башен
-    towers = towers.filter(t => t !== tower);
-    
-    // Закрываем меню, если удаляем выбранную башню
-    if (selectedTower === tower) {
-        closeUpgradeMenu();
-    }
-}
-
-// Исправленная функция startWave
-function startWave() {
-    if(!gameActive) return;
-    
-    waveInProgress = true;
-    document.getElementById('wave').textContent = currentWave;
-    
-    if(currentWave === 1) {
-        for(let i = 0; i < 3; i++) {
-            setTimeout(() => spawnEnemy(2), i*2000);
-        }
-    } else if(currentWave === 2) {
-        for(let i = 0; i < 5; i++) {
-            setTimeout(() => spawnEnemy(2), i*2000);
-        }
-    } else if(currentWave === 3) {
-        for(let i = 0; i < 10; i++) {
-            setTimeout(() => spawnEnemy(2), i*1500);
-        }
-    } else if(currentWave === 4) {
-        for(let i = 0; i < 15; i++) {
-            setTimeout(() => spawnEnemy(2), i*1000);
-        }
-    } else if(currentWave === 5) {
-        for(let i = 0; i < 5; i++) {
-            setTimeout(() => spawnEnemy(2), i*1500);
-        }
-        setTimeout(() => spawnEnemy(5), 5*1500);
-    }
-}
-          function startWave() {
-            if(!gameActive) return;
-            
-            waveInProgress = true;
-            document.getElementById('wave').textContent = currentWave;
-            
-            // Базовая логика волн
-            if(currentWave === 1) {
-                for(let i = 0; i < 3; i++) {
-                    setTimeout(() => spawnEnemy(2), i*2000);
-                }
-            } else if(currentWave === 2) {
-                for(let i = 0; i < 5; i++) {
-                    setTimeout(() => spawnEnemy(2), i*2000);
-                }
-            } else if(currentWave === 3) {
-                for(let i = 0; i < 10; i++) {
-                    setTimeout(() => spawnEnemy(2), i*1500);
-                }
-            } 
-            // Волны 5+ с фиолетовыми врагами
-            else if(currentWave >= 5 && currentWave < 15) {
-                const normalCount = 5 + (currentWave - 5) * 2;
-                const strongCount = Math.floor(currentWave / 5);
-                
-                for(let i = 0; i < normalCount; i++) {
-                    setTimeout(() => spawnEnemy(2), i*1500);
-                }
-                for(let i = 0; i < strongCount; i++) {
-                    setTimeout(() => spawnEnemy(5, 'strong'), (normalCount + i)*2000);
-                }
-            }
-            // Волны 15+ с золотыми врагами
-            else if(currentWave >= 15 && currentWave < 30) {
-                const normalCount = 10 + (currentWave - 15) * 3;
-                const strongCount = 5 + Math.floor(currentWave / 3);
-                const eliteCount = Math.floor(currentWave / 15);
-                
-                for(let i = 0; i < normalCount; i++) {
-                    setTimeout(() => spawnEnemy(2), i*1000);
-                }
-                for(let i = 0; i < strongCount; i++) {
-                    setTimeout(() => spawnEnemy(5, 'strong'), (normalCount + i)*1500);
-                }
-                for(let i = 0; i < eliteCount; i++) {
-                    setTimeout(() => spawnEnemy(10, 'elite'), (normalCount + strongCount + i)*2000);
-                }
-            }
-            // Волны 30+ с усиленными врагами
-            else if(currentWave >= 30) {
-                const normalCount = 20 + (currentWave - 30) * 5;
-                const strongCount = 10 + Math.floor(currentWave / 2);
-                const eliteCount = 10 + Math.floor(currentWave / 3);
-                
-                for(let i = 0; i < normalCount; i++) {
-                    setTimeout(() => spawnEnemy(3), i*800);
-                }
-                for(let i = 0; i < strongCount; i++) {
-                    setTimeout(() => spawnEnemy(8, 'strong'), (normalCount + i)*1000);
-                }
-                for(let i = 0; i < eliteCount; i++) {
-                    setTimeout(() => spawnEnemy(15, 'elite'), (normalCount + strongCount + i)*1200);
-                }
-            }
-            // Обычные волны (4, 6-14 и т.д.)
-            else {
-                const count = 10 + (currentWave - 1) * 3;
-                for(let i = 0; i < count; i++) {
-                    setTimeout(() => spawnEnemy(2 + Math.floor(currentWave/3)), i*1200);
-                }
-            }
-        }
-
-        function spawnEnemy(hp, type = 'normal') {
-            const enemy = {
-                x: 0,
-                y: 4 * tileSize + 10,
-                hp: hp,
-                pathIndex: 0,
-                type: type,
-                speed: type === 'elite' ? 3 : type === 'strong' ? 1.5 : 1
-            };
-            
-            const elem = document.createElement('div');
-            elem.className = `enemy ${type}`;
-            elem.style.left = enemy.x + 'px';
-            elem.style.top = enemy.y + 'px';
-            board.appendChild(elem);
-            enemy.elem = elem;
-            enemies.push(enemy);
-        }
-
-        function gameLoop() {
-            if(!gameActive) return;
-            
-            enemies.forEach((enemy, index) => {
-                const path = document.querySelectorAll('.tile');
-                if(enemy.pathIndex >= path.length - 1) {
-                    enemy.elem.remove();
-                    enemies.splice(index, 1);
-                    endGame();
-                    return;
-                }
-                
-                const target = path[enemy.pathIndex + 1];
-                if(target) {
-                    const targetX = parseInt(target.style.left) + tileSize/2;
-                    const targetY = parseInt(target.style.top) + tileSize/2;
-                    
-                    const dx = targetX - enemy.x;
-                    const dy = targetY - enemy.y;
-                    const distance = Math.sqrt(dx*dx + dy*dy);
-                    
-                    if(distance < 2) {
-                        enemy.pathIndex++;
-                    } else {
-                        enemy.x += (dx / distance) * enemy.speed;
-                        enemy.y += (dy / distance) * enemy.speed;
-                    }
-                    
-                    enemy.elem.style.left = enemy.x + 'px';
-                    enemy.elem.style.top = enemy.y + 'px';
-                }
-            });
-            
-            attackLogic();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // ... (остальные функции без изменений) ...
-
-        function initGame() {
-            money = 100;
-            currentWave = 1; // Теперь точно начинаем с 1 волны
-            enemies = [];
-            towers = [];
-            selectedTower = null;
-            waveInProgress = false;
-            gameActive = true;
-            
-            board.innerHTML = '';
-            createBoard();
-            
-            updateMoney();
-            document.getElementById('wave').textContent = currentWave;
-            document.getElementById('gameOver').style.display = 'none';
-            closeUpgradeMenu();
-            
-            gameLoop();
-            startWave();
-        }
-         let gameSpeed = 1;
-        let bossHealthDisplay = null;
-
-        const towerTypes = {
-            // ... (предыдущие башни) ...
-            mega: {
-                type: 'mega',
-                cost: 1500,
-                modes: [
-                    {damage: 2, radius: 50, attackSpeed: 2}, // Ближний бой
-                    {damage: 1, radius: 200, attackSpeed: 1}  // Дальний бой
-                ],
-                currentMode: 0,
-                upgraded: false
-            }
-        };
-
-        // Новая функция для управления скоростью
-        function setGameSpeed(speed) {
-            gameSpeed = speed;
-            document.getElementById('speed1x').classList.toggle('active', speed === 1);
-            document.getElementById('speed2x').classList.toggle('active', speed === 2);
-        }
-
-        // Обновлённая функция spawnEnemy
+        // Создание врага
         function spawnEnemy(hp, type = 'normal') {
             const speeds = {
                 normal: 1,
@@ -956,8 +548,8 @@ function startWave() {
             };
             
             const enemy = {
-                x: 0,
-                y: 4 * tileSize + 10,
+                x: pathTiles[0].x,
+                y: pathTiles[0].y,
                 hp: hp,
                 maxHp: hp,
                 pathIndex: 0,
@@ -983,66 +575,373 @@ function startWave() {
             enemies.push(enemy);
         }
 
-        // Обновлённая функция gameLoop
+        // Главный игровой цикл
         function gameLoop() {
             if(!gameActive) return;
             
+            // Движение врагов
             enemies.forEach((enemy, index) => {
-                // ... (предыдущая логика движения) ...
-                enemy.x += (dx / distance) * enemy.speed * gameSpeed;
-                enemy.y += (dy / distance) * enemy.speed * gameSpeed;
+                // Проверка достижения конца пути
+                if(enemy.pathIndex >= pathTiles.length - 1) {
+                    enemy.elem.remove();
+                    if(enemy.healthElem) enemy.healthElem.remove();
+                    enemies.splice(index, 1);
+                    enemiesPassed++;
+                    document.getElementById('enemiesPassed').textContent = enemiesPassed;
+                    endGame();
+                    return;
+                }
+                
+                const target = pathTiles[enemy.pathIndex + 1];
+                const dx = target.x - enemy.x;
+                const dy = target.y - enemy.y;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                
+                if(distance < 2) {
+                    enemy.pathIndex++;
+                } else {
+                    enemy.x += (dx / distance) * enemy.speed * gameSpeed;
+                    enemy.y += (dy / distance) * enemy.speed * gameSpeed;
+                }
+                
+                enemy.elem.style.left = enemy.x + 'px';
+                enemy.elem.style.top = enemy.y + 'px';
                 
                 if (enemy.healthElem) {
                     enemy.healthElem.textContent = `${enemy.hp}/${enemy.maxHp}`;
                     enemy.healthElem.style.left = enemy.x + 'px';
-                    enemy.healthElem.style.top = enemy.y + 'px';
+                    enemy.healthElem.style.top = (enemy.y - 30) + 'px';
                 }
             });
             
+            // Логика атак башен
             attackLogic();
+            
+            // Продолжаем цикл
             requestAnimationFrame(gameLoop);
         }
 
-        // Обновлённая функция attackLogic для МЕГА башни
+        // Логика атак башен
         function attackLogic() {
             towers.forEach(tower => {
+                // Для МЕГА башни
                 if (tower.type === 'mega') {
-                    const mode = tower.modes[tower.currentMode];
+                    const mode = tower.upgraded ? tower.upgradedModes[tower.currentMode] : tower.modes[tower.currentMode];
+                    
                     if (Date.now() - tower.lastAttack > (1000/mode.attackSpeed)/gameSpeed) {
-                        // Логика атаки для МЕГА башни
-                        let target = findTarget(tower, mode.radius);
-                        if (target) {
-                            target.hp -= mode.damage;
+                        let closestEnemy = null;
+                        let minDistance = Infinity;
+                        
+                        enemies.forEach(enemy => {
+                            const dx = enemy.x - tower.x;
+                            const dy = enemy.y - tower.y;
+                            const distance = Math.sqrt(dx*dx + dy*dy);
+                            
+                            if (distance < mode.radius && distance < minDistance) {
+                                closestEnemy = enemy;
+                                minDistance = distance;
+                            }
+                        });
+                        
+                        if (closestEnemy) {
+                            closestEnemy.hp -= mode.damage;
+                            tower.totalDamage += mode.damage;
                             tower.lastAttack = Date.now();
-                            // ... (обработка убийства врага)
+                            
+                            if (closestEnemy.hp <= 0) {
+                                closestEnemy.elem.remove();
+                                if(closestEnemy.healthElem) closestEnemy.healthElem.remove();
+                                enemies.splice(enemies.indexOf(closestEnemy), 1);
+                                money += getKillReward(closestEnemy.type);
+                                updateMoney();
+                            } else if (closestEnemy.healthElem) {
+                                closestEnemy.healthElem.textContent = `${closestEnemy.hp}/${closestEnemy.maxHp}`;
+                            }
                         }
                     }
-                } else {
-                    // Обычная логика атаки
+                } 
+                // Для обычных башен
+                else {
+                    const attackSpeed = tower.upgraded ? 
+                        (tower.type === 'sniper' ? tower.upgradedAttackSpeed : 
+                         tower.type === 'swordsman' ? tower.upgradedAttackSpeed : 
+                         tower.attackSpeed) : tower.attackSpeed;
+                    
+                    if (Date.now() - tower.lastAttack > (1000/attackSpeed)/gameSpeed) {
+                        let closestEnemy = null;
+                        let minDistance = Infinity;
+                        
+                        enemies.forEach(enemy => {
+                            const dx = enemy.x - tower.x;
+                            const dy = enemy.y - tower.y;
+                            const distance = Math.sqrt(dx*dx + dy*dy);
+                            const radius = tower.upgraded && tower.type === 'pistol' ? tower.upgradedRadius : tower.radius;
+                            
+                            if (distance < radius && distance < minDistance) {
+                                closestEnemy = enemy;
+                                minDistance = distance;
+                            }
+                        });
+                        
+                        if (closestEnemy) {
+                            const damage = tower.upgraded ? 
+                                (tower.type === 'pistol' ? tower.upgradedDamage : 
+                                 tower.type === 'swordsman' ? tower.upgradedDamage : 
+                                 tower.damage) : tower.damage;
+                            
+                            closestEnemy.hp -= damage;
+                            tower.totalDamage += damage;
+                            tower.lastAttack = Date.now();
+                            
+                            if (closestEnemy.hp <= 0) {
+                                closestEnemy.elem.remove();
+                                if(closestEnemy.healthElem) closestEnemy.healthElem.remove();
+                                enemies.splice(enemies.indexOf(closestEnemy), 1);
+                                money += getKillReward(closestEnemy.type);
+                                updateMoney();
+                            } else if (closestEnemy.healthElem) {
+                                closestEnemy.healthElem.textContent = `${closestEnemy.hp}/${closestEnemy.maxHp}`;
+                            }
+                        }
+                    }
                 }
             });
+            
+            // Проверка завершения волны
+            checkWaveCompletion();
         }
 
-        // Обновлённая функция startWave
+        // Получить награду за убийство врага
+        function getKillReward(type) {
+            switch(type) {
+                case 'boss': return 200;
+                case 'elite': return 50;
+                case 'strong': return 20;
+                case 'green': return 30;
+                case 'black': return 40;
+                default: return 10;
+            }
+        }
+
+        // Проверка завершения волны
+        function checkWaveCompletion() {
+            if(enemies.length === 0 && waveInProgress) {
+                waveInProgress = false;
+                currentWave++;
+                updateWaveDisplay();
+                startWave();
+            }
+        }
+
+        // Запуск волны врагов
         function startWave() {
-            // ... (предыдущие волны) ...
+            if(!gameActive) return;
+            
+            waveInProgress = true;
+            
+            // Волна 1: 3 обычных врага
+            if(currentWave === 1) {
+                for(let i = 0; i < 3; i++) {
+                    setTimeout(() => spawnEnemy(2), i*2000/gameSpeed);
+                }
+            } 
+            // Волна 2: 5 обычных врагов
+            else if(currentWave === 2) {
+                for(let i = 0; i < 5; i++) {
+                    setTimeout(() => spawnEnemy(2), i*2000/gameSpeed);
+                }
+            }
+            // Волна 3: 10 обычных врагов
+            else if(currentWave === 3) {
+                for(let i = 0; i < 10; i++) {
+                    setTimeout(() => spawnEnemy(2), i*1500/gameSpeed);
+                }
+            }
+            // Волна 4: 15 обычных врагов
+            else if(currentWave === 4) {
+                for(let i = 0; i < 15; i++) {
+                    setTimeout(() => spawnEnemy(2), i*1000/gameSpeed);
+                }
+            }
+            // Волна 5: 5 обычных + 1 фиолетовый
+            else if(currentWave === 5) {
+                for(let i = 0; i < 5; i++) {
+                    setTimeout(() => spawnEnemy(2), i*1500/gameSpeed);
+                }
+                setTimeout(() => spawnEnemy(5, 'strong'), 5*1500/gameSpeed);
+            }
+            // Волны 6-14
+            else if(currentWave >= 6 && currentWave < 15) {
+                const normalCount = 5 + (currentWave - 5) * 2;
+                const strongCount = Math.floor(currentWave / 5);
+                
+                for(let i = 0; i < normalCount; i++) {
+                    setTimeout(() => spawnEnemy(2 + Math.floor(currentWave/3)), i*1200/gameSpeed);
+                }
+                for(let i = 0; i < strongCount; i++) {
+                    setTimeout(() => spawnEnemy(5 + Math.floor(currentWave/2), 'strong'), (normalCount + i)*1500/gameSpeed);
+                }
+            }
+            // Волны 15-39
+            else if(currentWave >= 15 && currentWave < 40) {
+                const normalCount = 10 + (currentWave - 15) * 3;
+                const strongCount = 5 + Math.floor(currentWave / 3);
+                const eliteCount = Math.floor(currentWave / 15);
+                
+                for(let i = 0; i < normalCount; i++) {
+                    setTimeout(() => spawnEnemy(2 + Math.floor(currentWave/2)), i*800/gameSpeed);
+                }
+                for(let i = 0; i < strongCount; i++) {
+                    setTimeout(() => spawnEnemy(5 + currentWave, 'strong'), (normalCount + i)*1000/gameSpeed);
+                }
+                for(let i = 0; i < eliteCount; i++) {
+                    setTimeout(() => spawnEnemy(10 + currentWave*2, 'elite'), (normalCount + strongCount + i)*1200/gameSpeed);
+                }
+            }
+            // Волны 40-49
             else if(currentWave >= 40 && currentWave < 50) {
-                // ... + зелёные враги
-                setTimeout(() => spawnEnemy(100, 'green'), (normalCount + strongCount + eliteCount)*1500);
+                const normalCount = 15 + (currentWave - 40) * 4;
+                const strongCount = 10 + Math.floor(currentWave / 4);
+                const eliteCount = 3 + Math.floor(currentWave / 10);
+                const greenCount = Math.floor(currentWave / 40);
+                
+                for(let i = 0; i < normalCount; i++) {
+                    setTimeout(() => spawnEnemy(3 + Math.floor(currentWave/2)), i*700/gameSpeed);
+                }
+                for(let i = 0; i < strongCount; i++) {
+                    setTimeout(() => spawnEnemy(8 + currentWave, 'strong'), (normalCount + i)*800/gameSpeed);
+                }
+                for(let i = 0; i < eliteCount; i++) {
+                    setTimeout(() => spawnEnemy(15 + currentWave*2, 'elite'), (normalCount + strongCount + i)*900/gameSpeed);
+                }
+                for(let i = 0; i < greenCount; i++) {
+                    setTimeout(() => spawnEnemy(100, 'green'), (normalCount + strongCount + eliteCount + i)*1500/gameSpeed);
+                }
             }
+            // Волна 50: Босс
             else if(currentWave === 50) {
-                // Босс
-                setTimeout(() => spawnEnemy(1000, 'boss'), 2000);
+                setTimeout(() => spawnEnemy(1000, 'boss'), 2000/gameSpeed);
             }
-            else if(currentWave >= 65) {
-                // ... + чёрные враги
-                for(let i = 0; i < Math.floor(currentWave/6.5); i++) {
-                    setTimeout(() => spawnEnemy(50, 'black'), (normalCount + strongCount + eliteCount + greenCount + i)*1000);
+            // Волны 51-64
+            else if(currentWave > 50 && currentWave < 65) {
+                const normalCount = 20 + (currentWave - 50) * 5;
+                const strongCount = 15 + Math.floor(currentWave / 5);
+                const eliteCount = 5 + Math.floor(currentWave / 8);
+                const greenCount = Math.floor(currentWave / 50);
+                
+                for(let i = 0; i < normalCount; i++) {
+                    setTimeout(() => spawnEnemy(5 + Math.floor(currentWave/2)), i*600/gameSpeed);
+                }
+                for(let i = 0; i < strongCount; i++) {
+                    setTimeout(() => spawnEnemy(10 + currentWave, 'strong'), (normalCount + i)*700/gameSpeed);
+                }
+                for(let i = 0; i < eliteCount; i++) {
+                    setTimeout(() => spawnEnemy(20 + currentWave*2, 'elite'), (normalCount + strongCount + i)*800/gameSpeed);
+                }
+                for(let i = 0; i < greenCount; i++) {
+                    setTimeout(() => spawnEnemy(100, 'green'), (normalCount + strongCount + eliteCount + i)*1200/gameSpeed);
+                }
+            }
+            // Волны 65+
+            else {
+                const normalCount = 25 + (currentWave - 65) * 6;
+                const strongCount = 20 + Math.floor(currentWave / 5);
+                const eliteCount = 10 + Math.floor(currentWave / 7);
+                const greenCount = 5 + Math.floor(currentWave / 13);
+                const blackCount = Math.floor(currentWave / 6.5);
+                
+                for(let i = 0; i < normalCount; i++) {
+                    setTimeout(() => spawnEnemy(8 + Math.floor(currentWave/2)), i*500/gameSpeed);
+                }
+                for(let i = 0; i < strongCount; i++) {
+                    setTimeout(() => spawnEnemy(15 + currentWave, 'strong'), (normalCount + i)*600/gameSpeed);
+                }
+                for(let i = 0; i < eliteCount; i++) {
+                    setTimeout(() => spawnEnemy(30 + currentWave*2, 'elite'), (normalCount + strongCount + i)*700/gameSpeed);
+                }
+                for(let i = 0; i < greenCount; i++) {
+                    setTimeout(() => spawnEnemy(100, 'green'), (normalCount + strongCount + eliteCount + i)*1000/gameSpeed);
+                }
+                for(let i = 0; i < blackCount; i++) {
+                    setTimeout(() => spawnEnemy(50, 'black'), (normalCount + strongCount + eliteCount + greenCount + i)*800/gameSpeed);
                 }
             }
         }
 
-        // Функция для переключения режима МЕГА башни
+        // Показать меню улучшения
+        function showUpgradeMenu(tower) {
+            if(!gameActive) return;
+            
+            closeUpgradeMenu();
+            selectedTower = tower;
+            const menu = document.getElementById('upgradeMenu');
+            menu.style.display = 'block';
+            
+            let upgradeButton = menu.querySelector('button');
+            upgradeButton.textContent = tower.upgraded ? 'Улучшено' : `Улучшить (${tower.upgradeCost})`;
+            upgradeButton.disabled = tower.upgraded || money < tower.upgradeCost;
+            
+            let statsText = '';
+            if (tower.type === 'mega') {
+                const mode = tower.upgraded ? tower.upgradedModes[tower.currentMode] : tower.modes[tower.currentMode];
+                statsText = `
+                    <strong>МЕГА (${tower.currentMode === 0 ? 'Ближний' : 'Дальний'})</strong><br>
+                    Урон: ${mode.damage}<br>
+                    Радиус: ${Math.round(mode.radius/10)}st<br>
+                    Скорость: ${(1/mode.attackSpeed).toFixed(1)} атак/сек<br>
+                    ${tower.upgraded ? '<span style="color:green">УЛУЧШЕНО</span>' : ''}
+                `;
+            } else {
+                statsText = `
+                    <strong>${getTowerName(tower.type)}</strong><br>
+                    Урон: ${tower.upgraded ? tower.upgradedDamage || tower.damage : tower.damage}<br>
+                    Радиус: ${Math.round((tower.upgraded && tower.type === 'pistol' ? tower.upgradedRadius : tower.radius)/10)}st<br>
+                    Скорость: ${(1/(tower.upgraded && tower.type === 'sniper' ? tower.upgradedAttackSpeed : 
+                                   tower.upgraded && tower.type === 'swordsman' ? tower.upgradedAttackSpeed : 
+                                   tower.attackSpeed)).toFixed(1)} атак/сек<br>
+                    ${tower.upgraded ? '<span style="color:green">УЛУЧШЕНО</span>' : ''}
+                `;
+            }
+            
+            document.getElementById('towerStats').innerHTML = statsText;
+        }
+
+        // Получить название башни
+        function getTowerName(type) {
+            switch(type) {
+                case 'pistol': return 'Пистолет';
+                case 'swordsman': return 'Мечник';
+                case 'sniper': return 'Снайпер';
+                case 'mega': return 'МЕГА';
+                default: return 'Башня';
+            }
+        }
+
+        // Закрыть меню улучшения
+        function closeUpgradeMenu() {
+            document.getElementById('upgradeMenu').style.display = 'none';
+            selectedTower = null;
+        }
+
+        // Улучшить башню
+        function upgradeTower() {
+            if(!selectedTower || !gameActive || selectedTower.upgraded) return;
+            if(money < selectedTower.upgradeCost) return;
+            
+            money -= selectedTower.upgradeCost;
+            updateMoney();
+            selectedTower.upgraded = true;
+            
+            if (selectedTower.type === 'mega') {
+                // Для МЕГА башни улучшаем оба режима
+                selectedTower.modes = [...selectedTower.upgradedModes];
+            }
+            
+            updateTowerVisuals(selectedTower);
+            showUpgradeMenu(selectedTower);
+        }
+
+        // Переключить режим МЕГА башни
         function toggleMegaMode(tower) {
             if (tower.type === 'mega') {
                 tower.currentMode = (tower.currentMode + 1) % tower.modes.length;
@@ -1051,37 +950,100 @@ function startWave() {
             }
         }
 
-        // Обновлённая placeTower для МЕГА башни
-        function placeTower(tower) {
-            // ... (предыдущий код) ...
-            if (tower.type === 'mega') {
-                elem.onclick = (e) => {
-                    e.stopPropagation();
-                    clickCount++;
-                    
-                    if (clickTimer === null) {
-                        clickTimer = setTimeout(() => {
-                            if (clickCount === 1) {
-                                showUpgradeMenu(tower);
-                            } 
-                            else if (clickCount === 2) {
-                                toggleMegaMode(tower);
-                            }
-                            else if (clickCount === 3) {
-                                removeTower(tower);
-                            }
-                            clickCount = 0;
-                            clickTimer = null;
-                        }, 300);
-                    }
-                };
+        // Обновить визуал башни
+        function updateTowerVisuals(tower) {
+            if (tower.radiusElem) {
+                if (tower.type === 'mega') {
+                    const mode = tower.upgraded ? tower.upgradedModes[tower.currentMode] : tower.modes[tower.currentMode];
+                    tower.radiusElem.style.width = mode.radius*2 + 'px';
+                    tower.radiusElem.style.height = mode.radius*2 + 'px';
+                } else if (tower.type === 'pistol' && tower.upgraded) {
+                    tower.radiusElem.style.width = tower.upgradedRadius*2 + 'px';
+                    tower.radiusElem.style.height = tower.upgradedRadius*2 + 'px';
+                }
             }
-            // ... (остальной код)
         }
 
+        // Установить скорость игры
+        function setGameSpeed(speed) {
+            gameSpeed = speed;
+            document.getElementById('speed1x').classList.toggle('active', speed === 1);
+            document.getElementById('speed2x').classList.toggle('active', speed === 2);
+        }
 
-        window.addEventListener('load', initGame);
+        // Обновить отображение денег
+        function updateMoney() {
+            document.getElementById('moneyDisplay').textContent = `Деньги: ${money}`;
+        }
+
+        // Обновить отображение волны
+        function updateWaveDisplay() {
+            document.getElementById('waveDisplay').textContent = `Волна: ${currentWave}`;
+        }
+
+        // Завершение игры
+        function endGame() {
+            gameActive = false;
+            document.getElementById('finalWave').textContent = currentWave;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        // Перезапуск игры
+        function restartGame() {
+            // Очищаем игровое поле
+            board.innerHTML = '';
+            enemies = [];
+            towers = [];
+            
+            // Сбрасываем параметры
+            money = 100;
+            currentWave = 1;
+            enemiesPassed = 0;
+            gameActive = true;
+            
+            // Обновляем интерфейс
+            updateMoney();
+            updateWaveDisplay();
+            document.getElementById('enemiesPassed').textContent = '0';
+            document.getElementById('gameOver').style.display = 'none';
+            closeUpgradeMenu();
+            
+            // Перезапускаем игру
+            createBoard();
+            startWave();
+            gameLoop();
+        }
+
+        // Инициализация игры
+        function initGame() {
+            money = 100;
+            currentWave = 1;
+            enemiesPassed = 0;
+            enemies = [];
+            towers = [];
+            selectedTower = null;
+            waveInProgress = false;
+            gameActive = true;
+            gameSpeed = 1;
+            
+            createBoard();
+            updateMoney();
+            updateWaveDisplay();
+            document.getElementById('enemiesPassed').textContent = '0';
+            document.getElementById('gameOver').style.display = 'none';
+            closeUpgradeMenu();
+            
+            // Установим активную кнопку скорости
+            document.getElementById('speed1x').classList.add('active');
+            document.getElementById('speed2x').classList.remove('active');
+            
+            // Запускаем игровой цикл
+            gameLoop();
+            startWave();
+        }
+
+        // Запускаем игру при загрузке страницы
+        window.onload = initGame;
     </script>
 </body>
-</html>
 </html>
