@@ -1,12 +1,1 @@
-.c {
-  transition:0.35s ease-in-out;
-  flex: 1;
-}
-.c:hover {
-  flex: 3;
-}
 
-.a {
-  transitipn: 0.4s ease-in-out;
-  flex: 1;
-}
