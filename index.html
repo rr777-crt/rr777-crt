@@ -473,6 +473,33 @@
             menu.style.display = 'block';
             
             // ... (остальная логика меню) ...
+              function initGame() {
+        // Сбрасываем все параметры
+        money = 100;
+        currentWave = 1;
+        enemies = [];
+        towers = [];
+        selectedTower = null;
+        waveInProgress = false;
+        
+        // Очищаем доску
+        board.innerHTML = '';
+        createBoard();
+        
+        // Обновляем интерфейс
+        updateMoney();
+        document.getElementById('wave').textContent = currentWave;
+        closeUpgradeMenu(); // Явное закрытие меню
+        
+        // Запускаем игровой цикл
+        gameLoop();
+        startWave();
+    }
+
+    // Запускаем игру при полной загрузке страницы
+    window.addEventListener('load', () => {
+        initGame();
+    });
         }
     </script>
 </body>
