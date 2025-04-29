@@ -171,6 +171,67 @@
             50% { transform: scale(1.1); }
             100% { transform: scale(1); }
         }
+          .tower.mega {
+            background: linear-gradient(45deg, #ff0000, #ffff00);
+            clip-path: polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%);
+        }
+        
+        .enemy.green {
+            background: #00ff00;
+            width: 25px;
+            height: 25px;
+        }
+        
+        .enemy.boss {
+            background: #ff0000;
+            width: 40px;
+            height: 40px;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation: bossPulse 2s infinite;
+        }
+        
+        .enemy.black {
+            background: #000000;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .boss-health {
+            position: absolute;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+            transform: translate(-50%, -30px);
+            white-space: nowrap;
+        }
+        
+        .speed-control {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+        }
+        
+        .speed-control button {
+            padding: 8px 15px;
+            margin: 0 5px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .speed-control button.active {
+            background: #2E7D32;
+            font-weight: bold;
+        }
+        
+        @keyframes bossPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -212,6 +273,19 @@
         <p>Игра окончена</p>
         <button onclick="restartGame()">Играть снова</button>
     </div>
+     <div class="speed-control">
+        <button id="speed1x" class="active" onclick="setGameSpeed(1)">1X</button>
+        <button id="speed2x" onclick="setGameSpeed(2)">2X</button>
+    </div>
+    
+    <div id="gameContainer">
+        <!-- ... (остальная разметка магазина) ... -->
+            <div class="shop-item" onclick="selectTower('mega', 1500)">
+                МЕГА (1500)<br>
+                Двойной режим:<br>
+                Ближний: 2/0.5сек 5st<br>
+                Дальний: 1/сек 20st
+            </div>
 
     <script>
         const board = document.getElementById('gameBoard');
@@ -846,6 +920,165 @@ function startWave() {
             gameLoop();
             startWave();
         }
+         let gameSpeed = 1;
+        let bossHealthDisplay = null;
+
+        const towerTypes = {
+            // ... (предыдущие башни) ...
+            mega: {
+                type: 'mega',
+                cost: 1500,
+                modes: [
+                    {damage: 2, radius: 50, attackSpeed: 2}, // Ближний бой
+                    {damage: 1, radius: 200, attackSpeed: 1}  // Дальний бой
+                ],
+                currentMode: 0,
+                upgraded: false
+            }
+        };
+
+        // Новая функция для управления скоростью
+        function setGameSpeed(speed) {
+            gameSpeed = speed;
+            document.getElementById('speed1x').classList.toggle('active', speed === 1);
+            document.getElementById('speed2x').classList.toggle('active', speed === 2);
+        }
+
+        // Обновлённая функция spawnEnemy
+        function spawnEnemy(hp, type = 'normal') {
+            const speeds = {
+                normal: 1,
+                strong: 1.5,
+                elite: 3,
+                green: 0.5,
+                boss: 0.33,
+                black: 2
+            };
+            
+            const enemy = {
+                x: 0,
+                y: 4 * tileSize + 10,
+                hp: hp,
+                maxHp: hp,
+                pathIndex: 0,
+                type: type,
+                speed: speeds[type] || 1
+            };
+            
+            const elem = document.createElement('div');
+            elem.className = `enemy ${type}`;
+            elem.style.left = enemy.x + 'px';
+            elem.style.top = enemy.y + 'px';
+            
+            if (type === 'boss') {
+                const healthElem = document.createElement('div');
+                healthElem.className = 'boss-health';
+                healthElem.textContent = `${enemy.hp}/${enemy.maxHp}`;
+                elem.appendChild(healthElem);
+                enemy.healthElem = healthElem;
+            }
+            
+            board.appendChild(elem);
+            enemy.elem = elem;
+            enemies.push(enemy);
+        }
+
+        // Обновлённая функция gameLoop
+        function gameLoop() {
+            if(!gameActive) return;
+            
+            enemies.forEach((enemy, index) => {
+                // ... (предыдущая логика движения) ...
+                enemy.x += (dx / distance) * enemy.speed * gameSpeed;
+                enemy.y += (dy / distance) * enemy.speed * gameSpeed;
+                
+                if (enemy.healthElem) {
+                    enemy.healthElem.textContent = `${enemy.hp}/${enemy.maxHp}`;
+                    enemy.healthElem.style.left = enemy.x + 'px';
+                    enemy.healthElem.style.top = enemy.y + 'px';
+                }
+            });
+            
+            attackLogic();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Обновлённая функция attackLogic для МЕГА башни
+        function attackLogic() {
+            towers.forEach(tower => {
+                if (tower.type === 'mega') {
+                    const mode = tower.modes[tower.currentMode];
+                    if (Date.now() - tower.lastAttack > (1000/mode.attackSpeed)/gameSpeed) {
+                        // Логика атаки для МЕГА башни
+                        let target = findTarget(tower, mode.radius);
+                        if (target) {
+                            target.hp -= mode.damage;
+                            tower.lastAttack = Date.now();
+                            // ... (обработка убийства врага)
+                        }
+                    }
+                } else {
+                    // Обычная логика атаки
+                }
+            });
+        }
+
+        // Обновлённая функция startWave
+        function startWave() {
+            // ... (предыдущие волны) ...
+            else if(currentWave >= 40 && currentWave < 50) {
+                // ... + зелёные враги
+                setTimeout(() => spawnEnemy(100, 'green'), (normalCount + strongCount + eliteCount)*1500);
+            }
+            else if(currentWave === 50) {
+                // Босс
+                setTimeout(() => spawnEnemy(1000, 'boss'), 2000);
+            }
+            else if(currentWave >= 65) {
+                // ... + чёрные враги
+                for(let i = 0; i < Math.floor(currentWave/6.5); i++) {
+                    setTimeout(() => spawnEnemy(50, 'black'), (normalCount + strongCount + eliteCount + greenCount + i)*1000);
+                }
+            }
+        }
+
+        // Функция для переключения режима МЕГА башни
+        function toggleMegaMode(tower) {
+            if (tower.type === 'mega') {
+                tower.currentMode = (tower.currentMode + 1) % tower.modes.length;
+                updateTowerVisuals(tower);
+                showUpgradeMenu(tower);
+            }
+        }
+
+        // Обновлённая placeTower для МЕГА башни
+        function placeTower(tower) {
+            // ... (предыдущий код) ...
+            if (tower.type === 'mega') {
+                elem.onclick = (e) => {
+                    e.stopPropagation();
+                    clickCount++;
+                    
+                    if (clickTimer === null) {
+                        clickTimer = setTimeout(() => {
+                            if (clickCount === 1) {
+                                showUpgradeMenu(tower);
+                            } 
+                            else if (clickCount === 2) {
+                                toggleMegaMode(tower);
+                            }
+                            else if (clickCount === 3) {
+                                removeTower(tower);
+                            }
+                            clickCount = 0;
+                            clickTimer = null;
+                        }, 300);
+                    }
+                };
+            }
+            // ... (остальной код)
+        }
+
 
         window.addEventListener('load', initGame);
     </script>
