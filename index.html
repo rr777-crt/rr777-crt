@@ -1,18 +1,149 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Advanced Tower Defense</title>
-    <style>
-        /* ... предыдущие стили ... */
-        .tower.machinegun {
-            background: darkgreen;
+    <title>Tower Defense Fixed</title>
+  <style>
+        #gameContainer {
+            display: flex;
         }
         
-        .enemy.strong {
-            background: purple;
-            width: 25px;
-            height: 25px;
+        #gameBoard {
+            width: 800px;
+            height: 600px;
+            border: 1px solid black;
+            position: relative;
+            background: #eee;
         }
+        
+        .tile {
+            width: 40px;
+            height: 40px;
+            position: absolute;
+        }
+        
+        .path {
+            background: #666;
+        }
+        
+        .start {
+            background: gold;
+        }
+        
+        .end {
+            background: green;
+        }
+        
+        .enemy {
+            width: 20px;
+            height: 20px;
+            background: red;
+            position: absolute;
+            border-radius: 50%;
+        }
+        
+        .tower {
+            width: 30px;
+            height: 30px;
+            background: blue;
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .radius {
+            position: absolute;
+            border: 1px dashed blue;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        #shop {
+            padding: 20px;
+            background: #ccc;
+        }
+        
+        #upgradeMenu {
+            position: fixed;
+            right: 200px;
+            top: 20px;
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #000;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .shop-item {
+            margin: 5px;
+            padding: 5px;
+            border: 1px solid #000;
+            cursor: pointer;
+        }
+      .shop-item {
+        margin: 10px;
+        padding: 15px;
+        border: 2px solid #4CAF50;
+        border-radius: 8px;
+        cursor: pointer;
+        background: linear-gradient(145deg, #81C784, #66BB6A);
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .shop-item:hover {
+        background: linear-gradient(145deg, #66BB6A, #4CAF50);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+
+    .shop-item:active {
+        transform: translateY(1px);
+    }
+
+    #upgradeMenu {
+        background: #FFF3E0;
+        border: 2px solid #FFB74D;
+        border-radius: 10px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    }
+
+    #upgradeMenu button {
+        margin: 5px;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        background: linear-gradient(145deg, #FFA726, #FB8C00);
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    #upgradeMenu button:hover {
+        background: linear-gradient(145deg, #FB8C00, #F57C00);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    #upgradeMenu button:active {
+        transform: scale(0.95);
+    }
+
+    #upgradeMenu h4 {
+        color: #EF6C00;
+        margin: 0 0 10px 0;
+        text-align: center;
+    }
+
+    #towerStats {
+        background: #FFF8E1;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border: 1px solid #FFE0B2;
+        color: #EF6C00;
+    }
     </style>
 </head>
 <body>
@@ -24,56 +155,79 @@
                 Урон: 1/сек<br>
                 Радиус: 15st
             </div>
-            <div class="shop-item" onclick="selectTower('machinegun', 80)">
-                Пулемёт (80)<br>
-                Урон: 0.5/0.5сек<br>
-                Радиус: 20st
+            <div id="upgradeMenu">
+                <h4>Улучшение башни</h4>
+                <div id="towerStats"></div>
+                <button onclick="upgrade('damage')">Увеличить урон (30)</button>
+                <button onclick="upgrade('radius')">Увеличить радиус (40)</button>
+                <button onclick="upgrade('speed')">Ускорить атаку (50)</button>
+                <button onclick="closeUpgradeMenu()">Закрыть</button>
             </div>
-            <!-- ... остальное меню ... -->
+            <div>Деньги: <span id="money">100</span></div>
+            <div>Волна: <span id="wave">1</span></div>
         </div>
     </div>
 
+
+   
+
     <script>
-        // ... предыдущие переменные ...
-        const endBlockPosition = {x: 13*tileSize, y: 10*tileSize};
+         const board = document.getElementById('gameBoard');
+        const tileSize = 40;
+        let placingTower = false;
+        let money = 100;
+        let currentWave = 1;
+        let enemies = [];
+        let towers = [];
+        let selectedTower = null;
+        let waveInProgress = false;
 
         const towerTypes = {
             pistol: {
-                type: 'pistol',
                 cost: 50,
                 damage: 1,
                 radius: 150,
                 attackSpeed: 1,
-                maxUpgrades: {damage: 2, radius: 250, speed: 0.5},
                 upgrades: {
-                    damage: { level: 1, cost: 30, max: 2 },
-                    radius: { level: 1, cost: 40, max: 25 },
-                    speed: { level: 1, cost: 50, max: 2 }
-                }
-            },
-            machinegun: {
-                type: 'machinegun',
-                cost: 80,
-                damage: 0.5,
-                radius: 200,
-                attackSpeed: 2,
-                maxUpgrades: {damage: 2, radius: 200, speed: 4},
-                upgrades: {
-                    damage: { level: 1, cost: 50, max: 2 },
-                    radius: { level: 1, cost: 60, max: 20 },
-                    speed: { level: 1, cost: 70, max: 4 }
+                    damage: { level: 1, cost: 30 },
+                    radius: { level: 1, cost: 40 },
+                    speed: { level: 1, cost: 50 }
                 }
             }
         };
 
-        // Исправление размещения башен
+        function createBoard() {
+            const path = [
+                {x:0, y:3}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3},
+                {x:4, y:4}, {x:4, y:5}, {x:5, y:5}, {x:6, y:5}, {x:7, y:5},
+                {x:7, y:6}, {x:7, y:7}, {x:8, y:7}, {x:9, y:7}, {x:10, y:7},
+                {x:10, y:8}, {x:10, y:9}, {x:11, y:9}, {x:12, y:9}, {x:13, y:9},
+                {x:13, y:10}
+            ];
+            
+            path.forEach((pos, index) => {
+                const tile = document.createElement('div');
+                tile.className = `tile ${index === 0 ? 'start' : index === path.length-1 ? 'end' : 'path'}`;
+                tile.style.left = pos.x * tileSize + 'px';
+                tile.style.top = pos.y * tileSize + 'px';
+                board.appendChild(tile);
+            });
+        }
+
+        function selectTower(type, cost) {
+            if(money >= cost && !placingTower) {
+                placingTower = type;
+                money -= cost;
+                updateMoney();
+            }
+        }
+
         board.addEventListener('click', (e) => {
             if(placingTower) {
                 const rect = board.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
                 
-                // Проверка на дорожку и расстояние до конечной точки
                 const isPath = [...document.querySelectorAll('.tile')].some(tile => {
                     const tileX = parseInt(tile.style.left);
                     const tileY = parseInt(tile.style.top);
@@ -81,16 +235,9 @@
                            y >= tileY && y <= tileY + tileSize;
                 });
                 
-                // Проверка расстояния до конечной точки (200px)
-                const toEnd = Math.sqrt(
-                    Math.pow(x - endBlockPosition.x, 2) + 
-                    Math.pow(y - endBlockPosition.y, 2)
-                ) < 200;
-
-                if(!isPath && !toEnd) {
-                    const towerType = towerTypes[placingTower];
+                if(!isPath) {
                     const tower = {
-                        ...towerType,
+                        ...towerTypes.pistol,
                         x: x,
                         y: y,
                         totalDamage: 0,
@@ -103,97 +250,230 @@
             }
         });
 
-        // Новая функция создания врагов
-        function spawnEnemy(hp, isStrong = false) {
+        function placeTower(tower) {
+            const elem = document.createElement('div');
+            elem.className = 'tower';
+            elem.style.left = tower.x + 'px';
+            elem.style.top = tower.y + 'px';
+            elem.onclick = () => showUpgradeMenu(tower);
+            
+            const radius = document.createElement('div');
+            radius.className = 'radius';
+            radius.style.width = tower.radius*2 + 'px';
+            radius.style.height = tower.radius*2 + 'px';
+            radius.style.left = tower.x - tower.radius + 'px';
+            radius.style.top = tower.y - tower.radius + 'px';
+            
+            elem.appendChild(radius);
+            board.appendChild(elem);
+            tower.elem = elem;
+        }
+
+        function spawnEnemy(hp) {
             const enemy = {
                 x: 0,
                 y: 3*tileSize + 10,
                 hp: hp,
-                pathIndex: 0,
-                isStrong: isStrong
+                pathIndex: 0
             };
+            enemies.push(enemy);
             
             const elem = document.createElement('div');
-            elem.className = `enemy ${isStrong ? 'strong' : ''}`;
+            elem.className = 'enemy';
             elem.style.left = enemy.x + 'px';
             elem.style.top = enemy.y + 'px';
             board.appendChild(elem);
             enemy.elem = elem;
-            enemies.push(enemy);
         }
 
-        // Обновленная логика волн
+        function gameLoop() {
+            enemies.forEach((enemy, index) => {
+                const path = document.querySelectorAll('.tile');
+                const target = path[enemy.pathIndex + 1];
+                
+                if(target) {
+                    const targetX = parseInt(target.style.left);
+                    const targetY = parseInt(target.style.top);
+                    
+                    const dx = targetX - enemy.x;
+                    const dy = targetY - enemy.y;
+                    
+                    enemy.x += dx * 0.05;
+                    enemy.y += dy * 0.05;
+                    
+                    if(Math.abs(dx) < 2 && Math.abs(dy) < 2) {
+                        enemy.pathIndex++;
+                    }
+                    
+                    enemy.elem.style.left = enemy.x + 'px';
+                    enemy.elem.style.top = enemy.y + 'px';
+                }
+            });
+            
+            attackLogic();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function attackLogic() {
+            towers.forEach(tower => {
+                enemies.forEach(enemy => {
+                    const dx = enemy.x - tower.x;
+                    const dy = enemy.y - tower.y;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if(distance < tower.radius) {
+                        if(Date.now() - tower.lastAttack > 1000/tower.attackSpeed) {
+                            enemy.hp -= tower.damage;
+                            tower.totalDamage += tower.damage;
+                            tower.lastAttack = Date.now();
+                            
+                            if(enemy.hp <= 0) {
+                                enemy.elem.remove();
+                                enemies.splice(enemies.indexOf(enemy), 1);
+                                money += 10;
+                                updateMoney();
+                            }
+                        }
+                    }
+                });
+            });
+            
+            checkWaveCompletion();
+        }
+
+        function checkWaveCompletion() {
+            if(enemies.length === 0 && waveInProgress) {
+                waveInProgress = false;
+                currentWave++;
+                startWave();
+            }
+        }
+
         function startWave() {
             waveInProgress = true;
             document.getElementById('wave').textContent = currentWave;
             
-            let enemiesCount = 0;
-            let hp = 2;
-            
-            if(currentWave >= 5) {
-                enemiesCount = 5 + (currentWave - 1) * 2;
-                hp = 2 + Math.floor(currentWave / 2);
-                
-                // Каждая 5+ волна имеет 30% сильных врагов
-                for(let i = 0; i < enemiesCount; i++) {
-                    setTimeout(() => {
-                        const isStrong = currentWave >=5 && Math.random() < 0.3;
-                        spawnEnemy(isStrong ? 5 + (currentWave-5)*2 : hp, isStrong);
-                    }, i*1500);
+            if(currentWave === 1) {
+                for(let i = 0; i < 3; i++) {
+                    setTimeout(() => spawnEnemy(2), i*2000);
+                }
+            } else if(currentWave === 2) {
+                for(let i = 0; i < 5; i++) {
+                    setTimeout(() => spawnEnemy(2), i*2000);
                 }
             } else {
-                switch(currentWave) {
-                    case 1: enemiesCount = 3; break;
-                    case 2: enemiesCount = 5; break;
-                    case 3: enemiesCount = 10; hp = 2; break;
-                    case 4: enemiesCount = 10; hp = 2; break;
-                }
+                const enemiesCount = 5 + (currentWave - 2) * 2;
                 for(let i = 0; i < enemiesCount; i++) {
-                    setTimeout(() => spawnEnemy(hp), i*2000);
+                    setTimeout(() => spawnEnemy(2 + (currentWave - 1)), i*1500);
                 }
             }
         }
 
-        // Обновленная функция улучшений с лимитами
+        function showUpgradeMenu(tower) {
+            closeUpgradeMenu();
+            selectedTower = tower;
+            const menu = document.getElementById('upgradeMenu');
+            menu.style.display = 'block';
+            document.getElementById('towerStats').innerHTML = `
+                Общий урон: ${tower.totalDamage}<br>
+                Урон: ${tower.damage}/сек<br>
+                Радиус: ${tower.radius/10}st<br>
+                Скорость: ${1/tower.attackSpeed} атак/сек
+            `;
+        }
+
+        function closeUpgradeMenu() {
+            document.getElementById('upgradeMenu').style.display = 'none';
+            selectedTower = null;
+        }
+
         function upgrade(stat) {
             if(!selectedTower) return;
             
             const upgradeInfo = selectedTower.upgrades[stat];
-            const maxValue = selectedTower.maxUpgrades[stat];
-            
-            if(upgradeInfo.level >= upgradeInfo.max) return;
-            if(money < upgradeInfo.cost) return;
-
-            money -= upgradeInfo.cost;
-            updateMoney();
-            
-            switch(stat) {
-                case 'damage':
-                    selectedTower.damage += selectedTower.type === 'pistol' ? 0.5 : 0.3;
-                    break;
-                case 'radius':
-                    selectedTower.radius += selectedTower.type === 'pistol' ? 50 : 20;
-                    break;
-                case 'speed':
-                    selectedTower.attackSpeed *= selectedTower.type === 'pistol' ? 0.8 : 0.9;
-                    break;
+            if(money >= upgradeInfo.cost) {
+                money -= upgradeInfo.cost;
+                updateMoney();
+                
+                switch(stat) {
+                    case 'damage':
+                        selectedTower.damage += 0.5;
+                        upgradeInfo.cost += 20;
+                        break;
+                    case 'radius':
+                        selectedTower.radius += 50;
+                        upgradeInfo.cost += 30;
+                        break;
+                    case 'speed':
+                        selectedTower.attackSpeed *= 0.8;
+                        upgradeInfo.cost += 40;
+                        break;
+                }
+                
+                updateTowerVisuals(selectedTower);
+                showUpgradeMenu(selectedTower);
             }
-            
-            upgradeInfo.level++;
-            upgradeInfo.cost += selectedTower.type === 'pistol' ? 20 : 30;
-            
-            if(upgradeInfo.level >= upgradeInfo.max) {
-                document.querySelector(`button[onclick="upgrade('${stat}')"]`)
-                    .disabled = true;
-            }
-            
-            updateTowerVisuals(selectedTower);
-            showUpgradeMenu(selectedTower);
         }
 
-        // Остальные функции остаются с предыдущей версии с небольшими изменениями
-        // ... (placeTower, attackLogic, gameLoop и другие) ...
+        function updateTowerVisuals(tower) {
+            const radiusElem = tower.elem.querySelector('.radius');
+            radiusElem.style.width = tower.radius*2 + 'px';
+            radiusElem.style.height = tower.radius*2 + 'px';
+            radiusElem.style.left = -tower.radius + 'px';
+            radiusElem.style.top = -tower.radius + 'px';
+        }
+
+        function updateMoney() {
+            document.getElementById('money').textContent = money;
+        }
+
+        // Инициализация
+        createBoard();
+        gameLoop();
+        startWave();
+        // Инициализация игры
+        function initGame() {
+            // Сбрасываем все параметры
+            money = 100;
+            currentWave = 1;
+            enemies = [];
+            towers = [];
+            selectedTower = null;
+            waveInProgress = false;
+            
+            // Очищаем доску
+            board.innerHTML = '';
+            createBoard();
+            
+            // Обновляем интерфейс
+            updateMoney();
+            document.getElementById('wave').textContent = currentWave;
+            
+            // Запускаем игровой цикл
+            gameLoop();
+            startWave();
+        }
+
+        // Запускаем игру при полной загрузке страницы
+        window.addEventListener('load', () => {
+            // Явно закрываем меню улучшений
+            closeUpgradeMenu();
+            initGame();
+        });
+
+        // ... (остальной код без изменений) ... 
+
+        function showUpgradeMenu(tower) {
+            // Добавляем проверку на существование башни
+            if(!tower || !tower.elem) return;
+            
+            closeUpgradeMenu();
+            selectedTower = tower;
+            const menu = document.getElementById('upgradeMenu');
+            menu.style.display = 'block';
+            
+            // ... (остальная логика меню) ...
+        }
     </script>
 </body>
 </html>
-            
