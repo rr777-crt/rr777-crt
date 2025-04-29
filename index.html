@@ -1,17 +1,97 @@
-<html>
-   <head>
-        <meta charset="UTF-8">
-        <title>test</title>
-        <meta name="description" content="Пример задания">
-        <link rel="stylesheet" href="style.css" type="text/css">
-    </head>
-  <body>
-    <div class = "a">
-      <div class = "c"></div>
-       <div class = "c"></div>
-       <div class = "c"></div>
-       <div class = "c"></div>
-       <div class = "c"></div>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Русская рулетка</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            margin: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        #result {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .lose {
+            color: red;
+        }
+        
+        .win {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Русская рулетка</h1>
+        <div id="buttons">
+            <!-- Кнопки будут созданы через JavaScript -->
+        </div>
+        <div id="result"></div>
     </div>
-  </body>
+
+    <script>
+        const bullets = [6, 5, 4, 3, 2, 1];
+        const buttonsContainer = document.getElementById('buttons');
+        const resultDiv = document.getElementById('result');
+
+        // Создаем кнопки
+        bullets.forEach(bulletCount => {
+            const button = document.createElement('button');
+            button.textContent = `${bulletCount} патрон${bulletCount > 1 ? 'ов' : ''}`;
+            button.onclick = () => handleShot(bulletCount);
+            buttonsContainer.appendChild(button);
+        });
+
+        function handleShot(bulletCount) {
+            // Случайное число от 1 до bulletCount
+            const random = Math.floor(Math.random() * bulletCount) + 1;
+            
+            // Если выпало 1 - "убийственный" патрон
+            if(random === 1) {
+                resultDiv.textContent = "💀 Не повезло! Выстрел!";
+                resultDiv.className = 'lose';
+            } else {
+                resultDiv.textContent = "🎉 Повезло! Пустой ствол!";
+                resultDiv.className = 'win';
+            }
+
+            // Очищаем результат через 2 секунды
+            setTimeout(() => {
+                resultDiv.textContent = '';
+                resultDiv.className = '';
+            }, 2000);
+        }
+    </script>
+</body>
 </html>
