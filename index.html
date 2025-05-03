@@ -23,12 +23,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/mode/clike/clike.min.js"></script>
     <script>
-        // Настройка редактора кода
         const editor = CodeMirror(document.getElementById('editor'), {
             mode: 'text/x-csrc',
             lineNumbers: true,
             theme: 'default',
-            value: 'add - block\nblock.move.out(5, 7)\nwait - 1\nblock.move.out(-5, -5)\nend)'
+            value: `add - block
+block.move.out(10, 10)
+if - block.move = (10,10)
+  do block.move.out(100, 50)
+end)`
         });
 
         class Block {
@@ -37,6 +40,7 @@
                 this.element.className = 'block';
                 this.x = 0;
                 this.y = 0;
+                this.lastMove = { dx: 0, dy: 0 };
                 this.updatePosition();
                 document.getElementById('blocks').appendChild(this.element);
             }
@@ -44,13 +48,9 @@
             updatePosition() {
                 this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
             }
-            this.lastMove = { dx: 0, dy: 0 }; // Новое свойство!
-            }
 
             async moveOut(dx, dy, duration = 1) {
-                this.lastMove = { dx, dy }; // Запоминаем последнее движе
-
-            async moveOut(dx, dy, duration = 1) {
+                this.lastMove = { dx, dy };
                 this.x += dx;
                 this.y += dy;
                 this.element.style.transition = `all ${duration}s ease`;
@@ -59,7 +59,6 @@
             }
         }
 
-        // Система ошибок
         class ErrorSystem {
             constructor() {
                 this.console = document.getElementById('console');
@@ -74,30 +73,27 @@
             }
         }
 
-        // Интерпретатор
         class Interpreter {
-            async parseLine(line) {
-                if (line.startsWith('if - block.move = ')) {
-                    return this.handleIfCondition(line);
-                }
-                // ... (остальные условия) ...
-            }
             constructor() {
                 this.blocks = [];
                 this.currentBlock = null;
                 this.errors = new ErrorSystem();
+                this.lines = [];
+                this.currentLine = 0;
             }
 
             async execute(code) {
                 this.errors.clear();
                 try {
-                    const lines = code.split('\n').filter(l => l.trim() !== '');
-                    if (!lines[lines.length-1].startsWith('end)')) {
+                    this.lines = code.split('\n').filter(l => l.trim() !== '');
+                    if (!this.lines[this.lines.length-1].startsWith('end)')) {
                         throw new Error('Отсутствует завершающий "end)"');
                     }
 
-                    for (const line of lines) {
-                        await this.parseLine(line.trim());
+                    this.currentLine = 0;
+                    while (this.currentLine < this.lines.length) {
+                        await this.parseLine(this.lines[this.currentLine].trim());
+                        this.currentLine++;
                     }
                 } catch (e) {
                     this.errors.logError(e.message);
@@ -114,6 +110,9 @@
                     if (!match) throw new Error('Неправильный формат move.out');
                     await this.currentBlock.moveOut(parseInt(match[1]), parseInt(match[2]));
                 }
+                else if (line.startsWith('if - block.move = ')) {
+                    await this.handleIfCondition(line);
+                }
                 else if (line.startsWith('wait - ')) {
                     const seconds = parseFloat(line.split('wait - ')[1]);
                     await new Promise(resolve => setTimeout(resolve, seconds * 1000));
@@ -121,35 +120,34 @@
                 else if (line === 'end)') return;
                 else throw new Error(`Неизвестная команда: ${line}`);
             }
-        }
 
-        // Запуск кода
-        const interpreter = new Interpreter();
-        document.getElementById('runBtn').addEventListener('click', () => {
-            document.getElementById('blocks').innerHTML = '';
-            interpreter.execute(editor.getValue());
-        });
-        async handleIfCondition(line) {
-                // Парсим условие: if - block.move = (10,10)
-                const match = line.match(/if - block.move = \s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/);
+            async handleIfCondition(line) {
+                const match = line.match(/if - block\.move = \s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/);
                 if (!match) throw new Error('Неправильный формат условия if');
                 
                 const [_, targetDx, targetDy] = match;
                 const lastMove = this.currentBlock.lastMove;
 
-                // Проверяем, совпадает ли последнее движение с условием
                 if (lastMove.dx == targetDx && lastMove.dy == targetDy) {
-                    let nextLine;
-                    do {
-                        nextLine = lines.shift().trim();
-                        if (nextLine.startsWith('do ')) {
-                            const action = nextLine.replace('do ', '');
+                    this.currentLine++;
+                    while (this.currentLine < this.lines.length) {
+                        const currentLine = this.lines[this.currentLine].trim();
+                        if (currentLine.startsWith('do ')) {
+                            const action = currentLine.replace('do ', '');
                             await this.parseLine(action);
                         }
-                    } while (!nextLine.startsWith('end)'));
+                        else if (currentLine.startsWith('end)')) break;
+                        this.currentLine++;
+                    }
                 }
             }
         }
+
+        const interpreter = new Interpreter();
+        document.getElementById('runBtn').addEventListener('click', () => {
+            document.getElementById('blocks').innerHTML = '';
+            interpreter.execute(editor.getValue());
+        });
     </script>
 </body>
 </html>
