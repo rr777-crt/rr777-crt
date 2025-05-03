@@ -148,6 +148,83 @@ end)`
             document.getElementById('blocks').innerHTML = '';
             interpreter.execute(editor.getValue());
         });
+        class Block {
+            constructor() {
+                this.element = document.createElement('div');
+                this.element.className = 'block';
+                this.x = 0;
+                this.y = 0;
+                this.updatePosition();
+                document.getElementById('blocks').appendChild(this.element);
+            }
+
+            updatePosition() {
+                this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+            }
+
+            setColor(r, g, b) {
+                this.element.style.backgroundColor = `rgb(${r},${g},${b})`;
+            }
+        }
+
+        class OneBlock {
+            constructor(number) {
+                this.number = number;
+                this.element = document.createElement('div');
+                this.element.className = 'block one-block';
+                this.x = 0;
+                this.y = 0;
+                document.getElementById('blocks').appendChild(this.element);
+            }
+
+            setPosition(x, y) {
+                this.x = x;
+                this.y = y;
+                this.element.style.transform = `translate(${x}px, ${y}px)`;
+            }
+
+            setColor(r, g, b) {
+                this.element.style.backgroundColor = `rgb(${r},${g},${b})`;
+            }
+        }
+
+        class Interpreter {
+            constructor() {
+                // ... (прежние свойства) ...
+                this.oneBlocks = new Map();
+                this.currentOneBlock = null;
+            }
+
+            async parseLine(line) {
+                // ... (прежние условия) ...
+                
+                else if (line.startsWith('add - one.block(')) {
+                    const match = line.match(/add - one.block\((\d+)\)/);
+                    if (!match) throw new Error('Неправильный формат создания one.block');
+                    const number = parseInt(match[1]);
+                    const oneBlock = new OneBlock(number);
+                    this.oneBlocks.set(number, oneBlock);
+                    this.currentOneBlock = oneBlock;
+                }
+                else if (line.startsWith('one.block.color(')) {
+                    const match = line.match(/one\.block\.color\((\d+),(\d+),(\d+)\)/);
+                    if (!match || !this.currentOneBlock) throw new Error('Неправильный формат цвета');
+                    this.currentOneBlock.setColor(match[1], match[2], match[3]);
+                }
+                else if (line.startsWith('one.block.position(')) {
+                    const match = line.match(/one\.block\.position\((\d+),(\d+)\)/);
+                    if (!match || !this.currentOneBlock) throw new Error('Неправильный формат позиции');
+                    this.currentOneBlock.setPosition(parseInt(match[1]), parseInt(match[2]));
+                }
+                else if (line.startsWith('block.color(')) {
+                    const match = line.match(/block\.color\((\d+),(\d+),(\d+)\)/);
+                    if (!match || !this.currentBlock) throw new Error('Неправильный формат цвета блока');
+                    this.currentBlock.setColor(match[1], match[2], match[3]);
+                }
+            }
+        }
+
+        // ... (остальной код остаётся без изменений) ...
     </script>
 </body>
 </html>
