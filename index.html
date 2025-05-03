@@ -1,19 +1,22 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
 <head>
     <title>BlockLang IDE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.css">
     <style>
         body { margin: 0; padding: 20px; font-family: Arial; }
-        #editor { border: 2px solid #ccc; margin-bottom: 10px; }
-        #runBtn { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; }
-        #output { margin-top: 20px; border: 1px solid #ccc; padding: 10px; min-height: 200px; position: relative; }
+        #editor { border: 2px solid #ccc; margin-bottom: 10px; height: 200px; }
+        #runBtn { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; margin-bottom: 10px; }
+        #output { border: 1px solid #ccc; padding: 10px; min-height: 300px; position: relative; }
         .block { width: 50px; height: 50px; background: #2196F3; position: absolute; transition: all 1s ease; }
         .one-block { border: 2px solid #000; }
-        #console { margin-top: 10px; padding: 10px; background: #000; color: #fff; min-height: 100px; }
+        #console { margin-top: 20px; padding: 10px; background: #f5f5f5; border: 1px solid #ddd; min-height: 100px; }
+        .error { color: #ff4444; }
+        .log { color: #333; }
     </style>
 </head>
 <body>
+    <h1>BlockLang IDE</h1>
     <div id="editor"></div>
     <button id="runBtn">▶ Запустить</button>
     <div id="output">
@@ -30,6 +33,7 @@
             theme: 'default',
             value: `add - block
 block.color(100, 200, 50)
+block.move.out(100, 100)
 add - one.block(1)
 one.block.position(40, 10)
 one.block.color(255, 200, 0)
@@ -62,7 +66,7 @@ end)`
 
             setColor(r, g, b) {
                 const valid = [r, g, b].every(n => n >=0 && n <= 255);
-                if (!valid) throw new Error('Некорректные значения цвета (0-255)');
+                if (!valid) throw new Error('Цвет должен быть в диапазоне 0-255');
                 this.element.style.backgroundColor = `rgb(${r},${g},${b})`;
             }
         }
@@ -90,22 +94,8 @@ end)`
 
             setColor(r, g, b) {
                 const valid = [r, g, b].every(n => n >=0 && n <= 255);
-                if (!valid) throw new Error('Некорректные значения цвета (0-255)');
+                if (!valid) throw new Error('Цвет должен быть в диапазоне 0-255');
                 this.element.style.backgroundColor = `rgb(${r},${g},${b})`;
-            }
-        }
-
-        class ErrorSystem {
-            constructor() {
-                this.console = document.getElementById('console');
-            }
-
-            clear() {
-                this.console.innerHTML = '';
-            }
-
-            logError(msg) {
-                this.console.innerHTML += `<div style="color: #ff4444">[Ошибка] ${msg}</div>`;
             }
         }
 
@@ -115,117 +105,113 @@ end)`
                 this.oneBlocks = new Map();
                 this.currentBlock = null;
                 this.currentOneBlock = null;
-                this.errors = new ErrorSystem();
                 this.lines = [];
                 this.currentLine = 0;
             }
 
+            log(message, isError = false) {
+                const consoleElem = document.getElementById('console');
+                const msgElem = document.createElement('div');
+                msgElem.className = isError ? 'error' : 'log';
+                msgElem.textContent = message;
+                consoleElem.appendChild(msgElem);
+            }
+
+            clearOutput() {
+                document.getElementById('blocks').innerHTML = '';
+                document.getElementById('console').innerHTML = '';
+            }
+
             async execute(code) {
-                this.errors.clear();
+                this.clearOutput();
+                this.lines = code.split('\n').filter(l => l.trim() !== '');
+
                 try {
-                    this.lines = code.split('\n').filter(l => l.trim() !== '');
                     if (!this.lines[this.lines.length-1].startsWith('end)')) {
                         throw new Error('Отсутствует завершающий "end)"');
                     }
 
-                    this.currentLine = 0;
-                    while (this.currentLine < this.lines.length) {
+                    for (this.currentLine = 0; this.currentLine < this.lines.length; this.currentLine++) {
                         await this.parseLine(this.lines[this.currentLine].trim());
-                        this.currentLine++;
                     }
                 } catch (e) {
-                    this.errors.logError(e.message);
+                    this.log(`[Ошибка] ${e.message}`, true);
                 }
             }
 
             async parseLine(line) {
-                if (line.startsWith('add - block')) {
-                    this.currentBlock = new Block();
-                    this.blocks.push(this.currentBlock);
-                }
-                else if (line.startsWith('add - one.block(')) {
-                    const match = line.match(/add - one.block\((\d+)\)/);
-                    if (!match) throw new Error('Неправильный формат создания one.block');
-                    const number = parseInt(match[1]);
-                    if (this.oneBlocks.has(number)) throw new Error(`Блок ${number} уже существует`);
-                    const oneBlock = new OneBlock(number);
-                    this.oneBlocks.set(number, oneBlock);
-                    this.currentOneBlock = oneBlock;
-                }
-                else if (line.startsWith('block.move.out')) {
-                    const match = line.match(/block\.move\.out\((-?\d+),\s*(-?\d+)\)/);
-                    if (!match || !this.currentBlock) throw new Error('Неправильный формат move.out');
-                    await this.currentBlock.moveOut(parseInt(match[1]), parseInt(match[2]));
-                }
-                else if (line.startsWith('one.block.position(')) {
-                    const match = line.match(/one\.block\.position\((\d+),\s*(\d+)\)/);
-                    if (!match || !this.currentOneBlock) throw new Error('Неправильный формат позиции');
-                    this.currentOneBlock.setPosition(parseInt(match[1]), parseInt(match[2]));
-                }
-                else if (line.startsWith('one.block.color(')) {
-                    const match = line.match(/one\.block\.color\((\d+),\s*(\d+),\s*(\d+)\)/);
-                    if (!match || !this.currentOneBlock) throw new Error('Неправильный формат цвета');
-                    this.currentOneBlock.setColor(match[1], match[2], match[3]);
-                }
-                else if (line.startsWith('block.color(')) {
-                    const match = line.match(/block\.color\((\d+),\s*(\d+),\s*(\d+)\)/);
-                    if (!match || !this.currentBlock) throw new Error('Неправильный формат цвета блока');
-                    this.currentBlock.setColor(match[1], match[2], match[3]);
-                }
-                else if (line.startsWith('if - block.move = ')) {
-                    await this.handleIfCondition(line);
-                }
-                else if (line.startsWith('wait - ')) {
-                    const seconds = parseFloat(line.split('wait - ')[1]);
-                    await new Promise(resolve => setTimeout(resolve, seconds * 1000));
-                }
-                else if (line === 'end)') return;
-                else throw new Error(`Неизвестная команда: ${line}`);
-            }
-
-            async handleIfCondition(line) {
-                const match = line.match(/if - block\.move = \s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/);
-                if (!match) throw new Error('Неправильный формат условия if');
-                
-                const [_, targetDx, targetDy] = match;
-                const lastMove = this.currentBlock.lastMove;
-
-                if (lastMove.dx == targetDx && lastMove.dy == targetDy) {
-                    this.currentLine++;
-                    while (this.currentLine < this.lines.length) {
-                        const currentLine = this.lines[this.currentLine].trim();
-                        if (currentLine.startsWith('do ')) {
-                            const action = currentLine.replace('do ', '');
-                            await this.parseLine(action);
-                        }
-                        else if (currentLine.startsWith('end)')) break;
-                        this.currentLine++;
+                try {
+                    if (line.startsWith('add - block')) {
+                        this.currentBlock = new Block();
+                        this.blocks.push(this.currentBlock);
                     }
+                    else if (line.startsWith('add - one.block(')) {
+                        const match = line.match(/add - one.block\((\d+)\)/);
+                        if (!match) throw new Error('Неправильный формат создания one.block');
+                        
+                        const number = parseInt(match[1]);
+                        if (this.oneBlocks.has(number)) {
+                            throw new Error(`Блок с номером ${number} уже существует`);
+                        }
+                        
+                        const oneBlock = new OneBlock(number);
+                        this.oneBlocks.set(number, oneBlock);
+                        this.currentOneBlock = oneBlock;
+                    }
+                    else if (line.startsWith('block.move.out(')) {
+                        const match = line.match(/block\.move\.out\((-?\d+),\s*(-?\d+)\)/);
+                        if (!match || !this.currentBlock) throw new Error('Неправильный формат move.out');
+                        
+                        await this.currentBlock.moveOut(
+                            parseInt(match[1]), 
+                            parseInt(match[2])
+                        );
+                    }
+                    else if (line.startsWith('one.block.position(')) {
+                        const match = line.match(/one\.block\.position\((-?\d+),\s*(-?\d+)\)/);
+                        if (!match || !this.currentOneBlock) throw new Error('Неправильный формат позиции');
+                        
+                        this.currentOneBlock.setPosition(
+                            parseInt(match[1]), 
+                            parseInt(match[2])
+                        );
+                    }
+                    else if (line.startsWith('one.block.color(')) {
+                        const match = line.match(/one\.block\.color\((\d+),\s*(\d+),\s*(\d+)\)/);
+                        if (!match || !this.currentOneBlock) throw new Error('Неправильный формат цвета');
+                        
+                        this.currentOneBlock.setColor(
+                            parseInt(match[1]), 
+                            parseInt(match[2]), 
+                            parseInt(match[3])
+                        );
+                    }
+                    else if (line.startsWith('block.color(')) {
+                        const match = line.match(/block\.color\((\d+),\s*(\d+),\s*(\d+)\)/);
+                        if (!match || !this.currentBlock) throw new Error('Неправильный формат цвета блока');
+                        
+                        this.currentBlock.setColor(
+                            parseInt(match[1]), 
+                            parseInt(match[2]), 
+                            parseInt(match[3])
+                        );
+                    }
+                    else if (line === 'end)') {
+                        return;
+                    }
+                    else {
+                        throw new Error(`Неизвестная команда: "${line}"`);
+                    }
+                } catch (e) {
+                    throw new Error(`Строка ${this.currentLine + 1}: ${e.message}`);
                 }
             }
         }
 
         const interpreter = new Interpreter();
         document.getElementById('runBtn').addEventListener('click', () => {
-            document.getElementById('blocks').innerHTML = '';
             interpreter.execute(editor.getValue());
         });
-        else if (line.startsWith('one.block.position(')) {
-    const match = line.match(/one\.block\.position\((\d+),\s*(\d+)\)/);
-    if (!match) throw new Error('Неправильный формат позиции');
-    const number = parseInt(match[1]);
-    const x = parseInt(match[2]);
-    const y = parseInt(match[3]);
-    const block = this.oneBlocks.get(number);
-    if (!block) throw new Error(`OneBlock ${number} не существует`);
-    block.setPosition(x, y);
-        }
-        else if (line.startsWith('one.block.position(')) {
-    const match = line.match(/one\.block\.position\((\d+),\s*(\d+)\)/);
-    if (!match || !this.currentOneBlock) throw new Error('Неправильный формат позиции');
-    this.currentOneBlock.setPosition(parseInt(match[1]), parseInt(match[2]));
-        }
     </script>
 </body>
 </html>
-            
