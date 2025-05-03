@@ -1,58 +1,123 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Ultimate Tower Defense</title>
-    <link rel="stylesheet" href="style.css">
+    <title>BlockLang IDE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.css">
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial; }
+        #editor { border: 2px solid #ccc; margin-bottom: 10px; }
+        #runBtn { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+        #output { margin-top: 20px; border: 1px solid #ccc; padding: 10px; min-height: 200px; position: relative; }
+        .block { width: 50px; height: 50px; background: #2196F3; position: absolute; transition: all 1s ease; }
+        #console { margin-top: 10px; padding: 10px; background: #000; color: #fff; min-height: 100px; }
+    </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <div id="gameBoard"></div>
-        <div id="shop">
-            <div class="shop-item" onclick="selectTower('pistol', 50)">
-                Пистолет (50)<br>
-                Урон: 1/сек<br>
-                Радиус: 10st
-            </div>
-            <div class="shop-item" onclick="selectTower('swordsman', 80)">
-                Мечник (80)<br>
-                Урон: 2/0.5сек<br>
-                Радиус: 5st
-            </div>
-            <div class="shop-item" onclick="selectTower('sniper', 250)">
-                Снайпер (250)<br>
-                Урон: 10/5сек<br>
-                Радиус: 100st
-            </div>
-            <div class="shop-item" onclick="selectTower('mega', 1500)">
-                МЕГА (1500)<br>
-                Двойной режим:<br>
-                Ближний: 2/0.5сек 5st<br>
-                Дальний: 1/сек 20st
-            </div>
-            <div id="moneyDisplay">Деньги: 100</div>
-            <div id="waveDisplay">Волна: 1</div>
-        </div>
-    </div>
-    
-    <div class="speed-control">
-        <button id="speed1x" class="active" onclick="setGameSpeed(1)">1X</button>
-        <button id="speed2x" onclick="setGameSpeed(2)">2X</button>
-    </div>
-    
-    <div id="upgradeMenu">
-        <h4>Улучшение башни</h4>
-        <div id="towerStats"></div>
-        <button onclick="upgradeTower()">Улучшить</button>
-        <button onclick="closeUpgradeMenu()">Закрыть</button>
-    </div>
-    
-    <div id="gameOver">
-        <h2>Враги добрались до цели!</h2>
-        <p>Дошло врагов: <span id="enemiesPassed">0</span></p>
-        <p>Достигнутая волна: <span id="finalWave">1</span></p>
-        <button onclick="restartGame()">Играть снова</button>
+    <div id="editor"></div>
+    <button id="runBtn">▶ Запустить</button>
+    <div id="output">
+        <div id="blocks"></div>
+        <div id="console"></div>
     </div>
 
-    <script src="main.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/mode/clike/clike.min.js"></script>
+    <script>
+        // Настройка редактора кода
+        const editor = CodeMirror(document.getElementById('editor'), {
+            mode: 'text/x-csrc',
+            lineNumbers: true,
+            theme: 'default',
+            value: 'add - block\nblock.move.out(5, 7)\nwait - 1\nblock.move.out(-5, -5)\nend)'
+        });
+
+        class Block {
+            constructor() {
+                this.element = document.createElement('div');
+                this.element.className = 'block';
+                this.x = 0;
+                this.y = 0;
+                this.updatePosition();
+                document.getElementById('blocks').appendChild(this.element);
+            }
+
+            updatePosition() {
+                this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+            }
+
+            async moveOut(dx, dy, duration = 1) {
+                this.x += dx;
+                this.y += dy;
+                this.element.style.transition = `all ${duration}s ease`;
+                this.updatePosition();
+                return new Promise(resolve => setTimeout(resolve, duration * 1000));
+            }
+        }
+
+        // Система ошибок
+        class ErrorSystem {
+            constructor() {
+                this.console = document.getElementById('console');
+            }
+
+            clear() {
+                this.console.innerHTML = '';
+            }
+
+            logError(msg) {
+                this.console.innerHTML += `<div style="color: #ff4444">[Ошибка] ${msg}</div>`;
+            }
+        }
+
+        // Интерпретатор
+        class Interpreter {
+            constructor() {
+                this.blocks = [];
+                this.currentBlock = null;
+                this.errors = new ErrorSystem();
+            }
+
+            async execute(code) {
+                this.errors.clear();
+                try {
+                    const lines = code.split('\n').filter(l => l.trim() !== '');
+                    if (!lines[lines.length-1].startsWith('end)')) {
+                        throw new Error('Отсутствует завершающий "end)"');
+                    }
+
+                    for (const line of lines) {
+                        await this.parseLine(line.trim());
+                    }
+                } catch (e) {
+                    this.errors.logError(e.message);
+                }
+            }
+
+            async parseLine(line) {
+                if (line.startsWith('add - block')) {
+                    this.currentBlock = new Block();
+                    this.blocks.push(this.currentBlock);
+                } 
+                else if (line.startsWith('block.move.out')) {
+                    const match = line.match(/block\.move\.out\((-?\d+),\s*(-?\d+)\)/);
+                    if (!match) throw new Error('Неправильный формат move.out');
+                    await this.currentBlock.moveOut(parseInt(match[1]), parseInt(match[2]));
+                }
+                else if (line.startsWith('wait - ')) {
+                    const seconds = parseFloat(line.split('wait - ')[1]);
+                    await new Promise(resolve => setTimeout(resolve, seconds * 1000));
+                }
+                else if (line === 'end)') return;
+                else throw new Error(`Неизвестная команда: ${line}`);
+            }
+        }
+
+        // Запуск кода
+        const interpreter = new Interpreter();
+        document.getElementById('runBtn').addEventListener('click', () => {
+            document.getElementById('blocks').innerHTML = '';
+            interpreter.execute(editor.getValue());
+        });
+    </script>
 </body>
 </html>
