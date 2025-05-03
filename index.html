@@ -1,12 +1,13 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>BlockLang IDE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.css">
     <style>
         body { margin: 0; padding: 20px; font-family: Arial; }
-        #editor { border: 2px solid #ccc; margin-bottom: 10px; height: 200px; }
-        #runBtn { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; margin-bottom: 10px; }
+        #editor-container { margin-bottom: 10px; }
+        #editor { border: 2px solid #ccc; height: 200px; }
+        #runBtn { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; margin-top: 5px; }
         #output { border: 1px solid #ccc; padding: 10px; min-height: 300px; position: relative; }
         .block { width: 50px; height: 50px; background: #2196F3; position: absolute; transition: all 1s ease; }
         .one-block { border: 2px solid #000; }
@@ -17,8 +18,10 @@
 </head>
 <body>
     <h1>BlockLang IDE</h1>
-    <div id="editor"></div>
-    <button id="runBtn">▶ Запустить</button>
+    <div id="editor-container">
+        <div id="editor"></div>
+        <button id="runBtn">▶ Запустить</button>
+    </div>
     <div id="output">
         <div id="blocks"></div>
         <div id="console"></div>
@@ -37,6 +40,9 @@ block.move.out(100, 100)
 add - one.block(1)
 one.block.position(40, 10)
 one.block.color(255, 200, 0)
+
+if - block.touched(one.block(1))
+do script = return
 end)`
         });
 
@@ -68,6 +74,17 @@ end)`
                 const valid = [r, g, b].every(n => n >=0 && n <= 255);
                 if (!valid) throw new Error('Цвет должен быть в диапазоне 0-255');
                 this.element.style.backgroundColor = `rgb(${r},${g},${b})`;
+            }
+
+            isTouching(otherBlock) {
+                const rect1 = this.element.getBoundingClientRect();
+                const rect2 = otherBlock.element.getBoundingClientRect();
+                return !(
+                    rect1.right < rect2.left || 
+                    rect1.left > rect2.right || 
+                    rect1.bottom < rect2.top || 
+                    rect1.top > rect2.bottom
+                );
             }
         }
 
@@ -107,6 +124,7 @@ end)`
                 this.currentOneBlock = null;
                 this.lines = [];
                 this.currentLine = 0;
+                this.shouldReturn = false;
             }
 
             log(message, isError = false) {
@@ -125,6 +143,7 @@ end)`
             async execute(code) {
                 this.clearOutput();
                 this.lines = code.split('\n').filter(l => l.trim() !== '');
+                this.shouldReturn = false;
 
                 try {
                     if (!this.lines[this.lines.length-1].startsWith('end)')) {
@@ -132,6 +151,7 @@ end)`
                     }
 
                     for (this.currentLine = 0; this.currentLine < this.lines.length; this.currentLine++) {
+                        if (this.shouldReturn) break;
                         await this.parseLine(this.lines[this.currentLine].trim());
                     }
                 } catch (e) {
@@ -141,6 +161,8 @@ end)`
 
             async parseLine(line) {
                 try {
+                    if (this.shouldReturn) return;
+
                     if (line.startsWith('add - block')) {
                         this.currentBlock = new Block();
                         this.blocks.push(this.currentBlock);
@@ -195,6 +217,27 @@ end)`
                             parseInt(match[2]), 
                             parseInt(match[3])
                         );
+                    }
+                    else if (line.startsWith('if - block.touched(')) {
+                        const match = line.match(/if - block\.touched\(one\.block\((\d+)\)\)/);
+                        if (!match || !this.currentBlock) throw new Error('Неправильный формат условия touched');
+                        
+                        const blockNumber = parseInt(match[1]);
+                        const oneBlock = this.oneBlocks.get(blockNumber);
+                        if (!oneBlock) throw new Error(`OneBlock ${blockNumber} не существует`);
+                        
+                        if (this.currentBlock.isTouching(oneBlock)) {
+                            this.currentLine++;
+                            while (this.currentLine < this.lines.length) {
+                                const currentLine = this.lines[this.currentLine].trim();
+                                if (currentLine.startsWith('do script = return')) {
+                                    this.shouldReturn = true;
+                                    break;
+                                }
+                                else if (currentLine.startsWith('end)')) break;
+                                this.currentLine++;
+                            }
+                        }
                     }
                     else if (line === 'end)') {
                         return;
