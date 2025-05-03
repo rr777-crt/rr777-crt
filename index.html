@@ -210,6 +210,21 @@ end)`
             document.getElementById('blocks').innerHTML = '';
             interpreter.execute(editor.getValue());
         });
+        else if (line.startsWith('one.block.position(')) {
+    const match = line.match(/one\.block\.position\((\d+),\s*(\d+)\)/);
+    if (!match) throw new Error('Неправильный формат позиции');
+    const number = parseInt(match[1]);
+    const x = parseInt(match[2]);
+    const y = parseInt(match[3]);
+    const block = this.oneBlocks.get(number);
+    if (!block) throw new Error(`OneBlock ${number} не существует`);
+    block.setPosition(x, y);
+        }
+        else if (line.startsWith('one.block.position(')) {
+    const match = line.match(/one\.block\.position\((\d+),\s*(\d+)\)/);
+    if (!match || !this.currentOneBlock) throw new Error('Неправильный формат позиции');
+    this.currentOneBlock.setPosition(parseInt(match[1]), parseInt(match[2]));
+        }
     </script>
 </body>
 </html>
