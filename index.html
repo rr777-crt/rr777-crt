@@ -44,6 +44,11 @@
             updatePosition() {
                 this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
             }
+            this.lastMove = { dx: 0, dy: 0 }; // Новое свойство!
+            }
+
+            async moveOut(dx, dy, duration = 1) {
+                this.lastMove = { dx, dy }; // Запоминаем последнее движе
 
             async moveOut(dx, dy, duration = 1) {
                 this.x += dx;
@@ -71,6 +76,12 @@
 
         // Интерпретатор
         class Interpreter {
+            async parseLine(line) {
+                if (line.startsWith('if - block.move = ')) {
+                    return this.handleIfCondition(line);
+                }
+                // ... (остальные условия) ...
+            }
             constructor() {
                 this.blocks = [];
                 this.currentBlock = null;
@@ -118,6 +129,27 @@
             document.getElementById('blocks').innerHTML = '';
             interpreter.execute(editor.getValue());
         });
+        async handleIfCondition(line) {
+                // Парсим условие: if - block.move = (10,10)
+                const match = line.match(/if - block.move = \s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/);
+                if (!match) throw new Error('Неправильный формат условия if');
+                
+                const [_, targetDx, targetDy] = match;
+                const lastMove = this.currentBlock.lastMove;
+
+                // Проверяем, совпадает ли последнее движение с условием
+                if (lastMove.dx == targetDx && lastMove.dy == targetDy) {
+                    let nextLine;
+                    do {
+                        nextLine = lines.shift().trim();
+                        if (nextLine.startsWith('do ')) {
+                            const action = nextLine.replace('do ', '');
+                            await this.parseLine(action);
+                        }
+                    } while (!nextLine.startsWith('end)'));
+                }
+            }
+        }
     </script>
 </body>
 </html>
