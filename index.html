@@ -9,6 +9,7 @@
         #runBtn { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; }
         #output { margin-top: 20px; border: 1px solid #ccc; padding: 10px; min-height: 200px; position: relative; }
         .block { width: 50px; height: 50px; background: #2196F3; position: absolute; transition: all 1s ease; }
+        .one-block { border: 2px solid #000; }
         #console { margin-top: 10px; padding: 10px; background: #000; color: #fff; min-height: 100px; }
     </style>
 </head>
@@ -28,9 +29,10 @@
             lineNumbers: true,
             theme: 'default',
             value: `add - block
-block.move.out(10, 10)
-if - block.move = (10,10)
-  do block.move.out(100, 50)
+block.color(100, 200, 50)
+add - one.block(1)
+one.block.position(40, 10)
+one.block.color(255, 200, 0)
 end)`
         });
 
@@ -57,6 +59,40 @@ end)`
                 this.updatePosition();
                 return new Promise(resolve => setTimeout(resolve, duration * 1000));
             }
+
+            setColor(r, g, b) {
+                const valid = [r, g, b].every(n => n >=0 && n <= 255);
+                if (!valid) throw new Error('Некорректные значения цвета (0-255)');
+                this.element.style.backgroundColor = `rgb(${r},${g},${b})`;
+            }
+        }
+
+        class OneBlock {
+            constructor(number) {
+                this.number = number;
+                this.element = document.createElement('div');
+                this.element.className = 'block one-block';
+                this.x = 0;
+                this.y = 0;
+                this.updatePosition();
+                document.getElementById('blocks').appendChild(this.element);
+            }
+
+            updatePosition() {
+                this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+            }
+
+            setPosition(x, y) {
+                this.x = x;
+                this.y = y;
+                this.updatePosition();
+            }
+
+            setColor(r, g, b) {
+                const valid = [r, g, b].every(n => n >=0 && n <= 255);
+                if (!valid) throw new Error('Некорректные значения цвета (0-255)');
+                this.element.style.backgroundColor = `rgb(${r},${g},${b})`;
+            }
         }
 
         class ErrorSystem {
@@ -76,7 +112,9 @@ end)`
         class Interpreter {
             constructor() {
                 this.blocks = [];
+                this.oneBlocks = new Map();
                 this.currentBlock = null;
+                this.currentOneBlock = null;
                 this.errors = new ErrorSystem();
                 this.lines = [];
                 this.currentLine = 0;
@@ -104,11 +142,35 @@ end)`
                 if (line.startsWith('add - block')) {
                     this.currentBlock = new Block();
                     this.blocks.push(this.currentBlock);
-                } 
+                }
+                else if (line.startsWith('add - one.block(')) {
+                    const match = line.match(/add - one.block\((\d+)\)/);
+                    if (!match) throw new Error('Неправильный формат создания one.block');
+                    const number = parseInt(match[1]);
+                    if (this.oneBlocks.has(number)) throw new Error(`Блок ${number} уже существует`);
+                    const oneBlock = new OneBlock(number);
+                    this.oneBlocks.set(number, oneBlock);
+                    this.currentOneBlock = oneBlock;
+                }
                 else if (line.startsWith('block.move.out')) {
                     const match = line.match(/block\.move\.out\((-?\d+),\s*(-?\d+)\)/);
-                    if (!match) throw new Error('Неправильный формат move.out');
+                    if (!match || !this.currentBlock) throw new Error('Неправильный формат move.out');
                     await this.currentBlock.moveOut(parseInt(match[1]), parseInt(match[2]));
+                }
+                else if (line.startsWith('one.block.position(')) {
+                    const match = line.match(/one\.block\.position\((\d+),\s*(\d+)\)/);
+                    if (!match || !this.currentOneBlock) throw new Error('Неправильный формат позиции');
+                    this.currentOneBlock.setPosition(parseInt(match[1]), parseInt(match[2]));
+                }
+                else if (line.startsWith('one.block.color(')) {
+                    const match = line.match(/one\.block\.color\((\d+),\s*(\d+),\s*(\d+)\)/);
+                    if (!match || !this.currentOneBlock) throw new Error('Неправильный формат цвета');
+                    this.currentOneBlock.setColor(match[1], match[2], match[3]);
+                }
+                else if (line.startsWith('block.color(')) {
+                    const match = line.match(/block\.color\((\d+),\s*(\d+),\s*(\d+)\)/);
+                    if (!match || !this.currentBlock) throw new Error('Неправильный формат цвета блока');
+                    this.currentBlock.setColor(match[1], match[2], match[3]);
                 }
                 else if (line.startsWith('if - block.move = ')) {
                     await this.handleIfCondition(line);
@@ -148,83 +210,7 @@ end)`
             document.getElementById('blocks').innerHTML = '';
             interpreter.execute(editor.getValue());
         });
-        class Block {
-            constructor() {
-                this.element = document.createElement('div');
-                this.element.className = 'block';
-                this.x = 0;
-                this.y = 0;
-                this.updatePosition();
-                document.getElementById('blocks').appendChild(this.element);
-            }
-
-            updatePosition() {
-                this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
-            }
-
-            setColor(r, g, b) {
-                this.element.style.backgroundColor = `rgb(${r},${g},${b})`;
-            }
-        }
-
-        class OneBlock {
-            constructor(number) {
-                this.number = number;
-                this.element = document.createElement('div');
-                this.element.className = 'block one-block';
-                this.x = 0;
-                this.y = 0;
-                document.getElementById('blocks').appendChild(this.element);
-            }
-
-            setPosition(x, y) {
-                this.x = x;
-                this.y = y;
-                this.element.style.transform = `translate(${x}px, ${y}px)`;
-            }
-
-            setColor(r, g, b) {
-                this.element.style.backgroundColor = `rgb(${r},${g},${b})`;
-            }
-        }
-
-        class Interpreter {
-            constructor() {
-                // ... (прежние свойства) ...
-                this.oneBlocks = new Map();
-                this.currentOneBlock = null;
-            }
-
-            async parseLine(line) {
-                // ... (прежние условия) ...
-                
-                else if (line.startsWith('add - one.block(')) {
-                    const match = line.match(/add - one.block\((\d+)\)/);
-                    if (!match) throw new Error('Неправильный формат создания one.block');
-                    const number = parseInt(match[1]);
-                    const oneBlock = new OneBlock(number);
-                    this.oneBlocks.set(number, oneBlock);
-                    this.currentOneBlock = oneBlock;
-                }
-                else if (line.startsWith('one.block.color(')) {
-                    const match = line.match(/one\.block\.color\((\d+),(\d+),(\d+)\)/);
-                    if (!match || !this.currentOneBlock) throw new Error('Неправильный формат цвета');
-                    this.currentOneBlock.setColor(match[1], match[2], match[3]);
-                }
-                else if (line.startsWith('one.block.position(')) {
-                    const match = line.match(/one\.block\.position\((\d+),(\d+)\)/);
-                    if (!match || !this.currentOneBlock) throw new Error('Неправильный формат позиции');
-                    this.currentOneBlock.setPosition(parseInt(match[1]), parseInt(match[2]));
-                }
-                else if (line.startsWith('block.color(')) {
-                    const match = line.match(/block\.color\((\d+),(\d+),(\d+)\)/);
-                    if (!match || !this.currentBlock) throw new Error('Неправильный формат цвета блока');
-                    this.currentBlock.setColor(match[1], match[2], match[3]);
-                }
-            }
-        }
-
-        // ... (остальной код остаётся без изменений) ...
     </script>
 </body>
 </html>
+            
