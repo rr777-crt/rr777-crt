@@ -1,152 +1,1151 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>BlockLang IDE</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slap Battler Clicker</title>
     <style>
-        body { margin: 0; padding: 20px; font-family: Arial; }
-        #editor { border: 2px solid #ccc; height: 300px; margin-bottom: 10px; }
-        #runBtn { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; }
-        #output { border: 1px solid #ccc; padding: 10px; min-height: 300px; position: relative; }
-        .block { width: 50px; height: 50px; background: #2196F3; position: absolute; transition: all 0.5s ease; }
-        .block.size2 { width: 100px; height: 100px; }
-        .one-block { width: 50px; height: 50px; background: red; position: absolute; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            text-align: center;
+        }
+        #slapButton {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            border: none;
+            cursor: pointer;
+            margin: 20px auto;
+            transition: transform 0.1s;
+            background-color: #ff6b6b;
+            position: relative;
+            overflow: hidden;
+        }
+        #slapButton:active {
+            transform: scale(0.95);
+        }
+        #slapCounter {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .upgrade {
+            background-color: #4ecdc4;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .upgrade:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .glove {
+            background-color: #ffbe76;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .glove-selected {
+            background-color: #f0932b;
+            border: 2px solid #000;
+        }
+        .section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .ability-button {
+            background-color: #6c5ce7;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .achievement {
+            background-color: #ffeaa7;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .achievement.unlocked {
+            background-color: #fdcb6e;
+            font-weight: bold;
+        }
+        .skin-button {
+            background-color: #a29bfe;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .skin-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 5px;
+            display: inline-block;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .skin-preview.selected {
+            border-color: #000;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+        .close-modal {
+            float: right;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #00b894;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .flex-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        .flex-item {
+            margin: 10px;
+        }
+        .wall {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: #2d3436;
+            cursor: pointer;
+            display: none;
+            border-radius: 5px;
+        }
+        .ghost-dimension {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 0, 0, 0.3);
+            z-index: 50;
+            display: none;
+        }
+        .boss-ball {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: red;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+        }
+        .boss-fight-timer {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 100;
+            display: none;
+        }
+        @keyframes yellowRedPulse {
+            0% { background-color: #fdcb6e; }
+            50% { background-color: #e17055; }
+            100% { background-color: #fdcb6e; }
+        }
+        @keyframes rainbowFlash {
+            0% { background-color: red; }
+            20% { background-color: orange; }
+            40% { background-color: yellow; }
+            60% { background-color: green; }
+            80% { background-color: blue; }
+            100% { background-color: purple; }
+        }
     </style>
 </head>
 <body>
-    <div id="editor"></div>
-    <button id="runBtn">▶ Запустить</button>
-    <div id="output">
-        <div id="blocks"></div>
+    <div class="ghost-dimension" id="ghostDimension"></div>
+    <div class="boss-fight-timer" id="bossFightTimer">Time left: 60s | Slaps: 0/100</div>
+    
+    <h1>Slap Battler Clicker</h1>
+    
+    <div class="section">
+        <div id="slapCounter">0 slaps</div>
+        <div class="flex-container">
+            <div class="flex-item">
+                <button id="slapButton">SLAP!</button>
+                <p>Slaps per click: <span id="slapsPerClick">1</span></p>
+                <button class="ability-button" id="useAbility">Ability (E)</button>
+                <div id="abilityCooldown"></div>
+            </div>
+            <div class="flex-item">
+                <p>Null Crystals: <span id="nullCrystals">0</span></p>
+                <button class="skin-button" id="openChest">Open Skin Chest (100 crystals)</button>
+                <button class="skin-button" id="openMegaChest">Mega Chest (250 crystals)</button>
+                <button class="skin-button" id="viewSkins">View Skins</button>
+            </div>
+        </div>
+        <div id="wall" class="wall"></div>
+        <div id="bossBall" class="boss-ball"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Upgrades</h2>
+        <button class="upgrade" id="doubleSlap">Double Slaps (1,000 slaps)</button>
+        <button class="upgrade" id="fiveTimes">5x Slaps (10,000 slaps)</button>
+    </div>
+    
+    <div class="section">
+        <h2>Gloves</h2>
+        <button class="glove" id="defaultGlove">Default (0 slaps)</button>
+        <button class="glove" id="stoneGlove">Stone (45 slaps)</button>
+        <button class="glove" id="wallGlove">Wall (1,750 slaps)</button>
+        <button class="glove" id="randomGlove">Random Buff (1,000 slaps)</button>
+        <button class="glove" id="ghostGlove">Ghost (2,500 slaps)</button>
+        <button class="glove" id="plagueGlove">Plague (3,000 slaps)</button>
+        <button class="glove" id="stoneAgeGlove" disabled>Stone Age (Achievement)</button>
+        <button class="glove" id="doubleDefaultGlove" disabled>Double Default (Achievement)</button>
+        <button class="glove" id="pullGlove" disabled>Pull (Achievement)</button>
+        <button class="glove" id="voodooGlove" disabled>Voodoo (Achievement)</button>
+    </div>
+    
+    <div class="section">
+        <h2>Achievements</h2>
+        <div class="achievement" id="stoneAgeAchievement">Stone Age - Stay as stone for 10 minutes</div>
+        <div class="achievement" id="doubleDefaultAchievement">Double Default - Get the default glove ability to 2s cooldown</div>
+        <div class="achievement" id="pullAchievement">Pull - Get a 5x buff from Random glove</div>
+        <div class="achievement" id="trueGhostAchievement">True Ghost - Stay in ghost dimension for 5 minutes</div>
+        <div class="achievement" id="plagueAchievement">Plague - Get 50 slaps with Plague glove</div>
+        <div class="achievement" id="trueMasterAchievement">True Master - Reach 100,000 slaps</div>
+        <div class="achievement" id="eyeAchievement">Eye - Break the black wall 1,000 times</div>
+    </div>
+    
+    <div class="section">
+        <h2>Stats</h2>
+        <p>Total slaps: <span id="totalSlaps">0</span></p>
+        <p>Slaps per second: <span id="slapsPerSecond">0</span></p>
+        <p>Time as stone: <span id="stoneTime">0</span> seconds</p>
+        <p>Time in ghost: <span id="ghostTime">0</span> seconds</p>
+        <p>Null crystals found: <span id="totalCrystals">0</span></p>
+        <p>Chests opened: <span id="chestsOpened">0</span></p>
+        <p>Mega chests opened: <span id="megaChestsOpened">0</span></p>
+        <p>Walls broken: <span id="wallsBroken">0</span></p>
+        <p>Plague slaps: <span id="plagueSlaps">0</span></p>
+        <p>Boss fights won: <span id="bossFightsWon">0</span></p>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/mode/clike/clike.min.js"></script>
+    <!-- Skin Chest Modal -->
+    <div class="modal" id="chestModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Skin Chest</h2>
+            <p>Click to open and get a random skin!</p>
+            <div id="chestResult" style="min-height: 100px;"></div>
+            <button id="confirmOpenChest">Open Chest (100 crystals)</button>
+        </div>
+    </div>
+
+    <!-- Mega Skin Chest Modal -->
+    <div class="modal" id="megaChestModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Mega Skin Chest</h2>
+            <p>Click to open and get a rare skin!</p>
+            <div id="megaChestResult" style="min-height: 100px;"></div>
+            <button id="confirmOpenMegaChest">Open Mega Chest (250 crystals)</button>
+        </div>
+    </div>
+
+    <!-- Skins Modal -->
+    <div class="modal" id="skinsModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Your Skins</h2>
+            <div id="skinsContainer"></div>
+        </div>
+    </div>
+
+    <!-- Boss Fight Modal -->
+    <div class="modal" id="bossFightModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Boss Fight Challenge!</h2>
+            <p>A boss fight is available! Can you get 100 slaps in 60 seconds?</p>
+            <p>Watch out for red balls - if you click one, you lose!</p>
+            <button id="startBossFight">Accept Challenge</button>
+            <button id="declineBossFight">Maybe Later</button>
+        </div>
+    </div>
+
     <script>
-        const editor = CodeMirror(document.getElementById('editor'), {
-            mode: 'text/x-csrc',
-            lineNumbers: true,
-            value: `add - block
-function.block:Start()
-block.size = in 1:
-block.controller.function - sizes (E)
-if block.use (E)
-do block.size = 2
-end - конец функций
-block.move.out(20,20)
-add - one.block
-one.block.color(255, 0, 0)
-one.block.position(100,100)
-end)`
-        });
-
-        class Block {
-            constructor() {
-                this.element = document.createElement('div');
-                this.element.className = 'block';
-                this.x = 0;
-                this.y = 0;
-                this.size = 1;
-                this.functions = {};
-                document.getElementById('blocks').appendChild(this.element);
+        // Game state
+        let slaps = 0;
+        let totalSlaps = 0;
+        let slapsPerClick = 1;
+        let slapsPerSecond = 0;
+        let nullCrystals = 0;
+        let totalCrystals = 0;
+        let chestsOpened = 0;
+        let megaChestsOpened = 0;
+        let wallsBroken = 0;
+        let plagueSlaps = 0;
+        let bossFightsWon = 0;
+        let upgrades = {
+            double: false,
+            fiveTimes: false
+        };
+        let selectedGlove = 'default';
+        let abilityCooldown = 0;
+        let stoneTime = 0;
+        let ghostTime = 0;
+        let isStone = false;
+        let isGhost = false;
+        let randomBuffActive = false;
+        let randomBuffType = '';
+        let randomBuffEndTime = 0;
+        let pullHoldStart = 0;
+        let pullHoldActive = false;
+        let plagueActive = false;
+        let plagueEndTime = 0;
+        let wallActive = false;
+        let wallHits = 0;
+        let wallEndTime = 0;
+        let achievements = {
+            stoneAge: false,
+            doubleDefault: false,
+            pull: false,
+            trueGhost: false,
+            plague: false,
+            trueMaster: false,
+            eye: false
+        };
+        let unlockedGloves = {
+            stoneAge: false,
+            doubleDefault: false,
+            pull: false,
+            voodoo: false
+        };
+        
+        // Boss fight state
+        let bossFightActive = false;
+        let bossFightSlaps = 0;
+        let bossFightTimeLeft = 60;
+        let bossFightInterval;
+        let bossBallInterval;
+        
+        // Skins system
+        const skinTypes = {
+            yellow: {
+                name: "Yellow",
+                chance: 50,
+                color: "linear-gradient(135deg, #fdcb6e, #ffeaa7)"
+            },
+            rainbow: {
+                name: "Rainbow",
+                chance: 30,
+                color: "linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet)"
+            },
+            red: {
+                name: "Red",
+                chance: 15,
+                color: "linear-gradient(135deg, #e17055, #d63031)"
+            },
+            gold: {
+                name: "Gold",
+                chance: 5,
+                color: "linear-gradient(135deg, #fdcb6e, #ffffff, #fdcb6e)"
+            },
+            purpleBlack: {
+                name: "Purple Black",
+                chance: 5,
+                color: "linear-gradient(135deg, #6c5ce7, #2d3436)"
+            },
+            yellowRedPulse: {
+                name: "Yellow Red Pulse",
+                chance: 90,
+                animation: "yellowRedPulse 2s infinite"
+            },
+            rainbowFlash: {
+                name: "Rainbow Flash",
+                chance: 10,
+                animation: "rainbowFlash 1s infinite"
             }
-
-            async moveOut(dx, dy, duration = 0.5) {
-                this.x += dx;
-                this.y += dy;
-                this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
-                return new Promise(resolve => setTimeout(resolve, duration * 1000));
+        };
+        
+        let unlockedSkins = [];
+        let currentSkin = null;
+        
+        // DOM elements
+        const slapCounter = document.getElementById('slapCounter');
+        const slapButton = document.getElementById('slapButton');
+        const slapsPerClickDisplay = document.getElementById('slapsPerClick');
+        const totalSlapsDisplay = document.getElementById('totalSlaps');
+        const slapsPerSecondDisplay = document.getElementById('slapsPerSecond');
+        const stoneTimeDisplay = document.getElementById('stoneTime');
+        const ghostTimeDisplay = document.getElementById('ghostTime');
+        const nullCrystalsDisplay = document.getElementById('nullCrystals');
+        const totalCrystalsDisplay = document.getElementById('totalCrystals');
+        const chestsOpenedDisplay = document.getElementById('chestsOpened');
+        const megaChestsOpenedDisplay = document.getElementById('megaChestsOpened');
+        const wallsBrokenDisplay = document.getElementById('wallsBroken');
+        const plagueSlapsDisplay = document.getElementById('plagueSlaps');
+        const bossFightsWonDisplay = document.getElementById('bossFightsWon');
+        
+        // Upgrades
+        const doubleSlapBtn = document.getElementById('doubleSlap');
+        const fiveTimesBtn = document.getElementById('fiveTimes');
+        
+        // Gloves
+        const defaultGloveBtn = document.getElementById('defaultGlove');
+        const stoneGloveBtn = document.getElementById('stoneGlove');
+        const wallGloveBtn = document.getElementById('wallGlove');
+        const randomGloveBtn = document.getElementById('randomGlove');
+        const ghostGloveBtn = document.getElementById('ghostGlove');
+        const plagueGloveBtn = document.getElementById('plagueGlove');
+        const stoneAgeGloveBtn = document.getElementById('stoneAgeGlove');
+        const doubleDefaultGloveBtn = document.getElementById('doubleDefaultGlove');
+        const pullGloveBtn = document.getElementById('pullGlove');
+        const voodooGloveBtn = document.getElementById('voodooGlove');
+        
+        // Ability section
+        const useAbilityBtn = document.getElementById('useAbility');
+        const abilityCooldownDisplay = document.getElementById('abilityCooldown');
+        
+        // Achievements
+        const stoneAgeAchievement = document.getElementById('stoneAgeAchievement');
+        const doubleDefaultAchievement = document.getElementById('doubleDefaultAchievement');
+        const pullAchievement = document.getElementById('pullAchievement');
+        const trueGhostAchievement = document.getElementById('trueGhostAchievement');
+        const plagueAchievement = document.getElementById('plagueAchievement');
+        const trueMasterAchievement = document.getElementById('trueMasterAchievement');
+        const eyeAchievement = document.getElementById('eyeAchievement');
+        
+        // Skin elements
+        const openChestBtn = document.getElementById('openChest');
+        const openMegaChestBtn = document.getElementById('openMegaChest');
+        const viewSkinsBtn = document.getElementById('viewSkins');
+        const chestModal = document.getElementById('chestModal');
+        const megaChestModal = document.getElementById('megaChestModal');
+        const skinsModal = document.getElementById('skinsModal');
+        const chestResult = document.getElementById('chestResult');
+        const megaChestResult = document.getElementById('megaChestResult');
+        const confirmOpenChestBtn = document.getElementById('confirmOpenChest');
+        const confirmOpenMegaChestBtn = document.getElementById('confirmOpenMegaChest');
+        const skinsContainer = document.getElementById('skinsContainer');
+        
+        // Wall
+        const wall = document.getElementById('wall');
+        
+        // Ghost dimension
+        const ghostDimension = document.getElementById('ghostDimension');
+        
+        // Boss fight elements
+        const bossFightModal = document.getElementById('bossFightModal');
+        const startBossFightBtn = document.getElementById('startBossFight');
+        const declineBossFightBtn = document.getElementById('declineBossFight');
+        const bossFightTimer = document.getElementById('bossFightTimer');
+        const bossBall = document.getElementById('bossBall');
+        
+        // Update display
+        function updateDisplay() {
+            slapCounter.textContent = `${slaps.toLocaleString()} slaps`;
+            slapsPerClickDisplay.textContent = slapsPerClick;
+            totalSlapsDisplay.textContent = totalSlaps.toLocaleString();
+            slapsPerSecondDisplay.textContent = slapsPerSecond;
+            stoneTimeDisplay.textContent = Math.floor(stoneTime);
+            ghostTimeDisplay.textContent = Math.floor(ghostTime);
+            nullCrystalsDisplay.textContent = nullCrystals;
+            totalCrystalsDisplay.textContent = totalCrystals;
+            chestsOpenedDisplay.textContent = chestsOpened;
+            megaChestsOpenedDisplay.textContent = megaChestsOpened;
+            wallsBrokenDisplay.textContent = wallsBroken;
+            plagueSlapsDisplay.textContent = plagueSlaps;
+            bossFightsWonDisplay.textContent = bossFightsWon;
+            
+            // Check for True Master achievement
+            if (totalSlaps >= 100000 && !achievements.trueMaster) {
+                achievements.trueMaster = true;
+                trueMasterAchievement.classList.add('unlocked');
             }
-
-            setSize(size) {
-                this.size = size;
-                if (size === 2) {
-                    this.element.classList.add('size2');
-                } else {
-                    this.element.classList.remove('size2');
+            
+            // Check for Eye achievement
+            if (wallsBroken >= 1000 && !achievements.eye) {
+                achievements.eye = true;
+                eyeAchievement.classList.add('unlocked');
+            }
+            
+            // Update upgrade buttons
+            doubleSlapBtn.disabled = slaps < 1000 || upgrades.double;
+            fiveTimesBtn.disabled = slaps < 10000 || upgrades.fiveTimes;
+            
+            // Update glove buttons
+            defaultGloveBtn.disabled = selectedGlove === 'default';
+            stoneGloveBtn.disabled = slaps < 45 || selectedGlove === 'stone';
+            wallGloveBtn.disabled = slaps < 1750 || selectedGlove === 'wall';
+            randomGloveBtn.disabled = slaps < 1000 || selectedGlove === 'random';
+            ghostGloveBtn.disabled = slaps < 2500 || selectedGlove === 'ghost';
+            plagueGloveBtn.disabled = slaps < 3000 || selectedGlove === 'plague';
+            stoneAgeGloveBtn.disabled = !unlockedGloves.stoneAge || selectedGlove === 'stoneAge';
+            doubleDefaultGloveBtn.disabled = !unlockedGloves.doubleDefault || selectedGlove === 'doubleDefault';
+            pullGloveBtn.disabled = !unlockedGloves.pull || selectedGlove === 'pull';
+            voodooGloveBtn.disabled = !unlockedGloves.voodoo || selectedGlove === 'voodoo';
+            
+            // Update achievement display
+            if (achievements.stoneAge) {
+                stoneAgeAchievement.classList.add('unlocked');
+            }
+            if (achievements.doubleDefault) {
+                doubleDefaultAchievement.classList.add('unlocked');
+            }
+            if (achievements.pull) {
+                pullAchievement.classList.add('unlocked');
+            }
+            if (achievements.trueGhost) {
+                trueGhostAchievement.classList.add('unlocked');
+            }
+            if (achievements.plague) {
+                plagueAchievement.classList.add('unlocked');
+            }
+            
+            // Update ability button
+            if (abilityCooldown > 0) {
+                abilityCooldownDisplay.textContent = `Cooldown: ${abilityCooldown.toFixed(1)}s`;
+                useAbilityBtn.disabled = true;
+            } else {
+                abilityCooldownDisplay.textContent = '';
+                useAbilityBtn.disabled = false;
+            }
+            
+            // Update skin chest buttons
+            openChestBtn.disabled = nullCrystals < 100;
+            openMegaChestBtn.disabled = nullCrystals < 250;
+        }
+        
+        // Slap function
+        function slap() {
+            if (isStone) return;
+            
+            let slapValue = slapsPerClick;
+            
+            if (randomBuffActive) {
+                if (randomBuffType === 'double') {
+                    slapValue *= 2;
+                } else if (randomBuffType === 'fiveTimes') {
+                    slapValue *= 5;
                 }
             }
+            
+            // Pull glove bonus
+            if (selectedGlove === 'pull' && pullHoldActive) {
+                slapValue *= 10;
+                pullHoldActive = false;
+            }
+            
+            // Voodoo glove bonus
+            if (selectedGlove === 'voodoo' && abilityCooldown <= 0) {
+                slapValue *= 2;
+                nullCrystals += 5;
+                totalCrystals += 5;
+            }
+            
+            // Plague active bonus
+            if (plagueActive) {
+                plagueSlaps++;
+                if (plagueSlaps >= 50 && !achievements.plague) {
+                    achievements.plague = true;
+                    plagueAchievement.classList.add('unlocked');
+                }
+            }
+            
+            // Boss fight slaps
+            if (bossFightActive) {
+                bossFightSlaps++;
+                bossFightTimer.textContent = `Time left: ${bossFightTimeLeft}s | Slaps: ${bossFightSlaps}/100`;
+                
+                if (bossFightSlaps >= 100) {
+                    winBossFight();
+                }
+            }
+            
+            slaps += slapValue;
+            totalSlaps += slapValue;
+            
+            // 5% chance to get a null crystal
+            if (Math.random() < 0.05) {
+                nullCrystals++;
+                totalCrystals++;
+            }
+            
+            updateDisplay();
         }
-
-        class OneBlock {
-            constructor() {
-                this.element = document.createElement('div');
-                this.element.className = 'one-block';
-                this.x = 0;
-                this.y = 0;
-                document.getElementById('blocks').appendChild(this.element);
+        
+        // Buy upgrade
+        function buyUpgrade(upgradeType) {
+            if (upgradeType === 'double' && slaps >= 1000 && !upgrades.double) {
+                slaps -= 1000;
+                slapsPerClick *= 2;
+                upgrades.double = true;
+            } else if (upgradeType === 'fiveTimes' && slaps >= 10000 && !upgrades.fiveTimes) {
+                slaps -= 10000;
+                slapsPerClick *= 5;
+                upgrades.fiveTimes = true;
             }
-
-            setPosition(x, y) {
-                this.x = x;
-                this.y = y;
-                this.element.style.transform = `translate(${x}px, ${y}px)`;
-            }
+            updateDisplay();
         }
-
-        class Interpreter {
-            constructor() {
-                this.blocks = [];
-                this.oneBlocks = [];
-                this.currentBlock = null;
-                this.keyHandlers = {};
+        
+        // Select glove
+        function selectGlove(gloveType) {
+            selectedGlove = gloveType;
+            isStone = gloveType === 'stone';
+            isGhost = gloveType === 'ghost';
+            
+            // Reset ability cooldown when switching gloves
+            abilityCooldown = 0;
+            
+            // Update passive slaps per second
+            if (gloveType === 'stoneAge') {
+                slapsPerSecond = 0;
+            } else if (gloveType === 'doubleDefault') {
+                slapsPerSecond = 0;
+            } else if (gloveType === 'pull') {
+                slapsPerSecond = 0;
+            } else if (gloveType === 'voodoo') {
+                slapsPerSecond = 0;
+            } else {
+                slapsPerSecond = 0;
             }
-
-            init() {
-                document.addEventListener('keydown', (e) => {
-                    if (this.keyHandlers[e.key.toUpperCase()]) {
-                        this.keyHandlers[e.key.toUpperCase()]();
+            
+            // Show/hide ghost dimension
+            ghostDimension.style.display = isGhost ? 'block' : 'none';
+            
+            updateDisplay();
+        }
+        
+        // Use ability
+        function useAbility() {
+            if (abilityCooldown > 0) return;
+            
+            switch (selectedGlove) {
+                case 'default':
+                    // Default ability - +5 slaps
+                    slaps += 5;
+                    totalSlaps += 5;
+                    abilityCooldown = 10;
+                    break;
+                    
+                case 'wall':
+                    // Wall ability - spawn a wall
+                    spawnWall();
+                    abilityCooldown = 30;
+                    break;
+                    
+                case 'random':
+                    // Random ability - random buff
+                    const randomValue = Math.random();
+                    if (randomValue < 0.5) {
+                        randomBuffType = 'double';
+                    } else {
+                        randomBuffType = 'fiveTimes';
+                    }
+                    randomBuffActive = true;
+                    randomBuffEndTime = Date.now() + 10000; // 10 seconds
+                    abilityCooldown = 45;
+                    
+                    // Check for pull achievement
+                    if (randomBuffType === 'fiveTimes' && !achievements.pull) {
+                        achievements.pull = true;
+                        unlockedGloves.pull = true;
+                    }
+                    break;
+                    
+                case 'ghost':
+                    // Ghost ability - enter ghost dimension
+                    isGhost = true;
+                    ghostDimension.style.display = 'block';
+                    abilityCooldown = 60;
+                    break;
+                    
+                case 'plague':
+                    // Plague ability - +1 slap for 3 seconds
+                    plagueActive = true;
+                    plagueEndTime = Date.now() + 3000;
+                    abilityCooldown = 10;
+                    break;
+                    
+                case 'stoneAge':
+                    // Stone Age ability - +150 slaps every 5 seconds
+                    slaps += 150;
+                    totalSlaps += 150;
+                    abilityCooldown = 5;
+                    break;
+                    
+                case 'doubleDefault':
+                    // Double Default ability - like default but 2s cooldown
+                    slaps += 5;
+                    totalSlaps += 5;
+                    abilityCooldown = 2;
+                    break;
+                    
+                case 'pull':
+                    // Start pull hold
+                    pullHoldStart = Date.now();
+                    pullHoldActive = true;
+                    setTimeout(() => {
+                        if (pullHoldActive) {
+                            // If still holding after 10 seconds
+                            pullHoldActive = false;
+                        }
+                    }, 10000);
+                    break;
+                    
+                case 'voodoo':
+                    // Voodoo ability - next click gives bonus
+                    abilityCooldown = 30;
+                    break;
+            }
+            
+            updateDisplay();
+        }
+        
+        // Spawn wall
+        function spawnWall() {
+            wallActive = true;
+            wallHits = 0;
+            wallEndTime = Date.now() + 30000; // 30 seconds
+            
+            // Random position
+            const maxX = window.innerWidth - 100;
+            const maxY = window.innerHeight - 100;
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+            
+            wall.style.left = `${randomX}px`;
+            wall.style.top = `${randomY}px`;
+            wall.style.display = 'block';
+            
+            // Wall click handler
+            wall.onclick = function() {
+                wallHits++;
+                if (wallHits >= 10) {
+                    // Wall broken
+                    const slapsReward = Math.floor(Math.random() * 10) + 1;
+                    slaps += slapsReward;
+                    totalSlaps += slapsReward;
+                    wall.style.display = 'none';
+                    wallActive = false;
+                    wallsBroken++;
+                    
+                    if (wallsBroken >= 1000 && !achievements.eye) {
+                        achievements.eye = true;
+                        eyeAchievement.classList.add('unlocked');
+                        slaps += 1000;
+                        totalSlaps += 1000;
+                    }
+                    
+                    updateDisplay();
+                }
+            };
+        }
+        
+        // Skin system functions
+        function openSkinChest() {
+            if (nullCrystals < 100) return;
+            
+            nullCrystals -= 100;
+            chestsOpened++;
+            
+            // Determine which skin to unlock
+            const random = Math.random() * 100;
+            let cumulativeChance = 0;
+            let selectedSkin = null;
+            
+            for (const [key, skin] of Object.entries(skinTypes)) {
+                if (key === 'yellowRedPulse' || key === 'rainbowFlash') continue;
+                
+                cumulativeChance += skin.chance;
+                if (random <= cumulativeChance) {
+                    selectedSkin = key;
+                    break;
+                }
+            }
+            
+            // Add to unlocked skins if not already unlocked
+            if (!unlockedSkins.includes(selectedSkin)) {
+                unlockedSkins.push(selectedSkin);
+            }
+            
+            // Show result in modal
+            chestResult.innerHTML = `
+                <h3>You got: ${skinTypes[selectedSkin].name} Skin!</h3>
+                <div class="skin-preview" style="background: ${skinTypes[selectedSkin].color}; width: 100px; height: 100px;"></div>
+                <p>${unlockedSkins.length} / ${Object.keys(skinTypes).length - 2} skins unlocked</p>
+            `;
+            
+            updateDisplay();
+        }
+        
+        function openMegaSkinChest() {
+            if (nullCrystals < 250) return;
+            
+            nullCrystals -= 250;
+            megaChestsOpened++;
+            
+            // Determine which skin to unlock (special skins only)
+            const random = Math.random() * 100;
+            let selectedSkin = random <= 90 ? 'yellowRedPulse' : 'rainbowFlash';
+            
+            // Add to unlocked skins if not already unlocked
+            if (!unlockedSkins.includes(selectedSkin)) {
+                unlockedSkins.push(selectedSkin);
+            }
+            
+            // Show result in modal
+            megaChestResult.innerHTML = `
+                <h3>You got: ${skinTypes[selectedSkin].name} Skin!</h3>
+                <div class="skin-preview" style="animation: ${skinTypes[selectedSkin].animation}; width: 100px; height: 100px;"></div>
+                <p>${unlockedSkins.length} / ${Object.keys(skinTypes).length} skins unlocked</p>
+            `;
+            
+            updateDisplay();
+        }
+        
+        function showSkinsModal() {
+            skinsContainer.innerHTML = '';
+            
+            if (unlockedSkins.length === 0) {
+                skinsContainer.innerHTML = '<p>No skins unlocked yet. Open chests to get skins!</p>';
+                return;
+            }
+            
+            unlockedSkins.forEach(skinKey => {
+                const skin = skinTypes[skinKey];
+                const skinElement = document.createElement('div');
+                skinElement.className = `skin-preview ${currentSkin === skinKey ? 'selected' : ''}`;
+                
+                if (skin.color) {
+                    skinElement.style.background = skin.color;
+                } else if (skin.animation) {
+                    skinElement.style.animation = skin.animation;
+                }
+                
+                skinElement.title = skin.name;
+                skinElement.addEventListener('click', () => {
+                    currentSkin = skinKey;
+                    if (skin.color) {
+                        slapButton.style.background = skin.color;
+                        slapButton.style.animation = 'none';
+                    } else if (skin.animation) {
+                        slapButton.style.background = 'none';
+                        slapButton.style.animation = skin.animation;
+                    }
+                    updateSkinsDisplay();
+                });
+                
+                const skinLabel = document.createElement('div');
+                skinLabel.textContent = skin.name;
+                
+                const skinContainer = document.createElement('div');
+                skinContainer.style.display = 'inline-block';
+                skinContainer.style.margin = '10px';
+                skinContainer.style.textAlign = 'center';
+                skinContainer.appendChild(skinElement);
+                skinContainer.appendChild(skinLabel);
+                
+                skinsContainer.appendChild(skinContainer);
+            });
+        }
+        
+        function updateSkinsDisplay() {
+            // Update all skin preview selections
+            const skinPreviews = document.querySelectorAll('.skin-preview');
+            skinPreviews.forEach(preview => {
+                preview.classList.remove('selected');
+            });
+            
+            if (currentSkin) {
+                document.querySelectorAll('.skin-preview').forEach(el => {
+                    if (el.title === skinTypes[currentSkin].name) {
+                        el.classList.add('selected');
                     }
                 });
             }
-
-            async execute(code) {
-                document.getElementById('blocks').innerHTML = '';
-                const lines = code.split('\n').filter(l => l.trim() !== '');
+        }
+        
+        // Boss fight functions
+        function startBossFight() {
+            bossFightModal.style.display = 'none';
+            bossFightActive = true;
+            bossFightSlaps = 0;
+            bossFightTimeLeft = 60;
+            bossFightTimer.textContent = `Time left: ${bossFightTimeLeft}s | Slaps: 0/100`;
+            bossFightTimer.style.display = 'block';
+            
+            // Start timer
+            bossFightInterval = setInterval(() => {
+                bossFightTimeLeft--;
+                bossFightTimer.textContent = `Time left: ${bossFightTimeLeft}s | Slaps: ${bossFightSlaps}/100`;
                 
-                for (let line of lines) {
-                    line = line.trim();
-                    if (line.startsWith('add - block')) {
-                        this.currentBlock = new Block();
-                        this.blocks.push(this.currentBlock);
-                    }
-                    else if (line.startsWith('function.block:Start()')) {
-                        // Начало функции
-                    }
-                    else if (line.startsWith('block.size = in ')) {
-                        const size = parseInt(line.split('block.size = in ')[1].replace(':', ''));
-                        this.currentBlock.setSize(size);
-                    }
-                    else if (line.startsWith('block.controller.function - sizes (')) {
-                        const key = line.match(/\((\w)\)/)[1].toUpperCase();
-                        this.keyHandlers[key] = () => {
-                            this.currentBlock.setSize(2);
-                        };
-                    }
-                    else if (line.startsWith('block.move.out(')) {
-                        const coords = line.match(/\((-?\d+),\s*(-?\d+)\)/);
-                        await this.currentBlock.moveOut(parseInt(coords[1]), parseInt(coords[2]));
-                    }
-                    else if (line.startsWith('add - one.block')) {
-                        this.currentOneBlock = new OneBlock();
-                        this.oneBlocks.push(this.currentOneBlock);
-                    }
-                    else if (line.startsWith('one.block.position(')) {
-                        const coords = line.match(/\((-?\d+),\s*(-?\d+)\)/);
-                        this.currentOneBlock.setPosition(parseInt(coords[1]), parseInt(coords[2]));
-                    }
-                    else if (line === 'end)') {
-                        break;
-                    }
+                if (bossFightTimeLeft <= 0) {
+                    endBossFight(false);
+                }
+            }, 1000);
+            
+            // Spawn boss balls randomly
+            bossBallInterval = setInterval(spawnBossBall, 2000);
+        }
+        
+        function spawnBossBall() {
+            const maxX = window.innerWidth - 30;
+            const maxY = window.innerHeight - 30;
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+            
+            bossBall.style.left = `${randomX}px`;
+            bossBall.style.top = `${randomY}px`;
+            bossBall.style.display = 'block';
+            
+            // Remove after 1.5 seconds if not clicked
+            setTimeout(() => {
+                if (bossBall.style.display === 'block') {
+                    bossBall.style.display = 'none';
+                }
+            }, 1500);
+        }
+        
+        function endBossFight(won) {
+            clearInterval(bossFightInterval);
+            clearInterval(bossBallInterval);
+            bossFightActive = false;
+            bossFightTimer.style.display = 'none';
+            bossBall.style.display = 'none';
+            
+            if (won) {
+                bossFightsWon++;
+                slaps += 200;
+                totalSlaps += 200;
+                nullCrystals += 50;
+                totalCrystals += 50;
+                
+                // Show victory message
+                chestResult.innerHTML = `
+                    <h3>Boss Fight Victory!</h3>
+                    <p>You earned 200 slaps and 50 null crystals!</p>
+                `;
+                chestModal.style.display = 'flex';
+            }
+            
+            updateDisplay();
+        }
+        
+        function winBossFight() {
+            endBossFight(true);
+        }
+        
+        // Check for boss fight every 10 minutes
+        setInterval(() => {
+            if (!bossFightActive) {
+                bossFightModal.style.display = 'flex';
+            }
+        }, 600000); // 10 minutes
+        
+        // Game loop
+        function gameLoop() {
+            // Passive slaps
+            if (slapsPerSecond > 0) {
+                slaps += slapsPerSecond / 10;
+                totalSlaps += slapsPerSecond / 10;
+            }
+            
+            // Ability cooldown
+            if (abilityCooldown > 0) {
+                abilityCooldown -= 0.1;
+                if (abilityCooldown < 0) abilityCooldown = 0;
+            }
+            
+            // Stone time tracking
+            if (isStone) {
+                stoneTime += 0.1;
+                
+                // Check for Stone Age achievement
+                if (stoneTime >= 600 && !achievements.stoneAge) { // 10 minutes = 600 seconds
+                    achievements.stoneAge = true;
+                    unlockedGloves.stoneAge = true;
                 }
             }
+            
+            // Ghost time tracking
+            if (isGhost) {
+                ghostTime += 0.1;
+                
+                // Check for True Ghost achievement
+                if (ghostTime >= 300 && !achievements.trueGhost) { // 5 minutes = 300 seconds
+                    achievements.trueGhost = true;
+                    unlockedGloves.voodoo = true;
+                }
+            }
+            
+            // Random buff expiration
+            if (randomBuffActive && Date.now() >= randomBuffEndTime) {
+                randomBuffActive = false;
+            }
+            
+            // Plague expiration
+            if (plagueActive && Date.now() >= plagueEndTime) {
+                plagueActive = false;
+            }
+            
+            // Wall expiration
+            if (wallActive && Date.now() >= wallEndTime) {
+                wall.style.display = 'none';
+                wallActive = false;
+            }
+            
+            updateDisplay();
+            setTimeout(gameLoop, 100);
         }
-
-        const interpreter = new Interpreter();
-        interpreter.init();
-        document.getElementById('runBtn').addEventListener('click', () => {
-            interpreter.execute(editor.getValue());
+        
+        // Event listeners
+        slapButton.addEventListener('click', slap);
+        
+        doubleSlapBtn.addEventListener('click', () => buyUpgrade('double'));
+        fiveTimesBtn.addEventListener('click', () => buyUpgrade('fiveTimes'));
+        
+        defaultGloveBtn.addEventListener('click', () => selectGlove('default'));
+        stoneGloveBtn.addEventListener('click', () => selectGlove('stone'));
+        wallGloveBtn.addEventListener('click', () => selectGlove('wall'));
+        randomGloveBtn.addEventListener('click', () => selectGlove('random'));
+        ghostGloveBtn.addEventListener('click', () => selectGlove('ghost'));
+        plagueGloveBtn.addEventListener('click', () => selectGlove('plague'));
+        stoneAgeGloveBtn.addEventListener('click', () => selectGlove('stoneAge'));
+        doubleDefaultGloveBtn.addEventListener('click', () => selectGlove('doubleDefault'));
+        pullGloveBtn.addEventListener('click', () => selectGlove('pull'));
+        voodooGloveBtn.addEventListener('click', () => selectGlove('voodoo'));
+        
+        useAbilityBtn.addEventListener('click', useAbility);
+        
+        // Skin system events
+        openChestBtn.addEventListener('click', () => {
+            chestModal.style.display = 'flex';
+            chestResult.innerHTML = '<p>Are you ready to open a skin chest?</p>';
         });
+        
+        openMegaChestBtn.addEventListener('click', () => {
+            megaChestModal.style.display = 'flex';
+            megaChestResult.innerHTML = '<p>Are you ready to open a mega skin chest?</p>';
+        });
+        
+        viewSkinsBtn.addEventListener('click', () => {
+            showSkinsModal();
+            skinsModal.style.display = 'flex';
+        });
+        
+        confirmOpenChestBtn.addEventListener('click', () => {
+            openSkinChest();
+        });
+        
+        confirmOpenMegaChestBtn.addEventListener('click', () => {
+            openMegaSkinChest();
+        });
+        
+        // Boss fight events
+        startBossFightBtn.addEventListener('click', startBossFight);
+        declineBossFightBtn.addEventListener('click', () => {
+            bossFightModal.style.display = 'none';
+        });
+        
+        bossBall.addEventListener('click', () => {
+            endBossFight(false);
+        });
+        
+        // Close modals
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                chestModal.style.display = 'none';
+                megaChestModal.style.display = 'none';
+                skinsModal.style.display = 'none';
+            });
+        });
+        
+        // Close modals when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === chestModal) {
+                chestModal.style.display = 'none';
+            }
+            if (e.target === megaChestModal) {
+                megaChestModal.style.display = 'none';
+            }
+            if (e.target === skinsModal) {
+                skinsModal.style.display = 'none';
+            }
+            if (e.target === bossFightModal) {
+                bossFightModal.style.display = 'none';
+            }
+        });
+        
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'e') {
+                useAbility();
+            }
+        });
+        
+        // Exit ghost dimension on click
+        ghostDimension.addEventListener('click', () => {
+            if (isGhost) {
+                isGhost = false;
+                ghostDimension.style.display = 'none';
+            }
+        });
+        
+        // Initialize
+        updateDisplay();
+        gameLoop();
     </script>
 </body>
 </html>
