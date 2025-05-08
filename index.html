@@ -174,6 +174,16 @@
             z-index: 50;
             display: none;
         }
+        .bob-dimension {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 50;
+            display: none;
+        }
         .boss-ball {
             position: absolute;
             width: 30px;
@@ -194,6 +204,29 @@
             z-index: 100;
             display: none;
         }
+        .replica-square {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-color: #0984e3;
+            cursor: pointer;
+            display: none;
+            border-radius: 5px;
+        }
+        .replica-square.black {
+            background-color: #000;
+        }
+        .killstreak-display {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            z-index: 100;
+        }
         @keyframes yellowRedPulse {
             0% { background-color: #fdcb6e; }
             50% { background-color: #e17055; }
@@ -211,7 +244,9 @@
 </head>
 <body>
     <div class="ghost-dimension" id="ghostDimension"></div>
+    <div class="bob-dimension" id="bobDimension"></div>
     <div class="boss-fight-timer" id="bossFightTimer">Time left: 60s | Slaps: 0/100</div>
+    <div class="killstreak-display" id="killstreakDisplay">Killstreak: 0</div>
     
     <h1>Slap Battler Clicker</h1>
     
@@ -233,12 +268,16 @@
         </div>
         <div id="wall" class="wall"></div>
         <div id="bossBall" class="boss-ball"></div>
+        <div id="replicaSquare" class="replica-square"></div>
     </div>
     
     <div class="section">
         <h2>Upgrades</h2>
         <button class="upgrade" id="doubleSlap">Double Slaps (1,000 slaps)</button>
         <button class="upgrade" id="fiveTimes">5x Slaps (10,000 slaps)</button>
+        <button class="upgrade" id="plusFivePerSec">+5 slaps/sec (100 slaps)</button>
+        <button class="upgrade" id="plusTwentyPerSec">+20 slaps/sec (1,111 slaps)</button>
+        <button class="upgrade" id="tenTimes">10x Slaps (40,000 slaps)</button>
     </div>
     
     <div class="section">
@@ -249,10 +288,14 @@
         <button class="glove" id="randomGlove">Random Buff (1,000 slaps)</button>
         <button class="glove" id="ghostGlove">Ghost (2,500 slaps)</button>
         <button class="glove" id="plagueGlove">Plague (3,000 slaps)</button>
+        <button class="glove" id="flashGlove">Flash (300 slaps)</button>
+        <button class="glove" id="rainbowGlove">Rainbow (7,777 slaps)</button>
+        <button class="glove" id="replicaGlove">Replica (4,000 slaps)</button>
         <button class="glove" id="stoneAgeGlove" disabled>Stone Age (Achievement)</button>
         <button class="glove" id="doubleDefaultGlove" disabled>Double Default (Achievement)</button>
         <button class="glove" id="pullGlove" disabled>Pull (Achievement)</button>
         <button class="glove" id="voodooGlove" disabled>Voodoo (Achievement)</button>
+        <button class="glove" id="bobGlove" disabled>BOB (Achievement)</button>
     </div>
     
     <div class="section">
@@ -264,6 +307,8 @@
         <div class="achievement" id="plagueAchievement">Plague - Get 50 slaps with Plague glove</div>
         <div class="achievement" id="trueMasterAchievement">True Master - Reach 100,000 slaps</div>
         <div class="achievement" id="eyeAchievement">Eye - Break the black wall 1,000 times</div>
+        <div class="achievement" id="bobAchievement">BOB - Find the rare black square (1/1250)</div>
+        <div class="achievement" id="twoFiftyAchievement">250 - Reach 250 killstreak</div>
     </div>
     
     <div class="section">
@@ -272,12 +317,17 @@
         <p>Slaps per second: <span id="slapsPerSecond">0</span></p>
         <p>Time as stone: <span id="stoneTime">0</span> seconds</p>
         <p>Time in ghost: <span id="ghostTime">0</span> seconds</p>
+        <p>Time with BOB: <span id="bobTime">0</span> seconds</p>
         <p>Null crystals found: <span id="totalCrystals">0</span></p>
         <p>Chests opened: <span id="chestsOpened">0</span></p>
         <p>Mega chests opened: <span id="megaChestsOpened">0</span></p>
         <p>Walls broken: <span id="wallsBroken">0</span></p>
         <p>Plague slaps: <span id="plagueSlaps">0</span></p>
         <p>Boss fights won: <span id="bossFightsWon">0</span></p>
+        <p>Current killstreak: <span id="currentKillstreak">0</span></p>
+        <p>Highest killstreak: <span id="highestKillstreak">0</span></p>
+        <p>Replica squares clicked: <span id="replicaClicks">0</span></p>
+        <p>Black squares found: <span id="blackSquaresFound">0</span></p>
     </div>
 
     <!-- Skin Chest Modal -->
@@ -324,6 +374,10 @@
     </div>
 
     <script>
+        // ====================
+        // BASE GAME CODE
+        // ====================
+        
         // Game state
         let slaps = 0;
         let totalSlaps = 0;
@@ -338,14 +392,19 @@
         let bossFightsWon = 0;
         let upgrades = {
             double: false,
-            fiveTimes: false
+            fiveTimes: false,
+            plusFivePerSec: false,
+            plusTwentyPerSec: false,
+            tenTimes: false
         };
         let selectedGlove = 'default';
         let abilityCooldown = 0;
         let stoneTime = 0;
         let ghostTime = 0;
+        let bobTime = 0;
         let isStone = false;
         let isGhost = false;
+        let isBob = false;
         let randomBuffActive = false;
         let randomBuffType = '';
         let randomBuffEndTime = 0;
@@ -363,13 +422,16 @@
             trueGhost: false,
             plague: false,
             trueMaster: false,
-            eye: false
+            eye: false,
+            bob: false,
+            twoFifty: false
         };
         let unlockedGloves = {
             stoneAge: false,
             doubleDefault: false,
             pull: false,
-            voodoo: false
+            voodoo: false,
+            bob: false
         };
         
         // Boss fight state
@@ -429,6 +491,7 @@
         const slapsPerSecondDisplay = document.getElementById('slapsPerSecond');
         const stoneTimeDisplay = document.getElementById('stoneTime');
         const ghostTimeDisplay = document.getElementById('ghostTime');
+        const bobTimeDisplay = document.getElementById('bobTime');
         const nullCrystalsDisplay = document.getElementById('nullCrystals');
         const totalCrystalsDisplay = document.getElementById('totalCrystals');
         const chestsOpenedDisplay = document.getElementById('chestsOpened');
@@ -436,10 +499,17 @@
         const wallsBrokenDisplay = document.getElementById('wallsBroken');
         const plagueSlapsDisplay = document.getElementById('plagueSlaps');
         const bossFightsWonDisplay = document.getElementById('bossFightsWon');
+        const currentKillstreakDisplay = document.getElementById('currentKillstreak');
+        const highestKillstreakDisplay = document.getElementById('highestKillstreak');
+        const replicaClicksDisplay = document.getElementById('replicaClicks');
+        const blackSquaresFoundDisplay = document.getElementById('blackSquaresFound');
         
         // Upgrades
         const doubleSlapBtn = document.getElementById('doubleSlap');
         const fiveTimesBtn = document.getElementById('fiveTimes');
+        const plusFivePerSecBtn = document.getElementById('plusFivePerSec');
+        const plusTwentyPerSecBtn = document.getElementById('plusTwentyPerSec');
+        const tenTimesBtn = document.getElementById('tenTimes');
         
         // Gloves
         const defaultGloveBtn = document.getElementById('defaultGlove');
@@ -448,10 +518,14 @@
         const randomGloveBtn = document.getElementById('randomGlove');
         const ghostGloveBtn = document.getElementById('ghostGlove');
         const plagueGloveBtn = document.getElementById('plagueGlove');
+        const flashGloveBtn = document.getElementById('flashGlove');
+        const rainbowGloveBtn = document.getElementById('rainbowGlove');
+        const replicaGloveBtn = document.getElementById('replicaGlove');
         const stoneAgeGloveBtn = document.getElementById('stoneAgeGlove');
         const doubleDefaultGloveBtn = document.getElementById('doubleDefaultGlove');
         const pullGloveBtn = document.getElementById('pullGlove');
         const voodooGloveBtn = document.getElementById('voodooGlove');
+        const bobGloveBtn = document.getElementById('bobGlove');
         
         // Ability section
         const useAbilityBtn = document.getElementById('useAbility');
@@ -465,6 +539,8 @@
         const plagueAchievement = document.getElementById('plagueAchievement');
         const trueMasterAchievement = document.getElementById('trueMasterAchievement');
         const eyeAchievement = document.getElementById('eyeAchievement');
+        const bobAchievement = document.getElementById('bobAchievement');
+        const twoFiftyAchievement = document.getElementById('twoFiftyAchievement');
         
         // Skin elements
         const openChestBtn = document.getElementById('openChest');
@@ -485,12 +561,21 @@
         // Ghost dimension
         const ghostDimension = document.getElementById('ghostDimension');
         
+        // Bob dimension
+        const bobDimension = document.getElementById('bobDimension');
+        
         // Boss fight elements
         const bossFightModal = document.getElementById('bossFightModal');
         const startBossFightBtn = document.getElementById('startBossFight');
         const declineBossFightBtn = document.getElementById('declineBossFight');
         const bossFightTimer = document.getElementById('bossFightTimer');
         const bossBall = document.getElementById('bossBall');
+        
+        // Replica square
+        const replicaSquare = document.getElementById('replicaSquare');
+        
+        // Killstreak display
+        const killstreakDisplay = document.getElementById('killstreakDisplay');
         
         // Update display
         function updateDisplay() {
@@ -500,6 +585,7 @@
             slapsPerSecondDisplay.textContent = slapsPerSecond;
             stoneTimeDisplay.textContent = Math.floor(stoneTime);
             ghostTimeDisplay.textContent = Math.floor(ghostTime);
+            bobTimeDisplay.textContent = Math.floor(bobTime);
             nullCrystalsDisplay.textContent = nullCrystals;
             totalCrystalsDisplay.textContent = totalCrystals;
             chestsOpenedDisplay.textContent = chestsOpened;
@@ -507,6 +593,10 @@
             wallsBrokenDisplay.textContent = wallsBroken;
             plagueSlapsDisplay.textContent = plagueSlaps;
             bossFightsWonDisplay.textContent = bossFightsWon;
+            currentKillstreakDisplay.textContent = currentKillstreak;
+            highestKillstreakDisplay.textContent = highestKillstreak;
+            replicaClicksDisplay.textContent = replicaClicks;
+            blackSquaresFoundDisplay.textContent = blackSquaresFound;
             
             // Check for True Master achievement
             if (totalSlaps >= 100000 && !achievements.trueMaster) {
@@ -520,9 +610,20 @@
                 eyeAchievement.classList.add('unlocked');
             }
             
+            // Check for 250 killstreak achievement
+            if (currentKillstreak >= 250 && !achievements.twoFifty) {
+                achievements.twoFifty = true;
+                twoFiftyAchievement.classList.add('unlocked');
+                slaps += 2000;
+                totalSlaps += 2000;
+            }
+            
             // Update upgrade buttons
             doubleSlapBtn.disabled = slaps < 1000 || upgrades.double;
             fiveTimesBtn.disabled = slaps < 10000 || upgrades.fiveTimes;
+            plusFivePerSecBtn.disabled = slaps < 100 || upgrades.plusFivePerSec;
+            plusTwentyPerSecBtn.disabled = slaps < 1111 || upgrades.plusTwentyPerSec;
+            tenTimesBtn.disabled = slaps < 40000 || upgrades.tenTimes;
             
             // Update glove buttons
             defaultGloveBtn.disabled = selectedGlove === 'default';
@@ -531,10 +632,14 @@
             randomGloveBtn.disabled = slaps < 1000 || selectedGlove === 'random';
             ghostGloveBtn.disabled = slaps < 2500 || selectedGlove === 'ghost';
             plagueGloveBtn.disabled = slaps < 3000 || selectedGlove === 'plague';
+            flashGloveBtn.disabled = slaps < 300 || selectedGlove === 'flash';
+            rainbowGloveBtn.disabled = slaps < 7777 || selectedGlove === 'rainbow';
+            replicaGloveBtn.disabled = slaps < 4000 || selectedGlove === 'replica';
             stoneAgeGloveBtn.disabled = !unlockedGloves.stoneAge || selectedGlove === 'stoneAge';
             doubleDefaultGloveBtn.disabled = !unlockedGloves.doubleDefault || selectedGlove === 'doubleDefault';
             pullGloveBtn.disabled = !unlockedGloves.pull || selectedGlove === 'pull';
             voodooGloveBtn.disabled = !unlockedGloves.voodoo || selectedGlove === 'voodoo';
+            bobGloveBtn.disabled = !unlockedGloves.bob || selectedGlove === 'bob';
             
             // Update achievement display
             if (achievements.stoneAge) {
@@ -551,6 +656,9 @@
             }
             if (achievements.plague) {
                 plagueAchievement.classList.add('unlocked');
+            }
+            if (achievements.bob) {
+                bobAchievement.classList.add('unlocked');
             }
             
             // Update ability button
@@ -579,6 +687,14 @@
                 } else if (randomBuffType === 'fiveTimes') {
                     slapValue *= 5;
                 }
+            }
+            
+            // Killstreak bonuses
+            if (currentKillstreak >= 25) {
+                slapValue *= 2;
+            }
+            if (currentKillstreak >= 250) {
+                slapValue *= 10;
             }
             
             // Pull glove bonus
@@ -616,10 +732,26 @@
             slaps += slapValue;
             totalSlaps += slapValue;
             
-            // 5% chance to get a null crystal
-            if (Math.random() < 0.05) {
+            // 5% chance to get a null crystal (increased by rainbow glove)
+            let crystalChance = 0.05;
+            if (selectedGlove === 'rainbow') {
+                crystalChance = 0.5; // 50% chance with rainbow glove
+            }
+            
+            if (Math.random() < crystalChance) {
                 nullCrystals++;
                 totalCrystals++;
+            }
+            
+            // Killstreak tracking
+            currentKillstreak++;
+            if (currentKillstreak > highestKillstreak) {
+                highestKillstreak = currentKillstreak;
+            }
+            
+            // Every 10 slaps = 1 kill
+            if (currentKillstreak % 0 === 0) {
+                killstreakDisplay.textContent = `Killstreak: ${currentKillstreak}`;
             }
             
             updateDisplay();
@@ -635,6 +767,18 @@
                 slaps -= 10000;
                 slapsPerClick *= 5;
                 upgrades.fiveTimes = true;
+            } else if (upgradeType === 'plusFivePerSec' && slaps >= 100 && !upgrades.plusFivePerSec) {
+                slaps -= 100;
+                slapsPerSecond += 5;
+                upgrades.plusFivePerSec = true;
+            } else if (upgradeType === 'plusTwentyPerSec' && slaps >= 1111 && !upgrades.plusTwentyPerSec) {
+                slaps -= 1111;
+                slapsPerSecond += 20;
+                upgrades.plusTwentyPerSec = true;
+            } else if (upgradeType === 'tenTimes' && slaps >= 40000 && !upgrades.tenTimes) {
+                slaps -= 40000;
+                slapsPerClick *= 10;
+                upgrades.tenTimes = true;
             }
             updateDisplay();
         }
@@ -644,12 +788,17 @@
             selectedGlove = gloveType;
             isStone = gloveType === 'stone';
             isGhost = gloveType === 'ghost';
+            isBob = gloveType === 'bob';
             
             // Reset ability cooldown when switching gloves
             abilityCooldown = 0;
             
             // Update passive slaps per second
-            if (gloveType === 'stoneAge') {
+            if (gloveType === 'flash') {
+                slapsPerSecond += 5;
+            } else if (gloveType === 'bob') {
+                slapsPerSecond += 10;
+            } else if (gloveType === 'stoneAge') {
                 slapsPerSecond = 0;
             } else if (gloveType === 'doubleDefault') {
                 slapsPerSecond = 0;
@@ -657,12 +806,17 @@
                 slapsPerSecond = 0;
             } else if (gloveType === 'voodoo') {
                 slapsPerSecond = 0;
-            } else {
-                slapsPerSecond = 0;
+            } else if (selectedGlove !== 'flash' && selectedGlove !== 'bob') {
+                // Reset passive slaps if switching from flash/bob to another glove
+                if (selectedGlove === 'flash') slapsPerSecond -= 5;
+                if (selectedGlove === 'bob') slapsPerSecond -= 10;
             }
             
             // Show/hide ghost dimension
             ghostDimension.style.display = isGhost ? 'block' : 'none';
+            
+            // Show/hide bob dimension
+            bobDimension.style.display = isBob ? 'block' : 'none';
             
             updateDisplay();
         }
@@ -748,6 +902,23 @@
                     // Voodoo ability - next click gives bonus
                     abilityCooldown = 30;
                     break;
+                    
+                case 'replica':
+                    // Replica ability - spawn blue/black square
+                    spawnReplicaSquare();
+                    abilityCooldown = 100;
+                    break;
+                    
+                case 'bob':
+                    // BOB ability - black dimension for 25 seconds
+                    isBob = true;
+                    bobDimension.style.display = 'block';
+                    setTimeout(() => {
+                        isBob = false;
+                        bobDimension.style.display = 'none';
+                    }, 25000);
+                    abilityCooldown = 50;
+                    break;
             }
             
             updateDisplay();
@@ -791,6 +962,55 @@
                     updateDisplay();
                 }
             };
+        }
+        
+        // Spawn replica square
+        function spawnReplicaSquare() {
+            // 1/1250 chance for black square (BOB)
+            const isBlack = Math.random() < (1/1250);
+            
+            // Random position
+            const maxX = window.innerWidth - 80;
+            const maxY = window.innerHeight - 80;
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+            
+            replicaSquare.style.left = `${randomX}px`;
+            replicaSquare.style.top = `${randomY}px`;
+            replicaSquare.style.display = 'block';
+            
+            if (isBlack) {
+                replicaSquare.classList.add('black');
+                if (!achievements.bob) {
+                    achievements.bob = true;
+                    unlockedGloves.bob = true;
+                    bobAchievement.classList.add('unlocked');
+                }
+                blackSquaresFound++;
+            } else {
+                replicaSquare.classList.remove('black');
+            }
+            
+            // Square click handler
+            replicaSquare.onclick = function() {
+                if (isBlack) {
+                    // BOB square gives nothing (just the achievement)
+                } else {
+                    // Normal blue square gives 100 slaps
+                    slaps += 100;
+                    totalSlaps += 100;
+                }
+                replicaSquare.style.display = 'none';
+                replicaClicks++;
+                updateDisplay();
+            };
+            
+            // Hide after 5 seconds if not clicked
+            setTimeout(() => {
+                if (replicaSquare.style.display === 'block') {
+                    replicaSquare.style.display = 'none';
+                }
+            }, 5000);
         }
         
         // Skin system functions
@@ -926,6 +1146,10 @@
             bossFightTimer.textContent = `Time left: ${bossFightTimeLeft}s | Slaps: 0/100`;
             bossFightTimer.style.display = 'block';
             
+            // Reset killstreak for boss fight
+            currentKillstreak = 0;
+            killstreakDisplay.textContent = `Killstreak: 0`;
+            
             // Start timer
             bossFightInterval = setInterval(() => {
                 bossFightTimeLeft--;
@@ -992,7 +1216,7 @@
             if (!bossFightActive) {
                 bossFightModal.style.display = 'flex';
             }
-        }, 600000); // 10 minutes
+        }, 70000); // 10 minutes
         
         // Game loop
         function gameLoop() {
@@ -1030,6 +1254,11 @@
                 }
             }
             
+            // Bob time tracking
+            if (isBob) {
+                bobTime += 0.1;
+            }
+            
             // Random buff expiration
             if (randomBuffActive && Date.now() >= randomBuffEndTime) {
                 randomBuffActive = false;
@@ -1050,11 +1279,17 @@
             setTimeout(gameLoop, 100);
         }
         
-        // Event listeners
+        // ====================
+        // EVENT LISTENERS
+        // ====================
+        
         slapButton.addEventListener('click', slap);
         
         doubleSlapBtn.addEventListener('click', () => buyUpgrade('double'));
         fiveTimesBtn.addEventListener('click', () => buyUpgrade('fiveTimes'));
+        plusFivePerSecBtn.addEventListener('click', () => buyUpgrade('plusFivePerSec'));
+        plusTwentyPerSecBtn.addEventListener('click', () => buyUpgrade('plusTwentyPerSec'));
+        tenTimesBtn.addEventListener('click', () => buyUpgrade('tenTimes'));
         
         defaultGloveBtn.addEventListener('click', () => selectGlove('default'));
         stoneGloveBtn.addEventListener('click', () => selectGlove('stone'));
@@ -1062,10 +1297,14 @@
         randomGloveBtn.addEventListener('click', () => selectGlove('random'));
         ghostGloveBtn.addEventListener('click', () => selectGlove('ghost'));
         plagueGloveBtn.addEventListener('click', () => selectGlove('plague'));
+        flashGloveBtn.addEventListener('click', () => selectGlove('flash'));
+        rainbowGloveBtn.addEventListener('click', () => selectGlove('rainbow'));
+        replicaGloveBtn.addEventListener('click', () => selectGlove('replica'));
         stoneAgeGloveBtn.addEventListener('click', () => selectGlove('stoneAge'));
         doubleDefaultGloveBtn.addEventListener('click', () => selectGlove('doubleDefault'));
         pullGloveBtn.addEventListener('click', () => selectGlove('pull'));
         voodooGloveBtn.addEventListener('click', () => selectGlove('voodoo'));
+        bobGloveBtn.addEventListener('click', () => selectGlove('bob'));
         
         useAbilityBtn.addEventListener('click', useAbility);
         
@@ -1144,6 +1383,11 @@
         });
         
         // Initialize
+        let currentKillstreak = 0;
+        let highestKillstreak = 0;
+        let replicaClicks = 0;
+        let blackSquaresFound = 0;
+        
         updateDisplay();
         gameLoop();
     </script>
