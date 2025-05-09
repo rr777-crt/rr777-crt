@@ -1,4 +1,4 @@
-// Save system for Slap Battler Clicker
+'use script'
 class GameSave {
     constructor() {
         this.saveKey = 'slapBattlerSave';
