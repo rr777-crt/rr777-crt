@@ -1,4 +1,4 @@
-'use script'
+
 class GameSave {
     constructor() {
         this.saveKey = 'slapBattlerSave';
