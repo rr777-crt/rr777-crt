@@ -1,4 +1,24 @@
+const gameSave = new GameSave();
 
+// Try to load saved game
+if (!gameSave.loadGame()) {
+    console.log("No save found, starting new game");
+}
+
+// Add manual save button (optional)
+document.addEventListener('DOMContentLoaded', () => {
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Manual Save';
+    saveButton.style.position = 'fixed';
+    saveButton.style.bottom = '10px';
+    saveButton.style.right = '10px';
+    saveButton.style.zIndex = '1000';
+    saveButton.onclick = () => {
+        gameSave.saveGame();
+        alert('Game saved!');
+    };
+    document.body.appendChild(saveButton);
+});
 class GameSave {
     constructor() {
         this.saveKey = 'slapBattlerSave';
