@@ -6,6 +6,10 @@
     <title>Slap Battler Clicker</title>
     <style>
         body {
+            background-image: url('https://i.ytimg.com/vi/6gh8YqsAJ0M/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AG-B4AC0AWKAgwIABABGBEgcigRMA8=&rs=AOn4CLB9GFUVTzvlAPFQtqx0SeIkEsddiA');
+        background-size: cover;
+        background-attachment: fixed;
+        background-position: center;
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 0 auto;
@@ -240,6 +244,57 @@
             80% { background-color: blue; }
             100% { background-color: purple; }
         }
+        /* New visual effects */
+.detonator-zero {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background-color: #000;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 48px;
+    z-index: 10;
+}
+
+/* New chest animations */
+.shake-animation {
+    animation: shake 0.5s infinite;
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+}
+
+.gold-red-gradient {
+    background: linear-gradient(135deg, #fdcb6e, #e17055);
+}
+
+.colorful-shadow {
+    box-shadow: 0 0 15px red, 0 0 25px green, 0 0 35px blue;
+    animation: colorCycle 3s infinite;
+}
+
+@keyframes colorCycle {
+    0% { background-color: red; }
+    33% { background-color: green; }
+    66% { background-color: blue; }
+    100% { background-color: red; }
+}
+
+/* Background image */
+body {
+    background-image: url('https://i.imgur.com/J5Z9Q9a.jpg');
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
+}
     </style>
 </head>
 <body>
@@ -296,6 +351,8 @@
         <button class="glove" id="pullGlove" disabled>Pull (Achievement)</button>
         <button class="glove" id="voodooGlove" disabled>Voodoo (Achievement)</button>
         <button class="glove" id="bobGlove" disabled>BOB (Achievement)</button>
+        <button class="glove" id="detonatorGlove" disabled>Detonator (Achievement)</button>
+<button class="glove" id="berserkGlove">Berserk (12,500 slaps)</button>
     </div>
     
     <div class="section">
@@ -309,6 +366,7 @@
         <div class="achievement" id="eyeAchievement">Eye - Break the black wall 1,000 times</div>
         <div class="achievement" id="bobAchievement">BOB - Find the rare black square (1/1250)</div>
         <div class="achievement" id="twoFiftyAchievement">250 - Reach 250 killstreak</div>
+        <div class="achievement" id="survivorAchievement">Survivor - Use the Detonator glove</div>
     </div>
     
     <div class="section">
@@ -443,6 +501,7 @@
         let bossFightInterval;
         let bossBallInterval;
         
+        
         // Skins system
         const skinTypes = {
             yellow: {
@@ -484,6 +543,23 @@
         
         let unlockedSkins = [];
         let currentSkin = null;
+        // New variables for updates
+let detonatorActive = false;
+let detonatorEndTime = 0;
+let berserkStacks = 0;
+let berserkCooldown = 0;
+const newChestSkins = {
+    goldRedShake: {
+        name: "Gold-Red Shake",
+        chance: 60,
+        class: "gold-red-gradient shake-animation"
+    },
+    colorfulShadow: {
+        name: "Colorful Shadow",
+        chance: 40,
+        class: "colorful-shadow shake-animation"
+    }
+};
         
         // DOM elements
         const slapCounter = document.getElementById('slapCounter');
@@ -1389,9 +1465,145 @@
         let highestKillstreak = 0;
         let replicaClicks = 0;
         let blackSquaresFound = 0;
-        
+
+
+
+        // New glove abilities
+function activateDetonator() {
+    if (abilityCooldown > 0) return;
+    
+    detonatorActive = true;
+    detonatorEndTime = Date.now() + 5000; // 5 seconds
+    
+    // Create zero display
+    const zeroDisplay = document.createElement('div');
+    zeroDisplay.className = 'detonator-zero';
+    zeroDisplay.textContent = '0';
+    zeroDisplay.id = 'zeroDisplay';
+    slapButton.parentNode.insertBefore(zeroDisplay, slapButton);
+    slapButton.style.display = 'none';
+    
+    abilityCooldown = 120;
+    
+    // Check for survivor achievement
+    if (!achievements.survivor) {
+        achievements.survivor = true;
+        unlockedGloves.detonator = true;
+        showAchievementPopup("Survivor", "You used the Detonator glove!");
+    }
+    
+    updateDisplay();
+}
+
+function activateBerserk() {
+    if (berserkCooldown > 0) return;
+    
+    berserkStacks++;
+    if (berserkStacks >= 10) {
+        slaps += 500;
+        totalSlaps += 500;
+        berserkStacks = 0;
+        showAchievementPopup("Berserk", "You gained 500 slaps from Berserk!");
+    }
+    
+    berserkCooldown = 4;
+    updateDisplay();
+}
+
+// New achievement notification
+function showAchievementPopup(title, description) {
+    const popup = document.createElement('div');
+    popup.style.position = 'fixed';
+    popup.style.top = '20px';
+    popup.style.left = '50%';
+    popup.style.transform = 'translateX(-50%)';
+    popup.style.backgroundColor = '#fdcb6e';
+    popup.style.padding = '15px';
+    popup.style.borderRadius = '10px';
+    popup.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
+    popup.style.zIndex = '1000';
+    popup.style.textAlign = 'center';
+    popup.style.maxWidth = '80%';
+    
+    popup.innerHTML = `
+        <h3 style="margin:0">Achievement Unlocked: ${title}</h3>
+        <p style="margin:5px 0 0">${description}</p>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    setTimeout(() => {
+        popup.style.transition = 'opacity 1s';
+        popup.style.opacity = '0';
+        setTimeout(() => popup.remove(), 1000);
+    }, 3000);
+}
+
+// New premium chest
+function openPremiumChest() {
+    if (nullCrystals < 500) return;
+    
+    nullCrystals -= 500;
+    
+    // Determine which skin to unlock
+    const random = Math.random() * 100;
+    let selectedSkin = random <= 60 ? 'goldRedShake' : 'colorfulShadow';
+    
+    // Add to unlocked skins if not already unlocked
+    if (!unlockedSkins.includes(selectedSkin)) {
+        unlockedSkins.push(selectedSkin);
+    }
+    
+    // Apply skin immediately
+    currentSkin = selectedSkin;
+    slapButton.className = '';
+    slapButton.classList.add(newChestSkins[selectedSkin].class);
+    
+    showAchievementPopup("Premium Skin", `You got the ${newChestSkins[selectedSkin].name} skin!`);
+    updateDisplay();
+}
+        // Add to your game loop
+if (detonatorActive && Date.now() >= detonatorEndTime) {
+    detonatorActive = false;
+    const zeroDisplay = document.getElementById('zeroDisplay');
+    if (zeroDisplay) zeroDisplay.remove();
+    slapButton.style.display = 'block';
+}
+
+if (berserkCooldown > 0) {
+    berserkCooldown -= 0.1;
+    if (berserkCooldown < 0) berserkCooldown = 0;
+}
+
+// In your slap function, add:
+if (detonatorActive) {
+    nullCrystals++;
+    totalCrystals++;
+    return; // Don't give normal slaps during detonator
+}
+
+if (selectedGlove === 'pull') {
+    const extraSlaps = Math.floor(Math.random() * 3) + 1;
+    slaps += extraSlaps;
+    totalSlaps += extraSlaps;
+}
+        // Add to your glove selection
+detonatorGloveBtn.addEventListener('click', () => selectGlove('detonator'));
+berserkGloveBtn.addEventListener('click', () => selectGlove('berserk'));
+
+// Add to your useAbility function
+case 'detonator':
+    activateDetonator();
+    break;
+case 'berserk':
+    activateBerserk();
+    break;
+
+// Add premium chest button
+document.getElementById('openPremiumChest').addEventListener('click', openPremiumChest);
         updateDisplay();
         gameLoop();
+        
     </script>
     <script src="save.js"></script>
 </body>
