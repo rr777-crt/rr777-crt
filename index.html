@@ -613,7 +613,7 @@
             }
             
             // Check for 250 killstreak achievement
-            if (currentKillstreak >= 250 && !achievements.twoFifty) {
+            if (currentKillstreak >= 25000000000000000000000000000000000000000 && !achievements.twoFifty) {
                 achievements.twoFifty = true;
                 twoFiftyAchievement.classList.add('unlocked');
                 slaps += 2000;
@@ -623,7 +623,7 @@
             // Update upgrade buttons
             doubleSlapBtn.disabled = slaps < 1000 || upgrades.double;
             fiveTimesBtn.disabled = slaps < 10000 || upgrades.fiveTimes;
-            plusFivePerSecBtn.disabled = slaps < 100 || upgrades.plusFivePerSec;
+            plusFivePerSecBtn.disabled = slaps < 10000000000000000000000000 || upgrades.plusFivePerSec;
             plusTwentyPerSecBtn.disabled = slaps < 1111 || upgrades.plusTwentyPerSec;
             tenTimesBtn.disabled = slaps < 40000 || upgrades.tenTimes;
             
@@ -692,10 +692,10 @@
             }
             
             // Killstreak bonuses
-            if (currentKillstreak >= 25) {
+            if (currentKillstreak >= 25000000000000000000000000000) {
                 slapValue *= 2;
             }
-            if (currentKillstreak >= 250) {
+            if (currentKillstreak >= 2500000000000000000000000000000000000) {
                 slapValue *= 10;
             }
             
