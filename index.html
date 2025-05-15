@@ -1,1610 +1,1044 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slap Battler Clicker</title>
+    <title>Крутилка с шансами</title>
     <style>
         body {
-            background-image: url('https://i.ytimg.com/vi/6gh8YqsAJ0M/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AG-B4AC0AWKAgwIABABGBEgcigRMA8=&rs=AOn4CLB9GFUVTzvlAPFQtqx0SeIkEsddiA');
-        background-size: cover;
-        background-attachment: fixed;
-        background-position: center;
             font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.5s;
+        }
+        
+        .container {
             max-width: 800px;
             margin: 0 auto;
+            background-color: white;
             padding: 20px;
-            background-color: #f5f5f5;
-            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        #slapButton {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            color: white;
+        
+        h1 {
+            color: #333;
+        }
+        
+        .result {
             font-size: 24px;
-            border: none;
-            cursor: pointer;
-            margin: 20px auto;
-            transition: transform 0.1s;
-            background-color: #ff6b6b;
-            position: relative;
-            overflow: hidden;
-        }
-        #slapButton:active {
-            transform: scale(0.95);
-        }
-        #slapCounter {
-            font-size: 32px;
             font-weight: bold;
             margin: 20px 0;
-        }
-        .upgrade {
-            background-color: #4ecdc4;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            margin: 5px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .upgrade:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        .glove {
-            background-color: #ffbe76;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            margin: 5px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .glove-selected {
-            background-color: #f0932b;
-            border: 2px solid #000;
-        }
-        .section {
-            background-color: white;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .ability-button {
-            background-color: #6c5ce7;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            margin: 5px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .achievement {
-            background-color: #ffeaa7;
+            min-height: 50px;
             padding: 10px;
-            margin: 5px;
             border-radius: 5px;
-            display: inline-block;
+            transition: all 0.3s;
         }
-        .achievement.unlocked {
-            background-color: #fdcb6e;
-            font-weight: bold;
-        }
-        .skin-button {
-            background-color: #a29bfe;
-            color: white;
+        
+        .normal { color: black; }
+        .uncommon { color: green; }
+        .epic { color: blue; }
+        .legendary { color: purple; }
+        .mythic { color: orange; }
+        .shadow { color: gray; text-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .king { color: gold; text-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .angel { color: lightblue; text-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .god { color: red; text-shadow: 0 0 10px gold; font-size: 32px; animation: godAnimation 0.5s infinite alternate; }
+        .death { color: black; background-color: red; text-shadow: 0 0 10px black; font-size: 32px; animation: deathAnimation 0.1s infinite; }
+        .eternity { color: white; background-color: black; text-shadow: 0 0 10px white; font-size: 32px; animation: eternityAnimation 3s infinite; }
+        .heart { color: darkred; text-shadow: 0 0 5px rgba(0,0,0,0.5); font-size: 32px; animation: heartAnimation 1s infinite; }
+        .glitch { color: #9b59b6; animation: glitch-anim 0.3s infinite; }
+        .blaster { color: #3498db; text-shadow: 0 0 10px #2980b9; font-size: 32px; }
+        .omega { color: #e74c3c; text-shadow: 0 0 10px #c0392b; font-size: 40px; }
+        .purple { color: #8e44ad; text-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        
+        @keyframes godAnimation { from { text-shadow: 0 0 10px gold; } to { text-shadow: 0 0 20px red; } }
+        @keyframes deathAnimation { 0% { background-color: red; color: black; } 50% { background-color: black; color: red; } 100% { background-color: red; color: black; } }
+        @keyframes eternityAnimation { 0% { text-shadow: 0 0 10px white; } 50% { text-shadow: 0 0 20px silver; } 100% { text-shadow: 0 0 10px white; } }
+        @keyframes heartAnimation { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes glitch-anim { 0% { transform: translate(0); } 20% { transform: translate(-3px, 3px); } 40% { transform: translate(-3px, -3px); } 60% { transform: translate(3px, 3px); } 80% { transform: translate(3px, -3px); } 100% { transform: translate(0); } }
+        @keyframes blaster-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        
+        .spin-btn {
+            background-color: #4CAF50;
             border: none;
-            padding: 10px 15px;
-            margin: 5px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .skin-preview {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            margin: 5px;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
             display: inline-block;
+            font-size: 16px;
+            margin: 10px 2px;
             cursor: pointer;
-            border: 2px solid transparent;
+            border-radius: 5px;
+            transition: background-color 0.3s;
         }
-        .skin-preview.selected {
-            border-color: #000;
+        
+        .spin-btn:hover { background-color: #45a049; }
+        .spin-btn:disabled { background-color: #cccccc; cursor: not-allowed; }
+        
+        .cooldown {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
         }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.7);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 500px;
-            width: 90%;
-        }
-        .close-modal {
-            float: right;
-            cursor: pointer;
-            font-size: 24px;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background-color: #ddd;
-            border-radius: 10px;
-            margin: 10px 0;
-            overflow: hidden;
-        }
-        .progress {
-            height: 100%;
-            background-color: #00b894;
-            width: 0%;
-            transition: width 0.3s;
-        }
-        .flex-container {
+        
+        .stats {
             display: flex;
             justify-content: space-around;
+            margin: 20px 0;
             flex-wrap: wrap;
         }
-        .flex-item {
-            margin: 10px;
-        }
-        .wall {
-            position: absolute;
-            width: 100px;
-            height: 100px;
-            background-color: #2d3436;
-            cursor: pointer;
-            display: none;
-            border-radius: 5px;
-        }
-        .ghost-dimension {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 0, 0, 0.3);
-            z-index: 50;
-            display: none;
-        }
-        .bob-dimension {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            z-index: 50;
-            display: none;
-        }
-        .boss-ball {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background-color: red;
-            border-radius: 50%;
-            cursor: pointer;
-            display: none;
-        }
-        .boss-fight-timer {
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: white;
+        
+        .stat {
             padding: 10px;
+            background-color: #f9f9f9;
             border-radius: 5px;
-            z-index: 100;
-            display: none;
+            margin: 5px;
         }
-        .replica-square {
-            position: absolute;
-            width: 80px;
-            height: 80px;
-            background-color: #0984e3;
-            cursor: pointer;
-            display: none;
+        
+        .shop {
+            margin-top: 30px;
+            text-align: left;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        
+        .shop h2 { text-align: center; }
+        
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
             border-radius: 5px;
         }
-        .replica-square.black {
-            background-color: #000;
-        }
-        .killstreak-display {
-            position: fixed;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
+        
+        .shop-btn {
+            background-color: #2196F3;
+            border: none;
             color: white;
-            padding: 5px 10px;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            cursor: pointer;
             border-radius: 5px;
-            z-index: 100;
+            transition: background-color 0.3s;
         }
-        @keyframes yellowRedPulse {
-            0% { background-color: #fdcb6e; }
-            50% { background-color: #e17055; }
-            100% { background-color: #fdcb6e; }
+        
+        .shop-btn:hover { background-color: #0b7dda; }
+        .shop-btn:disabled { background-color: #cccccc; cursor: not-allowed; }
+        
+        .settings {
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
         }
-        @keyframes rainbowFlash {
-            0% { background-color: red; }
-            20% { background-color: orange; }
-            40% { background-color: yellow; }
-            60% { background-color: green; }
-            80% { background-color: blue; }
-            100% { background-color: purple; }
+        
+        .settings h2 { text-align: center; }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+            border-radius: 5px;
         }
-        /* New visual effects */
-.detonator-zero {
-    position: absolute;
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    background-color: #000;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 48px;
-    z-index: 10;
-}
-
-/* New chest animations */
-.shake-animation {
-    animation: shake 0.5s infinite;
-}
-
-@keyframes shake {
-    0% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    50% { transform: translateX(5px); }
-    75% { transform: translateX(-5px); }
-    100% { transform: translateX(0); }
-}
-
-.gold-red-gradient {
-    background: linear-gradient(135deg, #fdcb6e, #e17055);
-}
-
-.colorful-shadow {
-    box-shadow: 0 0 15px red, 0 0 25px green, 0 0 35px blue;
-    animation: colorCycle 3s infinite;
-}
-
-@keyframes colorCycle {
-    0% { background-color: red; }
-    33% { background-color: green; }
-    66% { background-color: blue; }
-    100% { background-color: red; }
-}
-
-/* Background image */
-body {
-    background-image: url('https://i.imgur.com/J5Z9Q9a.jpg');
-    background-size: cover;
-    background-attachment: fixed;
-    background-position: center;
-}
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .dark-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .gold-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: gold; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .red-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: red; z-index: 998; opacity: 0; pointer-events: none; transition: opacity 0.1s; }
+        .white-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: white; z-index: 997; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .blue-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #3498db; z-index: 996; opacity: 0; pointer-events: none; transition: opacity 0.1s; }
+        
+        .rarity-chances {
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .rarity-chance {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        
+        .library {
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        
+        .library h2 { text-align: center; }
+        .library-item { padding: 5px 0; text-align: left; }
+        
+        .typing-text { font-size: 24px; color: black; white-space: pre; }
+        .heart-beat { animation: heartBeat 0.8s infinite; }
+        
+        @keyframes heartBeat { 0% { transform: scale(1); } 25% { transform: scale(1.1); } 50% { transform: scale(1); } 75% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        
+        .omega-attack { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2000; }
+        .omega-dark-screen { position: absolute; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); transition: opacity 1s; }
+        .omega-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 72px; font-weight: bold; color: #ff0000; text-shadow: 0 0 20px #ff0000; opacity: 0; }
+        .omega-heart { position: absolute; font-size: 40px; color: red; opacity: 0; transition: opacity 0.5s; }
+        
+        @keyframes omega-rotate { 0% { transform: rotate(0deg) translateX(150px) rotate(0deg); } 100% { transform: rotate(360deg) translateX(150px) rotate(-360deg); } }
+        @keyframes omega-shake { 0%, 100% { transform: translate(-50%, -50%) rotate(0deg); } 25% { transform: translate(-50%, -50%) rotate(5deg); } 75% { transform: translate(-50%, -50%) rotate(-5deg); } }
     </style>
 </head>
 <body>
-    <div class="ghost-dimension" id="ghostDimension"></div>
-    <div class="bob-dimension" id="bobDimension"></div>
-    <div class="boss-fight-timer" id="bossFightTimer">Time left: 60s | Slaps: 0/100</div>
-    <div class="killstreak-display" id="killstreakDisplay">Killstreak: 0</div>
-    
-    <h1>Slap Battler Clicker</h1>
-    
-    <div class="section">
-        <div id="slapCounter">0 slaps</div>
-        <div class="flex-container">
-            <div class="flex-item">
-                <button id="slapButton">SLAP!</button>
-                <p>Slaps per click: <span id="slapsPerClick">1</span></p>
-                <button class="ability-button" id="useAbility">Ability (E)</button>
-                <div id="abilityCooldown"></div>
+    <div class="container">
+        <h1>Крутилка с шансами</h1>
+        
+        <div class="stats">
+            <div class="stat">Монеты: <span id="coins">0</span></div>
+        </div>
+        
+        <div class="result" id="result">Нажмите "Крутить"</div>
+        
+        <button class="spin-btn" id="spin-btn">Крутить</button>
+        <div class="cooldown" id="cooldown">Готово к использованию</div>
+        
+        <div class="rarity-chances">
+            <h3>Шансы выпадения:</h3>
+            <div class="rarity-chance normal-chance"><span>Обычно:</span> <span>33.33%</span></div>
+            <div class="rarity-chance uncommon-chance"><span>Необычно:</span> <span>20%</span></div>
+            <div class="rarity-chance epic-chance"><span>Эпик:</span> <span>10%</span></div>
+            <div class="rarity-chance legendary-chance"><span>Легенда:</span> <span>5%</span></div>
+            <div class="rarity-chance mythic-chance"><span>Миф:</span> <span>2.86%</span></div>
+            <div class="rarity-chance shadow-chance"><span>Тень:</span> <span>2%</span></div>
+            <div class="rarity-chance purple-chance"><span>Фиолетовый:</span> <span>1.33%</span></div>
+            <div class="rarity-chance king-chance"><span>Король:</span> <span>1%</span></div>
+            <div class="rarity-chance angel-chance"><span>Ангел:</span> <span>0.5%</span></div>
+            <div class="rarity-chance god-chance"><span>Божество:</span> <span>0.2%</span></div>
+            <div class="rarity-chance death-chance"><span>СМЕРТЬ:</span> <span>0.06%</span></div>
+            <div class="rarity-chance eternity-chance"><span>ВЕЧНОСТЬ:</span> <span>0.03%</span></div>
+            <div class="rarity-chance heart-chance"><span>СЕРДЦЕ:</span> <span>0.015%</span></div>
+            <div class="rarity-chance glitch-chance"><span>GLITCH:</span> <span>0.025%</span></div>
+            <div class="rarity-chance blaster-chance"><span>BLASTER:</span> <span>0.01%</span></div>
+            <div class="rarity-chance omega-chance"><span>ОМЕГА:</span> <span>0.001%</span></div>
+        </div>
+        
+        <div class="library">
+            <h2>Библиотека</h2>
+            <div id="library-items">
+                <div class="library-item">Пока ничего не найдено...</div>
             </div>
-            <div class="flex-item">
-                <p>Null Crystals: <span id="nullCrystals">0</span></p>
-                <button class="skin-button" id="openChest">Open Skin Chest (100 crystals)</button>
-                <button class="skin-button" id="openMegaChest">Mega Chest (250 crystals)</button>
-                <button class="skin-button" id="viewSkins">View Skins</button>
+        </div>
+        
+        <div class="shop">
+            <h2>Магазин</h2>
+            
+            <div class="shop-item">
+                <div>
+                    <strong>Уменьшить перезарядку на 0.5 сек</strong><br>
+                    <small>Текущая перезарядка: <span id="current-cooldown">5</span> сек</small>
+                </div>
+                <button class="shop-btn" id="upgrade-cooldown">25 монет</button>
+            </div>
+            
+            <div class="shop-item">
+                <div>
+                    <strong>Убрать "Обычно" из результатов</strong><br>
+                    <small>Увеличивает шансы других редкостей</small>
+                </div>
+                <button class="shop-btn" id="remove-normal">125 монет</button>
+            </div>
+            
+            <div class="shop-item">
+                <div>
+                    <strong>Убрать "Необычно" из результатов</strong><br>
+                    <small>Увеличивает шансы других редкостей</small>
+                </div>
+                <button class="shop-btn" id="remove-uncommon">250 монет</button>
+            </div>
+            
+            <div class="shop-item">
+                <div>
+                    <strong>Убрать "Эпик" из результатов</strong><br>
+                    <small>Увеличивает шансы других редкостей</small>
+                </div>
+                <button class="shop-btn" id="remove-epic">500 монет</button>
+            </div>
+            
+            <div class="shop-item">
+                <div>
+                    <strong>Убрать "Легенду" из результатов</strong><br>
+                    <small>Увеличивает шансы других редкостей</small>
+                </div>
+                <button class="shop-btn" id="remove-legendary">1000 монет</button>
+            </div>
+            
+            <div class="shop-item">
+                <div>
+                    <strong>Убрать "Миф" из результатов</strong><br>
+                    <small>Увеличивает шансы других редкостей</small>
+                </div>
+                <button class="shop-btn" id="remove-mythic">2000 монет</button>
+            </div>
+            
+            <div class="shop-item">
+                <div>
+                    <strong>Убрать "Тень" из результатов</strong><br>
+                    <small>Увеличивает шансы других редкостей</small>
+                </div>
+                <button class="shop-btn" id="remove-shadow">5000 монет</button>
+            </div>
+            
+            <div class="shop-item">
+                <div>
+                    <strong>Убрать "Фиолетовый" из результатов</strong><br>
+                    <small>Увеличивает шансы других редкостей</small>
+                </div>
+                <button class="shop-btn" id="remove-purple">7500 монет</button>
+            </div>
+            
+            <div class="shop-item">
+                <div>
+                    <strong>Убрать "Король" из результатов</strong><br>
+                    <small>Увеличивает шансы других редкостей</small>
+                </div>
+                <button class="shop-btn" id="remove-king">10000 монет</button>
+            </div>
+            
+            <div class="shop-item">
+                <div>
+                    <strong>Убрать "Ангел" из результатов</strong><br>
+                    <small>Увеличивает шансы других редкостей</small>
+                </div>
+                <button class="shop-btn" id="remove-angel">25000 монет</button>
             </div>
         </div>
-        <div id="wall" class="wall"></div>
-        <div id="bossBall" class="boss-ball"></div>
-        <div id="replicaSquare" class="replica-square"></div>
-    </div>
-    
-    <div class="section">
-        <h2>Upgrades</h2>
-        <button class="upgrade" id="doubleSlap">Double Slaps (1,000 slaps)</button>
-        <button class="upgrade" id="fiveTimes">5x Slaps (10,000 slaps)</button>
-        <button class="upgrade" id="plusFivePerSec">+5 slaps/sec (100 slaps)</button>
-        <button class="upgrade" id="plusTwentyPerSec">+20 slaps/sec (1,111 slaps)</button>
-        <button class="upgrade" id="tenTimes">10x Slaps (40,000 slaps)</button>
-    </div>
-    
-    <div class="section">
-        <h2>Gloves</h2>
-        <button class="glove" id="defaultGlove">Default (0 slaps)</button>
-        <button class="glove" id="stoneGlove">Stone (45 slaps)</button>
-        <button class="glove" id="wallGlove">Wall (1,750 slaps)</button>
-        <button class="glove" id="randomGlove">Random Buff (1,000 slaps)</button>
-        <button class="glove" id="ghostGlove">Ghost (2,500 slaps)</button>
-        <button class="glove" id="plagueGlove">Plague (3,000 slaps)</button>
-        <button class="glove" id="flashGlove">Flash (300 slaps)</button>
-        <button class="glove" id="rainbowGlove">Rainbow (7,777 slaps)</button>
-        <button class="glove" id="replicaGlove">Replica (4,000 slaps)</button>
-        <button class="glove" id="stoneAgeGlove" disabled>Stone Age (Achievement)</button>
-        <button class="glove" id="doubleDefaultGlove" disabled>Double Default (Achievement)</button>
-        <button class="glove" id="pullGlove" disabled>Pull (Achievement)</button>
-        <button class="glove" id="voodooGlove" disabled>Voodoo (Achievement)</button>
-        <button class="glove" id="bobGlove" disabled>BOB (Achievement)</button>
-        <button class="glove" id="detonatorGlove" disabled>Detonator (Achievement)</button>
-<button class="glove" id="berserkGlove">Berserk (12,500 slaps)</button>
-    </div>
-    
-    <div class="section">
-        <h2>Achievements</h2>
-        <div class="achievement" id="stoneAgeAchievement">Stone Age - Stay as stone for 10 minutes</div>
-        <div class="achievement" id="doubleDefaultAchievement">Double Default - Get the default glove ability to 2s cooldown</div>
-        <div class="achievement" id="pullAchievement">Pull - Get a 5x buff from Random glove</div>
-        <div class="achievement" id="trueGhostAchievement">True Ghost - Stay in ghost dimension for 5 minutes</div>
-        <div class="achievement" id="plagueAchievement">Plague - Get 50 slaps with Plague glove</div>
-        <div class="achievement" id="trueMasterAchievement">True Master - Reach 100,000 slaps</div>
-        <div class="achievement" id="eyeAchievement">Eye - Break the black wall 1,000 times</div>
-        <div class="achievement" id="bobAchievement">BOB - Find the rare black square (1/1250)</div>
-        <div class="achievement" id="twoFiftyAchievement">250 - Reach 250 killstreak</div>
-        <div class="achievement" id="survivorAchievement">Survivor - Use the Detonator glove</div>
-    </div>
-    
-    <div class="section">
-        <h2>Stats</h2>
-        <p>Total slaps: <span id="totalSlaps">0</span></p>
-        <p>Slaps per second: <span id="slapsPerSecond">0</span></p>
-        <p>Time as stone: <span id="stoneTime">0</span> seconds</p>
-        <p>Time in ghost: <span id="ghostTime">0</span> seconds</p>
-        <p>Time with BOB: <span id="bobTime">0</span> seconds</p>
-        <p>Null crystals found: <span id="totalCrystals">0</span></p>
-        <p>Chests opened: <span id="chestsOpened">0</span></p>
-        <p>Mega chests opened: <span id="megaChestsOpened">0</span></p>
-        <p>Walls broken: <span id="wallsBroken">0</span></p>
-        <p>Plague slaps: <span id="plagueSlaps">0</span></p>
-        <p>Boss fights won: <span id="bossFightsWon">0</span></p>
-        <p>Current killstreak: <span id="currentKillstreak">0</span></p>
-        <p>Highest killstreak: <span id="highestKillstreak">0</span></p>
-        <p>Replica squares clicked: <span id="replicaClicks">0</span></p>
-        <p>Black squares found: <span id="blackSquaresFound">0</span></p>
-    </div>
-
-    <!-- Skin Chest Modal -->
-    <div class="modal" id="chestModal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>Skin Chest</h2>
-            <p>Click to open and get a random skin!</p>
-            <div id="chestResult" style="min-height: 100px;"></div>
-            <button id="confirmOpenChest">Open Chest (100 crystals)</button>
+        
+        <div class="settings">
+            <h2>Настройки анимаций</h2>
+            
+            <div class="setting-item">
+                <span>Анимация Божества</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-god" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <span>Анимация Вечности</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-eternity" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <span>Анимация Смерти</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-death" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <span>Анимация Сердца</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-heart" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
     </div>
-
-    <!-- Mega Skin Chest Modal -->
-    <div class="modal" id="megaChestModal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>Mega Skin Chest</h2>
-            <p>Click to open and get a rare skin!</p>
-            <div id="megaChestResult" style="min-height: 100px;"></div>
-            <button id="confirmOpenMegaChest">Open Mega Chest (250 crystals)</button>
-        </div>
+    
+    <div class="dark-screen" id="dark-screen">
+        <h1 id="special-text" style="color: white; font-size: 48px;"></h1>
+        <div id="typing-text" class="typing-text"></div>
     </div>
-
-    <!-- Skins Modal -->
-    <div class="modal" id="skinsModal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>Your Skins</h2>
-            <div id="skinsContainer"></div>
-        </div>
-    </div>
-
-    <!-- Boss Fight Modal -->
-    <div class="modal" id="bossFightModal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>Boss Fight Challenge!</h2>
-            <p>A boss fight is available! Can you get 100 slaps in 60 seconds?</p>
-            <p>Watch out for red balls - if you click one, you lose!</p>
-            <button id="startBossFight">Accept Challenge</button>
-            <button id="declineBossFight">Maybe Later</button>
-        </div>
-    </div>
-
+    
+    <div class="gold-screen" id="gold-screen"></div>
+    <div class="red-screen" id="red-screen"></div>
+    <div class="white-screen" id="white-screen"></div>
+    <div class="blue-screen" id="blue-screen"></div>
+    
     <script>
-        // Initialize save system
-
-        // ====================
-        // BASE GAME CODE
-        // ====================
+        // Игровые переменные
+        let coins = 100000;
+        let cooldownTime = 1;
+        let isCooldown = false;
+        let removedRarities = {
+            normal: false,
+            uncommon: false,
+            epic: false,
+            legendary: false,
+            mythic: false,
+            shadow: false,
+            purple: false,
+            king: false,
+            angel: false
+        };
+        let library = [];
         
-        // Game state
-        let slaps = 0;
-        let totalSlaps = 0;
-        let slapsPerClick = 1;
-        let slapsPerSecond = 0;
-        let nullCrystals = 0;
-        let totalCrystals = 0;
-        let chestsOpened = 0;
-        let megaChestsOpened = 0;
-        let wallsBroken = 0;
-        let plagueSlaps = 0;
-        let bossFightsWon = 0;
-        let upgrades = {
-            double: false,
-            fiveTimes: false,
-            plusFivePerSec: false,
-            plusTwentyPerSec: false,
-            tenTimes: false
-        };
-        let selectedGlove = 'default';
-        let abilityCooldown = 0;
-        let stoneTime = 0;
-        let ghostTime = 0;
-        let bobTime = 0;
-        let isStone = false;
-        let isGhost = false;
-        let isBob = false;
-        let randomBuffActive = false;
-        let randomBuffType = '';
-        let randomBuffEndTime = 0;
-        let pullHoldStart = 0;
-        let pullHoldActive = false;
-        let plagueActive = false;
-        let plagueEndTime = 0;
-        let wallActive = false;
-        let wallHits = 0;
-        let wallEndTime = 0;
-        let achievements = {
-            stoneAge: false,
-            doubleDefault: false,
-            pull: false,
-            trueGhost: false,
-            plague: false,
-            trueMaster: false,
-            eye: false,
-            bob: false,
-            twoFifty: false
-        };
-        let unlockedGloves = {
-            stoneAge: false,
-            doubleDefault: false,
-            pull: false,
-            voodoo: false,
-            bob: false
+        // Настройки анимаций
+        const animationSettings = {
+            god: true,
+            eternity: false,
+            death: true,
+            heart: true
         };
         
-        // Boss fight state
-        let bossFightActive = false;
-        let bossFightSlaps = 0;
-        let bossFightTimeLeft = 60;
-        let bossFightInterval;
-        let bossBallInterval;
-        
-        
-        // Skins system
-        const skinTypes = {
-            yellow: {
-                name: "Yellow",
-                chance: 50,
-                color: "linear-gradient(135deg, #fdcb6e, #ffeaa7)"
-            },
-            rainbow: {
-                name: "Rainbow",
-                chance: 30,
-                color: "linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet)"
-            },
-            red: {
-                name: "Red",
-                chance: 15,
-                color: "linear-gradient(135deg, #e17055, #d63031)"
-            },
-            gold: {
-                name: "Gold",
-                chance: 5,
-                color: "linear-gradient(135deg, #fdcb6e, #ffffff, #fdcb6e)"
-            },
-            purpleBlack: {
-                name: "Purple Black",
-                chance: 5,
-                color: "linear-gradient(135deg, #6c5ce7, #2d3436)"
-            },
-            yellowRedPulse: {
-                name: "Yellow Red Pulse",
-                chance: 90,
-                animation: "yellowRedPulse 2s infinite"
-            },
-            rainbowFlash: {
-                name: "Rainbow Flash",
-                chance: 10,
-                animation: "rainbowFlash 1s infinite"
-            }
+        // Шансы выпадения (в процентах)
+        const baseChances = {
+            normal: 33.33,
+            uncommon: 20,
+            epic: 10,
+            legendary: 5,
+            mythic: 2.86,
+            shadow: 2,
+            purple: 1.33,
+            king: 1,
+            angel: 0.5,
+            god: 0.2,
+            death: 0.06,
+            eternity: 0.03,
+            heart: 0.015,
+            glitch: 0.025,
+            blaster: 0.01,
+            omega: 25
         };
         
-        let unlockedSkins = [];
-        let currentSkin = null;
-        // New variables for updates
-let detonatorActive = false;
-let detonatorEndTime = 0;
-let berserkStacks = 0;
-let berserkCooldown = 0;
-const newChestSkins = {
-    goldRedShake: {
-        name: "Gold-Red Shake",
-        chance: 60,
-        class: "gold-red-gradient shake-animation"
-    },
-    colorfulShadow: {
-        name: "Colorful Shadow",
-        chance: 40,
-        class: "colorful-shadow shake-animation"
-    }
-};
+        // Награды за каждую редкость (монеты)
+        const rewards = {
+            normal: 1,
+            uncommon: 3,
+            epic: 5,
+            legendary: 10,
+            mythic: 15,
+            shadow: 25,
+            purple: 35,
+            king: 50,
+            angel: 100,
+            god: 500,
+            death: 6666,
+            eternity: 3500,
+            heart: 6666,
+            glitch: 4040,
+            blaster: 10000,
+            omega: 100000
+        };
         
-        // DOM elements
-        const slapCounter = document.getElementById('slapCounter');
-        const slapButton = document.getElementById('slapButton');
-        const slapsPerClickDisplay = document.getElementById('slapsPerClick');
-        const totalSlapsDisplay = document.getElementById('totalSlaps');
-        const slapsPerSecondDisplay = document.getElementById('slapsPerSecond');
-        const stoneTimeDisplay = document.getElementById('stoneTime');
-        const ghostTimeDisplay = document.getElementById('ghostTime');
-        const bobTimeDisplay = document.getElementById('bobTime');
-        const nullCrystalsDisplay = document.getElementById('nullCrystals');
-        const totalCrystalsDisplay = document.getElementById('totalCrystals');
-        const chestsOpenedDisplay = document.getElementById('chestsOpened');
-        const megaChestsOpenedDisplay = document.getElementById('megaChestsOpened');
-        const wallsBrokenDisplay = document.getElementById('wallsBroken');
-        const plagueSlapsDisplay = document.getElementById('plagueSlaps');
-        const bossFightsWonDisplay = document.getElementById('bossFightsWon');
-        const currentKillstreakDisplay = document.getElementById('currentKillstreak');
-        const highestKillstreakDisplay = document.getElementById('highestKillstreak');
-        const replicaClicksDisplay = document.getElementById('replicaClicks');
-        const blackSquaresFoundDisplay = document.getElementById('blackSquaresFound');
+        // Текст для вечности
+        const eternityText = "быть кем чтоб быть вечным, вечность это дар...";
         
-        // Upgrades
-        const doubleSlapBtn = document.getElementById('doubleSlap');
-        const fiveTimesBtn = document.getElementById('fiveTimes');
-        const plusFivePerSecBtn = document.getElementById('plusFivePerSec');
-        const plusTwentyPerSecBtn = document.getElementById('plusTwentyPerSec');
-        const tenTimesBtn = document.getElementById('tenTimes');
-        
-        // Gloves
-        const defaultGloveBtn = document.getElementById('defaultGlove');
-        const stoneGloveBtn = document.getElementById('stoneGlove');
-        const wallGloveBtn = document.getElementById('wallGlove');
-        const randomGloveBtn = document.getElementById('randomGlove');
-        const ghostGloveBtn = document.getElementById('ghostGlove');
-        const plagueGloveBtn = document.getElementById('plagueGlove');
-        const flashGloveBtn = document.getElementById('flashGlove');
-        const rainbowGloveBtn = document.getElementById('rainbowGlove');
-        const replicaGloveBtn = document.getElementById('replicaGlove');
-        const stoneAgeGloveBtn = document.getElementById('stoneAgeGlove');
-        const doubleDefaultGloveBtn = document.getElementById('doubleDefaultGlove');
-        const pullGloveBtn = document.getElementById('pullGlove');
-        const voodooGloveBtn = document.getElementById('voodooGlove');
-        const bobGloveBtn = document.getElementById('bobGlove');
-        
-        // Ability section
-        const useAbilityBtn = document.getElementById('useAbility');
-        const abilityCooldownDisplay = document.getElementById('abilityCooldown');
-        
-        // Achievements
-        const stoneAgeAchievement = document.getElementById('stoneAgeAchievement');
-        const doubleDefaultAchievement = document.getElementById('doubleDefaultAchievement');
-        const pullAchievement = document.getElementById('pullAchievement');
-        const trueGhostAchievement = document.getElementById('trueGhostAchievement');
-        const plagueAchievement = document.getElementById('plagueAchievement');
-        const trueMasterAchievement = document.getElementById('trueMasterAchievement');
-        const eyeAchievement = document.getElementById('eyeAchievement');
-        const bobAchievement = document.getElementById('bobAchievement');
-        const twoFiftyAchievement = document.getElementById('twoFiftyAchievement');
-        
-        // Skin elements
-        const openChestBtn = document.getElementById('openChest');
-        const openMegaChestBtn = document.getElementById('openMegaChest');
-        const viewSkinsBtn = document.getElementById('viewSkins');
-        const chestModal = document.getElementById('chestModal');
-        const megaChestModal = document.getElementById('megaChestModal');
-        const skinsModal = document.getElementById('skinsModal');
-        const chestResult = document.getElementById('chestResult');
-        const megaChestResult = document.getElementById('megaChestResult');
-        const confirmOpenChestBtn = document.getElementById('confirmOpenChest');
-        const confirmOpenMegaChestBtn = document.getElementById('confirmOpenMegaChest');
-        const skinsContainer = document.getElementById('skinsContainer');
-        
-        // Wall
-        const wall = document.getElementById('wall');
-        
-        // Ghost dimension
-        const ghostDimension = document.getElementById('ghostDimension');
-        
-        // Bob dimension
-        const bobDimension = document.getElementById('bobDimension');
-        
-        // Boss fight elements
-        const bossFightModal = document.getElementById('bossFightModal');
-        const startBossFightBtn = document.getElementById('startBossFight');
-        const declineBossFightBtn = document.getElementById('declineBossFight');
-        const bossFightTimer = document.getElementById('bossFightTimer');
-        const bossBall = document.getElementById('bossBall');
-        
-        // Replica square
-        const replicaSquare = document.getElementById('replicaSquare');
-        
-        // Killstreak display
-        const killstreakDisplay = document.getElementById('killstreakDisplay');
-        
-        // Update display
-        function updateDisplay() {
-            slapCounter.textContent = `${slaps.toLocaleString()} slaps`;
-            slapsPerClickDisplay.textContent = slapsPerClick;
-            totalSlapsDisplay.textContent = totalSlaps.toLocaleString();
-            slapsPerSecondDisplay.textContent = slapsPerSecond;
-            stoneTimeDisplay.textContent = Math.floor(stoneTime);
-            ghostTimeDisplay.textContent = Math.floor(ghostTime);
-            bobTimeDisplay.textContent = Math.floor(bobTime);
-            nullCrystalsDisplay.textContent = nullCrystals;
-            totalCrystalsDisplay.textContent = totalCrystals;
-            chestsOpenedDisplay.textContent = chestsOpened;
-            megaChestsOpenedDisplay.textContent = megaChestsOpened;
-            wallsBrokenDisplay.textContent = wallsBroken;
-            plagueSlapsDisplay.textContent = plagueSlaps;
-            bossFightsWonDisplay.textContent = bossFightsWon;
-            currentKillstreakDisplay.textContent = currentKillstreak;
-            highestKillstreakDisplay.textContent = highestKillstreak;
-            replicaClicksDisplay.textContent = replicaClicks;
-            blackSquaresFoundDisplay.textContent = blackSquaresFound;
+        // Обновление интерфейса
+        function updateUI() {
+            document.getElementById('coins').textContent = coins;
+            document.getElementById('current-cooldown').textContent = (cooldownTime / 1000).toFixed(1);
             
-            // Check for True Master achievement
-            if (totalSlaps >= 100000 && !achievements.trueMaster) {
-                achievements.trueMaster = true;
-                trueMasterAchievement.classList.add('unlocked');
-            }
+            // Проверка, хватает ли монет для покупок
+            document.getElementById('upgrade-cooldown').disabled = coins < 25;
+            document.getElementById('remove-normal').disabled = coins < 125 || removedRarities.normal;
+            document.getElementById('remove-uncommon').disabled = coins < 250 || removedRarities.uncommon;
+            document.getElementById('remove-epic').disabled = coins < 500 || removedRarities.epic;
+            document.getElementById('remove-legendary').disabled = coins < 1000 || removedRarities.legendary;
+            document.getElementById('remove-mythic').disabled = coins < 2000 || removedRarities.mythic;
+            document.getElementById('remove-shadow').disabled = coins < 5000 || removedRarities.shadow;
+            document.getElementById('remove-purple').disabled = coins < 7500 || removedRarities.purple;
+            document.getElementById('remove-king').disabled = coins < 10000 || removedRarities.king;
+            document.getElementById('remove-angel').disabled = coins < 25000 || removedRarities.angel;
             
-            // Check for Eye achievement
-            if (wallsBroken >= 1000 && !achievements.eye) {
-                achievements.eye = true;
-                eyeAchievement.classList.add('unlocked');
-            }
+            // Обновление кнопок удаления редкостей
+            updateShopButtons();
             
-            // Check for 250 killstreak achievement
-            if (currentKillstreak >= 25000000000000000000000000000000000000000 && !achievements.twoFifty) {
-                achievements.twoFifty = true;
-                twoFiftyAchievement.classList.add('unlocked');
-                slaps += 2000;
-                totalSlaps += 2000;
-            }
-            
-            // Update upgrade buttons
-            doubleSlapBtn.disabled = slaps < 1000 || upgrades.double;
-            fiveTimesBtn.disabled = slaps < 10000 || upgrades.fiveTimes;
-            plusFivePerSecBtn.disabled = slaps < 10000000000000000000000000 || upgrades.plusFivePerSec;
-            plusTwentyPerSecBtn.disabled = slaps < 1111 || upgrades.plusTwentyPerSec;
-            tenTimesBtn.disabled = slaps < 40000 || upgrades.tenTimes;
-            
-            // Update glove buttons
-            defaultGloveBtn.disabled = selectedGlove === 'default';
-            stoneGloveBtn.disabled = slaps < 45 || selectedGlove === 'stone';
-            wallGloveBtn.disabled = slaps < 1750 || selectedGlove === 'wall';
-            randomGloveBtn.disabled = slaps < 1000 || selectedGlove === 'random';
-            ghostGloveBtn.disabled = slaps < 2500 || selectedGlove === 'ghost';
-            plagueGloveBtn.disabled = slaps < 3000 || selectedGlove === 'plague';
-            flashGloveBtn.disabled = slaps < 300 || selectedGlove === 'flash';
-            rainbowGloveBtn.disabled = slaps < 7777 || selectedGlove === 'rainbow';
-            replicaGloveBtn.disabled = slaps < 4000 || selectedGlove === 'replica';
-            stoneAgeGloveBtn.disabled = !unlockedGloves.stoneAge || selectedGlove === 'stoneAge';
-            doubleDefaultGloveBtn.disabled = !unlockedGloves.doubleDefault || selectedGlove === 'doubleDefault';
-            pullGloveBtn.disabled = !unlockedGloves.pull || selectedGlove === 'pull';
-            voodooGloveBtn.disabled = !unlockedGloves.voodoo || selectedGlove === 'voodoo';
-            bobGloveBtn.disabled = !unlockedGloves.bob || selectedGlove === 'bob';
-            
-            // Update achievement display
-            if (achievements.stoneAge) {
-                stoneAgeAchievement.classList.add('unlocked');
-            }
-            if (achievements.doubleDefault) {
-                doubleDefaultAchievement.classList.add('unlocked');
-            }
-            if (achievements.pull) {
-                pullAchievement.classList.add('unlocked');
-            }
-            if (achievements.trueGhost) {
-                trueGhostAchievement.classList.add('unlocked');
-            }
-            if (achievements.plague) {
-                plagueAchievement.classList.add('unlocked');
-            }
-            if (achievements.bob) {
-                bobAchievement.classList.add('unlocked');
-            }
-            
-            // Update ability button
-            if (abilityCooldown > 0) {
-                abilityCooldownDisplay.textContent = `Cooldown: ${abilityCooldown.toFixed(1)}s`;
-                useAbilityBtn.disabled = true;
-            } else {
-                abilityCooldownDisplay.textContent = '';
-                useAbilityBtn.disabled = false;
-            }
-            
-            // Update skin chest buttons
-            openChestBtn.disabled = nullCrystals < 100;
-            openMegaChestBtn.disabled = nullCrystals < 250;
+            updateChancesDisplay();
         }
         
-        // Slap function
-        function slap() {
-            if (isStone) return;
-            
-            let slapValue = slapsPerClick;
-            
-            if (randomBuffActive) {
-                if (randomBuffType === 'double') {
-                    slapValue *= 2;
-                } else if (randomBuffType === 'fiveTimes') {
-                    slapValue *= 5;
-                }
-            }
-            
-            // Killstreak bonuses
-            if (currentKillstreak >= 25000000000000000000000000000) {
-                slapValue *= 2;
-            }
-            if (currentKillstreak >= 2500000000000000000000000000000000000) {
-                slapValue *= 10;
-            }
-            
-            // Pull glove bonus
-            if (selectedGlove === 'pull' && pullHoldActive) {
-                slapValue *= 10;
-                pullHoldActive = false;
-            }
-            
-            // Voodoo glove bonus
-            if (selectedGlove === 'voodoo' && abilityCooldown <= 0) {
-                slapValue *= 2;
-                nullCrystals += 5;
-                totalCrystals += 5;
-            }
-            
-            // Plague active bonus
-            if (plagueActive) {
-                plagueSlaps++;
-                if (plagueSlaps >= 50 && !achievements.plague) {
-                    achievements.plague = true;
-                    plagueAchievement.classList.add('unlocked');
-                }
-            }
-            
-            // Boss fight slaps
-            if (bossFightActive) {
-                bossFightSlaps++;
-                bossFightTimer.textContent = `Time left: ${bossFightTimeLeft}s | Slaps: ${bossFightSlaps}/100`;
-                
-                if (bossFightSlaps >= 100) {
-                    winBossFight();
-                }
-            }
-            
-            slaps += slapValue;
-            totalSlaps += slapValue;
-            
-            // 5% chance to get a null crystal (increased by rainbow glove)
-            let crystalChance = 0.05;
-            if (selectedGlove === 'rainbow') {
-                crystalChance = 0.5; // 50% chance with rainbow glove
-            }
-            
-            if (Math.random() < crystalChance) {
-                nullCrystals++;
-                totalCrystals++;
-            }
-            
-            // Killstreak tracking
-            currentKillstreak++;
-            if (currentKillstreak > highestKillstreak) {
-                highestKillstreak = currentKillstreak;
-            }
-            
-            // Every 10 slaps = 1 kill
-            if (currentKillstreak % 0 === 0) {
-                killstreakDisplay.textContent = `Killstreak: ${currentKillstreak}`;
-            }
-            
-            updateDisplay();
-        }
-        
-        // Buy upgrade
-        function buyUpgrade(upgradeType) {
-            if (upgradeType === 'double' && slaps >= 1000 && !upgrades.double) {
-                slaps -= 1000;
-                slapsPerClick *= 2;
-                upgrades.double = true;
-            } else if (upgradeType === 'fiveTimes' && slaps >= 10000 && !upgrades.fiveTimes) {
-                slaps -= 10000;
-                slapsPerClick *= 5;
-                upgrades.fiveTimes = true;
-            } else if (upgradeType === 'plusFivePerSec' && slaps >= 100 && !upgrades.plusFivePerSec) {
-                slaps -= 100;
-                slapsPerSecond += 5;
-                upgrades.plusFivePerSec = true;
-            } else if (upgradeType === 'plusTwentyPerSec' && slaps >= 1111 && !upgrades.plusTwentyPerSec) {
-                slaps -= 1111;
-                slapsPerSecond += 20;
-                upgrades.plusTwentyPerSec = true;
-            } else if (upgradeType === 'tenTimes' && slaps >= 40000 && !upgrades.tenTimes) {
-                slaps -= 40000;
-                slapsPerClick *= 10;
-                upgrades.tenTimes = true;
-            }
-            updateDisplay();
-        }
-        
-        // Select glove
-        function selectGlove(gloveType) {
-            selectedGlove = gloveType;
-            isStone = gloveType === 'stone';
-            isGhost = gloveType === 'ghost';
-            isBob = gloveType === 'bob';
-            
-            // Reset ability cooldown when switching gloves
-            abilityCooldown = 0;
-            
-            // Update passive slaps per second
-            if (gloveType === 'flash') {
-                slapsPerSecond += 5;
-            } else if (gloveType === 'bob') {
-                slapsPerSecond += 10;
-            } else if (gloveType === 'stoneAge') {
-                slapsPerSecond = 0;
-            } else if (gloveType === 'doubleDefault') {
-                slapsPerSecond = 0;
-            } else if (gloveType === 'pull') {
-                slapsPerSecond = 0;
-            } else if (gloveType === 'voodoo') {
-                slapsPerSecond = 0;
-            } else if (selectedGlove !== 'flash' && selectedGlove !== 'bob') {
-                // Reset passive slaps if switching from flash/bob to another glove
-                if (selectedGlove === 'flash') slapsPerSecond -= 5;
-                if (selectedGlove === 'bob') slapsPerSecond -= 10;
-            }
-            
-            // Show/hide ghost dimension
-            ghostDimension.style.display = isGhost ? 'block' : 'none';
-            
-            // Show/hide bob dimension
-            bobDimension.style.display = isBob ? 'block' : 'none';
-            
-            updateDisplay();
-        }
-        
-        // Use ability
-        function useAbility() {
-            if (abilityCooldown > 0) return;
-            
-            switch (selectedGlove) {
-                case 'default':
-                    // Default ability - +5 slaps
-                    slaps += 5;
-                    totalSlaps += 5;
-                    abilityCooldown = 10;
-                    break;
-                    
-                case 'wall':
-                    // Wall ability - spawn a wall
-                    spawnWall();
-                    abilityCooldown = 30;
-                    break;
-                    
-                case 'random':
-                    // Random ability - random buff
-                    const randomValue = Math.random();
-                    if (randomValue < 0.5) {
-                        randomBuffType = 'double';
-                    } else {
-                        randomBuffType = 'fiveTimes';
-                    }
-                    randomBuffActive = true;
-                    randomBuffEndTime = Date.now() + 10000; // 10 seconds
-                    abilityCooldown = 45;
-                    
-                    // Check for pull achievement
-                    if (randomBuffType === 'fiveTimes' && !achievements.pull) {
-                        achievements.pull = true;
-                        unlockedGloves.pull = true;
-                    }
-                    break;
-                    
-                case 'ghost':
-                    // Ghost ability - enter ghost dimension
-                    isGhost = true;
-                    ghostDimension.style.display = 'block';
-                    abilityCooldown = 60;
-                    break;
-                    
-                case 'plague':
-                    // Plague ability - +1 slap for 3 seconds
-                    plagueActive = true;
-                    plagueEndTime = Date.now() + 3000;
-                    abilityCooldown = 10;
-                    break;
-                    
-                case 'stoneAge':
-                    // Stone Age ability - +150 slaps every 5 seconds
-                    slaps += 150;
-                    totalSlaps += 150;
-                    abilityCooldown = 5;
-                    break;
-                    
-                case 'doubleDefault':
-                    // Double Default ability - like default but 2s cooldown
-                    slaps += 5;
-                    totalSlaps += 5;
-                    abilityCooldown = 2;
-                    break;
-                    
-                case 'pull':
-                    // Start pull hold
-                    pullHoldStart = Date.now();
-                    pullHoldActive = true;
-                    setTimeout(() => {
-                        if (pullHoldActive) {
-                            // If still holding after 10 seconds
-                            pullHoldActive = false;
-                        }
-                    }, 10000);
-                    break;
-                    
-                case 'voodoo':
-                    // Voodoo ability - next click gives bonus
-                    abilityCooldown = 30;
-                    break;
-                    
-                case 'replica':
-                    // Replica ability - spawn blue/black square
-                    spawnReplicaSquare();
-                    abilityCooldown = 100;
-                    break;
-                    
-                case 'bob':
-                    // BOB ability - black dimension for 25 seconds
-                    isBob = true;
-                    bobDimension.style.display = 'block';
-                    setTimeout(() => {
-                        isBob = false;
-                        bobDimension.style.display = 'none';
-                    }, 25000);
-                    abilityCooldown = 50;
-                    break;
-            }
-            
-            updateDisplay();
-        }
-        
-        // Spawn wall
-        function spawnWall() {
-            wallActive = true;
-            wallHits = 0;
-            wallEndTime = Date.now() + 30000; // 30 seconds
-            
-            // Random position
-            const maxX = window.innerWidth - 100;
-            const maxY = window.innerHeight - 100;
-            const randomX = Math.floor(Math.random() * maxX);
-            const randomY = Math.floor(Math.random() * maxY);
-            
-            wall.style.left = `${randomX}px`;
-            wall.style.top = `${randomY}px`;
-            wall.style.display = 'block';
-            
-            // Wall click handler
-            wall.onclick = function() {
-                wallHits++;
-                if (wallHits >= 10) {
-                    // Wall broken
-                    const slapsReward = Math.floor(Math.random() * 10) + 1;
-                    slaps += slapsReward;
-                    totalSlaps += slapsReward;
-                    wall.style.display = 'none';
-                    wallActive = false;
-                    wallsBroken++;
-                    
-                    if (wallsBroken >= 1000 && !achievements.eye) {
-                        achievements.eye = true;
-                        eyeAchievement.classList.add('unlocked');
-                        slaps += 1000;
-                        totalSlaps += 1000;
-                    }
-                    
-                    updateDisplay();
-                }
-            };
-        }
-        
-        // Spawn replica square
-        function spawnReplicaSquare() {
-            // 1/1250 chance for black square (BOB)
-            const isBlack = Math.random() < (1/1250);
-            
-            // Random position
-            const maxX = window.innerWidth - 80;
-            const maxY = window.innerHeight - 80;
-            const randomX = Math.floor(Math.random() * maxX);
-            const randomY = Math.floor(Math.random() * maxY);
-            
-            replicaSquare.style.left = `${randomX}px`;
-            replicaSquare.style.top = `${randomY}px`;
-            replicaSquare.style.display = 'block';
-            
-            if (isBlack) {
-                replicaSquare.classList.add('black');
-                if (!achievements.bob) {
-                    achievements.bob = true;
-                    unlockedGloves.bob = true;
-                    bobAchievement.classList.add('unlocked');
-                }
-                blackSquaresFound++;
-            } else {
-                replicaSquare.classList.remove('black');
-            }
-            
-            // Square click handler
-            replicaSquare.onclick = function() {
-                if (isBlack) {
-                    // BOB square gives nothing (just the achievement)
-                } else {
-                    // Normal blue square gives 100 slaps
-                    slaps += 100;
-                    totalSlaps += 100;
-                }
-                replicaSquare.style.display = 'none';
-                replicaClicks++;
-                updateDisplay();
+        function updateShopButtons() {
+            const shopItems = {
+                normal: document.getElementById('remove-normal'),
+                uncommon: document.getElementById('remove-uncommon'),
+                epic: document.getElementById('remove-epic'),
+                legendary: document.getElementById('remove-legendary'),
+                mythic: document.getElementById('remove-mythic'),
+                shadow: document.getElementById('remove-shadow'),
+                purple: document.getElementById('remove-purple'),
+                king: document.getElementById('remove-king'),
+                angel: document.getElementById('remove-angel')
             };
             
-            // Hide after 5 seconds if not clicked
-            setTimeout(() => {
-                if (replicaSquare.style.display === 'block') {
-                    replicaSquare.style.display = 'none';
+            for (const [rarity, button] of Object.entries(shopItems)) {
+                if (removedRarities[rarity]) {
+                    button.textContent = "Куплено";
+                    button.disabled = true;
                 }
-            }, 5000);
+            }
         }
         
-        // Skin system functions
-        function openSkinChest() {
-            if (nullCrystals < 100) return;
+        function updateChancesDisplay() {
+            const chances = calculateAdjustedChances();
+            const total = Object.values(chances).reduce((a, b) => a + b, 0);
             
-            nullCrystals -= 100;
-            chestsOpened++;
+            const chanceElements = {
+                normal: document.querySelector('.normal-chance span:last-child'),
+                uncommon: document.querySelector('.uncommon-chance span:last-child'),
+                epic: document.querySelector('.epic-chance span:last-child'),
+                legendary: document.querySelector('.legendary-chance span:last-child'),
+                mythic: document.querySelector('.mythic-chance span:last-child'),
+                shadow: document.querySelector('.shadow-chance span:last-child'),
+                purple: document.querySelector('.purple-chance span:last-child'),
+                king: document.querySelector('.king-chance span:last-child'),
+                angel: document.querySelector('.angel-chance span:last-child'),
+                god: document.querySelector('.god-chance span:last-child'),
+                death: document.querySelector('.death-chance span:last-child'),
+                eternity: document.querySelector('.eternity-chance span:last-child'),
+                heart: document.querySelector('.heart-chance span:last-child'),
+                glitch: document.querySelector('.glitch-chance span:last-child'),
+                blaster: document.querySelector('.blaster-chance span:last-child'),
+                omega: document.querySelector('.omega-chance span:last-child')
+            };
             
-            // Determine which skin to unlock
-            const random = Math.random() * 100;
+            for (const [rarity, element] of Object.entries(chanceElements)) {
+                if (element) {
+                    element.textContent = `${(chances[rarity] / total * 100).toFixed(2)}%`;
+                }
+            }
+            
+            // Скрываем удаленные редкости
+            document.querySelector('.normal-chance').style.display = removedRarities.normal ? 'none' : 'flex';
+            document.querySelector('.uncommon-chance').style.display = removedRarities.uncommon ? 'none' : 'flex';
+            document.querySelector('.epic-chance').style.display = removedRarities.epic ? 'none' : 'flex';
+            document.querySelector('.legendary-chance').style.display = removedRarities.legendary ? 'none' : 'flex';
+            document.querySelector('.mythic-chance').style.display = removedRarities.mythic ? 'none' : 'flex';
+            document.querySelector('.shadow-chance').style.display = removedRarities.shadow ? 'none' : 'flex';
+            document.querySelector('.purple-chance').style.display = removedRarities.purple ? 'none' : 'flex';
+            document.querySelector('.king-chance').style.display = removedRarities.king ? 'none' : 'flex';
+            document.querySelector('.angel-chance').style.display = removedRarities.angel ? 'none' : 'flex';
+        }
+        
+        function calculateAdjustedChances() {
+            let chances = {...baseChances};
+            
+            for (const rarity in removedRarities) {
+                if (removedRarities[rarity]) {
+                    chances[rarity] = 0;
+                }
+            }
+            
+            return chances;
+        }
+        
+        function spin() {
+            if (isCooldown) return;
+            
+            isCooldown = true;
+            document.getElementById('spin-btn').disabled = true;
+            
+            const chances = calculateAdjustedChances();
+            const totalChance = Object.values(chances).reduce((a, b) => a + b, 0);
+            const random = Math.random() * totalChance;
             let cumulativeChance = 0;
-            let selectedSkin = null;
+            let resultRarity = '';
             
-            for (const [key, skin] of Object.entries(skinTypes)) {
-                if (key === 'yellowRedPulse' || key === 'rainbowFlash') continue;
-                
-                cumulativeChance += skin.chance;
+            for (const [key, value] of Object.entries(chances)) {
+                cumulativeChance += value;
                 if (random <= cumulativeChance) {
-                    selectedSkin = key;
+                    resultRarity = key;
                     break;
                 }
             }
             
-            // Add to unlocked skins if not already unlocked
-            if (!unlockedSkins.includes(selectedSkin)) {
-                unlockedSkins.push(selectedSkin);
-            }
-            
-            // Show result in modal
-            chestResult.innerHTML = `
-                <h3>You got: ${skinTypes[selectedSkin].name} Skin!</h3>
-                <div class="skin-preview" style="background: ${skinTypes[selectedSkin].color}; width: 100px; height: 100px;"></div>
-                <p>${unlockedSkins.length} / ${Object.keys(skinTypes).length - 2} skins unlocked</p>
-            `;
-            
-            updateDisplay();
+            processSpinResult(resultRarity);
         }
         
-        function openMegaSkinChest() {
-            if (nullCrystals < 250) return;
+        function processSpinResult(rarity) {
+            const result = translateRarity(rarity);
+            const resultElement = document.getElementById('result');
             
-            nullCrystals -= 250;
-            megaChestsOpened++;
+            resultElement.textContent = result;
+            resultElement.className = 'result ' + rarity;
             
-            // Determine which skin to unlock (special skins only)
-            const random = Math.random() * 100;
-            let selectedSkin = random <= 90 ? 'yellowRedPulse' : 'rainbowFlash';
+            coins += rewards[rarity];
             
-            // Add to unlocked skins if not already unlocked
-            if (!unlockedSkins.includes(selectedSkin)) {
-                unlockedSkins.push(selectedSkin);
+            if (!library.includes(rarity)) {
+                library.push(rarity);
+                updateLibrary();
             }
             
-            // Show result in modal
-            megaChestResult.innerHTML = `
-                <h3>You got: ${skinTypes[selectedSkin].name} Skin!</h3>
-                <div class="skin-preview" style="animation: ${skinTypes[selectedSkin].animation}; width: 100px; height: 100px;"></div>
-                <p>${unlockedSkins.length} / ${Object.keys(skinTypes).length} skins unlocked</p>
-            `;
-            
-            updateDisplay();
-        }
-        
-        function showSkinsModal() {
-            skinsContainer.innerHTML = '';
-            
-            if (unlockedSkins.length === 0) {
-                skinsContainer.innerHTML = '<p>No skins unlocked yet. Open chests to get skins!</p>';
-                return;
-            }
-            
-            unlockedSkins.forEach(skinKey => {
-                const skin = skinTypes[skinKey];
-                const skinElement = document.createElement('div');
-                skinElement.className = `skin-preview ${currentSkin === skinKey ? 'selected' : ''}`;
-                
-                if (skin.color) {
-                    skinElement.style.background = skin.color;
-                } else if (skin.animation) {
-                    skinElement.style.animation = skin.animation;
+            // Проверяем настройки анимаций перед воспроизведением
+            if (animationSettings[rarity] !== undefined ? animationSettings[rarity] : true) {
+                switch(rarity) {
+                    case 'god':
+                        showSpecialAnimation(result, 'gold');
+                        break;
+                    case 'death':
+                        showDeathAnimation(result);
+                        break;
+                    case 'eternity':
+                        showEternityAnimation(result);
+                        break;
+                    case 'heart':
+                        showHeartAnimation(result);
+                        break;
+                    case 'glitch':
+                        resultElement.classList.add('glitch');
+                        setTimeout(() => resultElement.classList.remove('glitch'), 3000);
+                        break;
+                    case 'blaster':
+                        showBlasterAnimation();
+                        break;
+                    case 'omega':
+                        showOmegaAnimation();
+                        break;
                 }
-                
-                skinElement.title = skin.name;
-                skinElement.addEventListener('click', () => {
-                    currentSkin = skinKey;
-                    if (skin.color) {
-                        slapButton.style.background = skin.color;
-                        slapButton.style.animation = 'none';
-                    } else if (skin.animation) {
-                        slapButton.style.background = 'none';
-                        slapButton.style.animation = skin.animation;
-                    }
-                    updateSkinsDisplay();
-                });
-                
-                const skinLabel = document.createElement('div');
-                skinLabel.textContent = skin.name;
-                
-                const skinContainer = document.createElement('div');
-                skinContainer.style.display = 'inline-block';
-                skinContainer.style.margin = '10px';
-                skinContainer.style.textAlign = 'center';
-                skinContainer.appendChild(skinElement);
-                skinContainer.appendChild(skinLabel);
-                
-                skinsContainer.appendChild(skinContainer);
-            });
-        }
-        
-        function updateSkinsDisplay() {
-            // Update all skin preview selections
-            const skinPreviews = document.querySelectorAll('.skin-preview');
-            skinPreviews.forEach(preview => {
-                preview.classList.remove('selected');
-            });
-            
-            if (currentSkin) {
-                document.querySelectorAll('.skin-preview').forEach(el => {
-                    if (el.title === skinTypes[currentSkin].name) {
-                        el.classList.add('selected');
-                    }
-                });
             }
+            
+            updateUI();
+            startCooldown();
         }
         
-        // Boss fight functions
-        function startBossFight() {
-            bossFightModal.style.display = 'none';
-            bossFightActive = true;
-            bossFightSlaps = 0;
-            bossFightTimeLeft = 60;
-            bossFightTimer.textContent = `Time left: ${bossFightTimeLeft}s | Slaps: 0/100`;
-            bossFightTimer.style.display = 'block';
+        function translateRarity(rarity) {
+            const translations = {
+                normal: 'Обычно',
+                uncommon: 'Необычно',
+                epic: 'Эпик',
+                legendary: 'Легенда',
+                mythic: 'Миф',
+                shadow: 'Тень',
+                purple: 'Фиолетовый',
+                king: 'КОРОЛЬ',
+                angel: 'АНГЕЛ',
+                god: 'БОЖЕСТВО',
+                death: 'С М Е Р Т Ь',
+                eternity: 'В Е Ч Н О С Т Ь',
+                heart: 'С Е Р Д Ц Е',
+                glitch: 'G L I T C H',
+                blaster: 'B L A S T E R',
+                omega: 'О М Е Г А'
+            };
+            return translations[rarity];
+        }
+        
+        function startCooldown() {
+            let remaining = cooldownTime / 1000;
+            document.getElementById('cooldown').textContent = `Перезарядка: ${remaining.toFixed(1)} сек`;
             
-            // Reset killstreak for boss fight
-            currentKillstreak = 0;
-            killstreakDisplay.textContent = `Killstreak: 0`;
-            
-            // Start timer
-            bossFightInterval = setInterval(() => {
-                bossFightTimeLeft--;
-                bossFightTimer.textContent = `Time left: ${bossFightTimeLeft}s | Slaps: ${bossFightSlaps}/100`;
-                
-                if (bossFightTimeLeft <= 0) {
-                    endBossFight(false);
+            const interval = setInterval(() => {
+                remaining -= 0.1;
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    document.getElementById('cooldown').textContent = 'Готово к использованию';
+                    document.getElementById('spin-btn').disabled = false;
+                    isCooldown = false;
+                } else {
+                    document.getElementById('cooldown').textContent = `Перезарядка: ${remaining.toFixed(1)} сек`;
                 }
-            }, 1000);
-            
-            // Spawn boss balls randomly
-            bossBallInterval = setInterval(spawnBossBall, 2000);
+            }, 100);
         }
         
-        function spawnBossBall() {
-            const maxX = window.innerWidth - 30;
-            const maxY = window.innerHeight - 30;
-            const randomX = Math.floor(Math.random() * maxX);
-            const randomY = Math.floor(Math.random() * maxY);
+        function showSpecialAnimation(text, type) {
+            const darkScreen = document.getElementById('dark-screen');
+            const effectScreen = document.getElementById(type === 'gold' ? 'gold-screen' : 'red-screen');
+            const specialText = document.getElementById('special-text');
             
-            bossBall.style.left = `${randomX}px`;
-            bossBall.style.top = `${randomY}px`;
-            bossBall.style.display = 'block';
+            specialText.textContent = text;
+            specialText.style.color = type === 'gold' ? 'white' : 'black';
             
-            // Remove after 1.5 seconds if not clicked
+            darkScreen.style.opacity = '1';
+            darkScreen.style.pointerEvents = 'auto';
+            
             setTimeout(() => {
-                if (bossBall.style.display === 'block') {
-                    bossBall.style.display = 'none';
-                }
+                darkScreen.style.opacity = '0';
+                darkScreen.style.pointerEvents = 'none';
+                effectScreen.style.opacity = '1';
+                
+                setTimeout(() => effectScreen.style.opacity = '0', 3000);
             }, 1500);
         }
         
-        function endBossFight(won) {
-            clearInterval(bossFightInterval);
-            clearInterval(bossBallInterval);
-            bossFightActive = false;
-            bossFightTimer.style.display = 'none';
-            bossBall.style.display = 'none';
+        function showDeathAnimation(text) {
+            const darkScreen = document.getElementById('dark-screen');
+            const redScreen = document.getElementById('red-screen');
+            const specialText = document.getElementById('special-text');
+            const resultElement = document.getElementById('result');
             
-            if (won) {
-                bossFightsWon++;
-                slaps += 200;
-                totalSlaps += 200;
-                nullCrystals += 50;
-                totalCrystals += 50;
+            specialText.textContent = text;
+            specialText.style.color = 'white';
+            
+            darkScreen.style.opacity = '1';
+            darkScreen.style.pointerEvents = 'auto';
+            
+            setTimeout(() => {
+                darkScreen.style.opacity = '0';
+                darkScreen.style.pointerEvents = 'none';
                 
-                // Show victory message
-                chestResult.innerHTML = `
-                    <h3>Boss Fight Victory!</h3>
-                    <p>You earned 200 slaps and 50 null crystals!</p>
-                `;
-                chestModal.style.display = 'flex';
-            }
-            
-            updateDisplay();
+                let blinkCount = 0;
+                const blinkInterval = setInterval(() => {
+                    redScreen.style.opacity = redScreen.style.opacity === '1' ? '0' : '1';
+                    blinkCount++;
+                    
+                    if (blinkCount >= 50) {
+                        clearInterval(blinkInterval);
+                        redScreen.style.opacity = '0';
+                        
+                        const originalSize = resultElement.style.fontSize;
+                        resultElement.style.fontSize = '160px';
+                        
+                        setTimeout(() => resultElement.style.fontSize = originalSize, 1000);
+                    }
+                }, 200);
+            }, 1500);
         }
         
-        function winBossFight() {
-            endBossFight(true);
-        }
-        
-        // Check for boss fight every 10 minutes
-        setInterval(() => {
-            if (!bossFightActive) {
-                bossFightModal.style.display = 'flex';
-            }
-        }, 70000); // 10 minutes
-        
-        // Game loop
-        function gameLoop() {
-            // Passive slaps
-            if (slapsPerSecond > 0) {
-                slaps += slapsPerSecond / 10;
-                totalSlaps += slapsPerSecond / 10;
-            }
+        function showEternityAnimation(text) {
+            const darkScreen = document.getElementById('dark-screen');
+            const whiteScreen = document.getElementById('white-screen');
+            const specialText = document.getElementById('special-text');
+            const typingText = document.getElementById('typing-text');
+            const resultElement = document.getElementById('result');
             
-            // Ability cooldown
-            if (abilityCooldown > 0) {
-                abilityCooldown -= 0.1;
-                if (abilityCooldown < 0) abilityCooldown = 0;
-            }
+            specialText.textContent = text;
+            specialText.style.color = 'black';
+            typingText.textContent = '';
             
-            // Stone time tracking
-            if (isStone) {
-                stoneTime += 0.1;
-                
-                // Check for Stone Age achievement
-                if (stoneTime >= 600 && !achievements.stoneAge) { // 10 minutes = 600 seconds
-                    achievements.stoneAge = true;
-                    unlockedGloves.stoneAge = true;
+            whiteScreen.style.opacity = '1';
+            whiteScreen.style.pointerEvents = 'auto';
+            
+            let i = 0;
+            const typingInterval = setInterval(() => {
+                if (i < eternityText.length) {
+                    typingText.textContent += eternityText.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(typingInterval);
+                    
+                    setTimeout(() => {
+                        resultElement.classList.add('heart-beat');
+                        
+                        let blinkCount = 0;
+                        const blinkInterval = setInterval(() => {
+                            whiteScreen.style.opacity = whiteScreen.style.opacity === '1' ? '0' : '1';
+                            blinkCount++;
+                            
+                            if (blinkCount >= 5) {
+                                clearInterval(blinkInterval);
+                                whiteScreen.style.opacity = '0';
+                                resultElement.classList.remove('heart-beat');
+                            }
+                        }, 500);
+                    }, 1000);
                 }
-            }
+            }, 15000 / eternityText.length);
             
-            // Ghost time tracking
-            if (isGhost) {
-                ghostTime += 0.1;
-                
-                // Check for True Ghost achievement
-                if (ghostTime >= 300 && !achievements.trueGhost) { // 5 minutes = 300 seconds
-                    achievements.trueGhost = true;
-                    unlockedGloves.voodoo = true;
+            // Включаем возможность крутить снова
+            setTimeout(() => {
+                if (isCooldown) {
+                    document.getElementById('spin-btn').disabled = false;
+                    isCooldown = false;
+                    document.getElementById('cooldown').textContent = 'Готово к использованию';
                 }
-            }
-            
-            // Bob time tracking
-            if (isBob) {
-                bobTime += 0.1;
-            }
-            
-            // Random buff expiration
-            if (randomBuffActive && Date.now() >= randomBuffEndTime) {
-                randomBuffActive = false;
-            }
-            
-            // Plague expiration
-            if (plagueActive && Date.now() >= plagueEndTime) {
-                plagueActive = false;
-            }
-            
-            // Wall expiration
-            if (wallActive && Date.now() >= wallEndTime) {
-                wall.style.display = 'none';
-                wallActive = false;
-            }
-            
-            updateDisplay();
-            setTimeout(gameLoop, 100);
+            }, 100);
         }
         
-        // ====================
-        // EVENT LISTENERS
-        // ====================
+        function showHeartAnimation(text) {
+            const darkScreen = document.getElementById('dark-screen');
+            const specialText = document.getElementById('special-text');
+            const resultElement = document.getElementById('result');
+            
+            specialText.textContent = text;
+            specialText.style.color = 'darkred';
+            
+            darkScreen.style.opacity = '1';
+            darkScreen.style.pointerEvents = 'auto';
+            darkScreen.style.backgroundColor = 'rgba(0,0,0,0.9)';
+            
+            setTimeout(() => {
+                resultElement.classList.add('heart-beat');
+                
+                setTimeout(() => {
+                    resultElement.classList.remove('heart-beat');
+                    darkScreen.style.opacity = '0';
+                    darkScreen.style.pointerEvents = 'none';
+                }, 10000);
+            }, 10000);
+        }
         
-        slapButton.addEventListener('click', slap);
+        function showBlasterAnimation() {
+            const blueScreen = document.getElementById('blue-screen');
+            let blinkCount = 0;
+            
+            const blinkInterval = setInterval(() => {
+                blueScreen.style.opacity = blueScreen.style.opacity === '1' ? '0' : '1';
+                blinkCount++;
+                
+                if (blinkCount >= 10) {
+                    clearInterval(blinkInterval);
+                    blueScreen.style.opacity = '0';
+                }
+            }, 500);
+        }
         
-        doubleSlapBtn.addEventListener('click', () => buyUpgrade('double'));
-        fiveTimesBtn.addEventListener('click', () => buyUpgrade('fiveTimes'));
-        plusFivePerSecBtn.addEventListener('click', () => buyUpgrade('plusFivePerSec'));
-        plusTwentyPerSecBtn.addEventListener('click', () => buyUpgrade('plusTwentyPerSec'));
-        tenTimesBtn.addEventListener('click', () => buyUpgrade('tenTimes'));
+        function showOmegaAnimation() {
+            const omegaAttack = document.createElement('div');
+            omegaAttack.className = 'omega-attack';
+            
+            const darkScreen = document.createElement('div');
+            darkScreen.className = 'omega-dark-screen';
+            darkScreen.style.opacity = '0';
+            
+            const omegaText = document.createElement('div');
+            omegaText.className = 'omega-text';
+            omegaText.textContent = 'О М Е Г А';
+            
+            const heartsContainer = document.createElement('div');
+            heartsContainer.className = 'omega-hearts-container';
+            
+            omegaAttack.appendChild(darkScreen);
+            omegaAttack.appendChild(omegaText);
+            omegaAttack.appendChild(heartsContainer);
+            document.body.appendChild(omegaAttack);
+            
+            setTimeout(() => {
+                darkScreen.style.opacity = '1';
+                
+                for (let i = 0; i < 7; i++) {
+                    setTimeout(() => {
+                        const heart = document.createElement('div');
+                        heart.className = 'omega-heart';
+                        heart.innerHTML = '❤';
+                        heart.style.opacity = '1';
+                        heart.style.animation = `omega-rotate ${5 + i}s linear infinite`;
+                        heart.style.animationDelay = `${i * 0.2}s`;
+                        heartsContainer.appendChild(heart);
+                    }, 2000 * (i + 1));
+                }
+                
+                setTimeout(() => {
+                    heartsContainer.innerHTML = '';
+                    omegaText.style.opacity = '1';
+                    omegaText.style.animation = 'omega-shake 0.1s infinite';
+                    
+                    setTimeout(() => {
+                        omegaText.style.animation = 'none';
+                        setTimeout(() => omegaAttack.remove(), 1000);
+                    }, 10000);
+                }, 16000);
+            }, 0);
+        }
         
-        defaultGloveBtn.addEventListener('click', () => selectGlove('default'));
-        stoneGloveBtn.addEventListener('click', () => selectGlove('stone'));
-        wallGloveBtn.addEventListener('click', () => selectGlove('wall'));
-        randomGloveBtn.addEventListener('click', () => selectGlove('random'));
-        ghostGloveBtn.addEventListener('click', () => selectGlove('ghost'));
-        plagueGloveBtn.addEventListener('click', () => selectGlove('plague'));
-        flashGloveBtn.addEventListener('click', () => selectGlove('flash'));
-        rainbowGloveBtn.addEventListener('click', () => selectGlove('rainbow'));
-        replicaGloveBtn.addEventListener('click', () => selectGlove('replica'));
-        stoneAgeGloveBtn.addEventListener('click', () => selectGlove('stoneAge'));
-        doubleDefaultGloveBtn.addEventListener('click', () => selectGlove('doubleDefault'));
-        pullGloveBtn.addEventListener('click', () => selectGlove('pull'));
-        voodooGloveBtn.addEventListener('click', () => selectGlove('voodoo'));
-        bobGloveBtn.addEventListener('click', () => selectGlove('bob'));
-        
-        useAbilityBtn.addEventListener('click', useAbility);
-        
-        // Skin system events
-        openChestBtn.addEventListener('click', () => {
-            chestModal.style.display = 'flex';
-            chestResult.innerHTML = '<p>Are you ready to open a skin chest?</p>';
-        });
-        
-        openMegaChestBtn.addEventListener('click', () => {
-            megaChestModal.style.display = 'flex';
-            megaChestResult.innerHTML = '<p>Are you ready to open a mega skin chest?</p>';
-        });
-        
-        viewSkinsBtn.addEventListener('click', () => {
-            showSkinsModal();
-            skinsModal.style.display = 'flex';
-        });
-        
-        confirmOpenChestBtn.addEventListener('click', () => {
-            openSkinChest();
-        });
-        
-        confirmOpenMegaChestBtn.addEventListener('click', () => {
-            openMegaSkinChest();
-        });
-        
-        // Boss fight events
-        startBossFightBtn.addEventListener('click', startBossFight);
-        declineBossFightBtn.addEventListener('click', () => {
-            bossFightModal.style.display = 'none';
-        });
-        
-        bossBall.addEventListener('click', () => {
-            endBossFight(false);
-        });
-        
-        // Close modals
-        document.querySelectorAll('.close-modal').forEach(btn => {
-            btn.addEventListener('click', () => {
-                chestModal.style.display = 'none';
-                megaChestModal.style.display = 'none';
-                skinsModal.style.display = 'none';
+        function updateLibrary() {
+            const libraryElement = document.getElementById('library-items');
+            
+            if (library.length === 0) {
+                libraryElement.innerHTML = '<div class="library-item">Пока ничего не найдено...</div>';
+                return;
+            }
+            
+            libraryElement.innerHTML = '';
+            library.sort().forEach(rarity => {
+                const item = document.createElement('div');
+                item.className = 'library-item';
+                item.textContent = `${translateRarity(rarity)} (${rewards[rarity]} монет)`;
+                item.style.color = getRarityColor(rarity);
+                if (['god', 'death', 'eternity', 'heart', 'king', 'glitch', 'blaster', 'omega', 'angel', 'purple'].includes(rarity)) {
+                    item.style.fontWeight = 'bold';
+                }
+                libraryElement.appendChild(item);
             });
-        });
+        }
         
-        // Close modals when clicking outside
-        window.addEventListener('click', (e) => {
-            if (e.target === chestModal) {
-                chestModal.style.display = 'none';
-            }
-            if (e.target === megaChestModal) {
-                megaChestModal.style.display = 'none';
-            }
-            if (e.target === skinsModal) {
-                skinsModal.style.display = 'none';
-            }
-            if (e.target === bossFightModal) {
-                bossFightModal.style.display = 'none';
-            }
-        });
+        function getRarityColor(rarity) {
+            const colors = {
+                normal: 'black',
+                uncommon: 'green',
+                epic: 'blue',
+                legendary: 'purple',
+                mythic: 'orange',
+                shadow: 'gray',
+                purple: '#8e44ad',
+                king: 'gold',
+                angel: 'lightblue',
+                god: 'red',
+                death: 'black',
+                eternity: 'white',
+                heart: 'darkred',
+                glitch: '#9b59b6',
+                blaster: '#3498db',
+                omega: '#e74c3c'
+            };
+            return colors[rarity] || 'black';
+        }
         
-        // Keyboard support
-        document.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'e') {
-                useAbility();
-            }
-        });
+        function setupShop() {
+            document.getElementById('upgrade-cooldown').addEventListener('click', () => {
+                if (coins >= 25) {
+                    coins -= 25;
+                    cooldownTime -= 500;
+                    updateUI();
+                }
+            });
+            
+            document.getElementById('remove-normal').addEventListener('click', () => {
+                if (coins >= 125 && !removedRarities.normal) {
+                    coins -= 125;
+                    removedRarities.normal = true;
+                    updateUI();
+                }
+            });
+            
+            document.getElementById('remove-uncommon').addEventListener('click', () => {
+                if (coins >= 250 && !removedRarities.uncommon) {
+                    coins -= 250;
+                    removedRarities.uncommon = true;
+                    updateUI();
+                }
+            });
+            
+            document.getElementById('remove-epic').addEventListener('click', () => {
+                if (coins >= 500 && !removedRarities.epic) {
+                    coins -= 500;
+                    removedRarities.epic = true;
+                    updateUI();
+                }
+            });
+            
+            document.getElementById('remove-legendary').addEventListener('click', () => {
+                if (coins >= 1000 && !removedRarities.legendary) {
+                    coins -= 1000;
+                    removedRarities.legendary = true;
+                    updateUI();
+                }
+            });
+            
+            document.getElementById('remove-mythic').addEventListener('click', () => {
+                if (coins >= 2000 && !removedRarities.mythic) {
+                    coins -= 2000;
+                    removedRarities.mythic = true;
+                    updateUI();
+                }
+            });
+            
+            document.getElementById('remove-shadow').addEventListener('click', () => {
+                if (coins >= 5000 && !removedRarities.shadow) {
+                    coins -= 5000;
+                    removedRarities.shadow = true;
+                    updateUI();
+                }
+            });
+            
+            document.getElementById('remove-purple').addEventListener('click', () => {
+                if (coins >= 7500 && !removedRarities.purple) {
+                    coins -= 7500;
+                    removedRarities.purple = true;
+                    updateUI();
+                }
+            });
+            
+            document.getElementById('remove-king').addEventListener('click', () => {
+                if (coins >= 10000 && !removedRarities.king) {
+                    coins -= 10000;
+                    removedRarities.king = true;
+                    updateUI();
+                }
+            });
+            
+            document.getElementById('remove-angel').addEventListener('click', () => {
+                if (coins >= 25000 && !removedRarities.angel) {
+                    coins -= 25000;
+                    removedRarities.angel = true;
+                    updateUI();
+                }
+            });
+        }
         
-        // Exit ghost dimension on click
-        ghostDimension.addEventListener('click', () => {
-            if (isGhost) {
-                isGhost = false;
-                ghostDimension.style.display = 'none';
-            }
-        });
+        function setupSettings() {
+            document.getElementById('toggle-god').addEventListener('change', function() {
+                animationSettings.god = this.checked;
+            });
+            
+            document.getElementById('toggle-eternity').addEventListener('change', function() {
+                animationSettings.eternity = this.checked;
+            });
+            
+            document.getElementById('toggle-death').addEventListener('change', function() {
+                animationSettings.death = this.checked;
+            });
+            
+            document.getElementById('toggle-heart').addEventListener('change', function() {
+                animationSettings.heart = this.checked;
+            });
+        }
         
-        // Initialize
-        let currentKillstreak = 0;
-        let highestKillstreak = 0;
-        let replicaClicks = 0;
-        let blackSquaresFound = 0;
-
-
-
-        // New glove abilities
-function activateDetonator() {
-    if (abilityCooldown > 0) return;
-    
-    detonatorActive = true;
-    detonatorEndTime = Date.now() + 5000; // 5 seconds
-    
-    // Create zero display
-    const zeroDisplay = document.createElement('div');
-    zeroDisplay.className = 'detonator-zero';
-    zeroDisplay.textContent = '0';
-    zeroDisplay.id = 'zeroDisplay';
-    slapButton.parentNode.insertBefore(zeroDisplay, slapButton);
-    slapButton.style.display = 'none';
-    
-    abilityCooldown = 120;
-    
-    // Check for survivor achievement
-    if (!achievements.survivor) {
-        achievements.survivor = true;
-        unlockedGloves.detonator = true;
-        showAchievementPopup("Survivor", "You used the Detonator glove!");
-    }
-    
-    updateDisplay();
-}
-
-function activateBerserk() {
-    if (berserkCooldown > 0) return;
-    
-    berserkStacks++;
-    if (berserkStacks >= 10) {
-        slaps += 500;
-        totalSlaps += 500;
-        berserkStacks = 0;
-        showAchievementPopup("Berserk", "You gained 500 slaps from Berserk!");
-    }
-    
-    berserkCooldown = 4;
-    updateDisplay();
-}
-
-// New achievement notification
-function showAchievementPopup(title, description) {
-    const popup = document.createElement('div');
-    popup.style.position = 'fixed';
-    popup.style.top = '20px';
-    popup.style.left = '50%';
-    popup.style.transform = 'translateX(-50%)';
-    popup.style.backgroundColor = '#fdcb6e';
-    popup.style.padding = '15px';
-    popup.style.borderRadius = '10px';
-    popup.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
-    popup.style.zIndex = '1000';
-    popup.style.textAlign = 'center';
-    popup.style.maxWidth = '80%';
-    
-    popup.innerHTML = `
-        <h3 style="margin:0">Achievement Unlocked: ${title}</h3>
-        <p style="margin:5px 0 0">${description}</p>
-    `;
-    
-    document.body.appendChild(popup);
-    
-    setTimeout(() => {
-        popup.style.transition = 'opacity 1s';
-        popup.style.opacity = '0';
-        setTimeout(() => popup.remove(), 1000);
-    }, 3000);
-}
-
-// New premium chest
-function openPremiumChest() {
-    if (nullCrystals < 500) return;
-    
-    nullCrystals -= 500;
-    
-    // Determine which skin to unlock
-    const random = Math.random() * 100;
-    let selectedSkin = random <= 60 ? 'goldRedShake' : 'colorfulShadow';
-    
-    // Add to unlocked skins if not already unlocked
-    if (!unlockedSkins.includes(selectedSkin)) {
-        unlockedSkins.push(selectedSkin);
-    }
-    
-    // Apply skin immediately
-    currentSkin = selectedSkin;
-    slapButton.className = '';
-    slapButton.classList.add(newChestSkins[selectedSkin].class);
-    
-    showAchievementPopup("Premium Skin", `You got the ${newChestSkins[selectedSkin].name} skin!`);
-    updateDisplay();
-}
-        // Add to your game loop
-if (detonatorActive && Date.now() >= detonatorEndTime) {
-    detonatorActive = false;
-    const zeroDisplay = document.getElementById('zeroDisplay');
-    if (zeroDisplay) zeroDisplay.remove();
-    slapButton.style.display = 'block';
-}
-
-if (berserkCooldown > 0) {
-    berserkCooldown -= 0.1;
-    if (berserkCooldown < 0) berserkCooldown = 0;
-}
-
-// In your slap function, add:
-if (detonatorActive) {
-    nullCrystals++;
-    totalCrystals++;
-    return; // Don't give normal slaps during detonator
-}
-
-if (selectedGlove === 'pull') {
-    const extraSlaps = Math.floor(Math.random() * 3) + 1;
-    slaps += extraSlaps;
-    totalSlaps += extraSlaps;
-}
-        // Add to your glove selection
-detonatorGloveBtn.addEventListener('click', () => selectGlove('detonator'));
-berserkGloveBtn.addEventListener('click', () => selectGlove('berserk'));
-
-// Add to your useAbility function
-case 'detonator':
-    activateDetonator();
-    break;
-case 'berserk':
-    activateBerserk();
-    break;
-
-// Add premium chest button
-document.getElementById('openPremiumChest').addEventListener('click', openPremiumChest);
-        updateDisplay();
-        gameLoop();
+        function init() {
+            document.getElementById('spin-btn').addEventListener('click', spin);
+            setupShop();
+            setupSettings();
+            updateUI();
+        }
         
+        window.onload = init;
     </script>
-    <script src="save.js"></script>
 </body>
 </html>
