@@ -188,3 +188,117 @@ function gameLoop() {
 }
 
 gameLoop();
+// ===== ГЕНЕРАЦИЯ УРОВНЯ =====
+let lastPlatformX = 0;
+let levelLength = 5000; // Длина уровня (можно увеличивать)
+let difficulty = 0;
+
+function generatePlatforms() {
+    while (lastPlatformX < player.x + levelLength) {
+        const platformWidth = 50 + Math.random() * 100;
+        const gap = 100 + Math.random() * 200 - difficulty * 10; // Уже щели
+        const heightVariation = Math.random() * 100 - 50;
+        
+        platforms.push({
+            x: lastPlatformX + gap,
+            y: 400 + heightVariation,
+            width: platformWidth,
+            height: 20,
+            color: `hsl(${Math.random() * 120 + 100}, 70%, 50%)`
+        });
+        
+        // Ловушки (чем дальше, тем чаще)
+        if (Math.random() > 0.7 - difficulty * 0.01) {
+            traps.push({
+                x: lastPlatformX + gap + 10,
+                y: 480,
+                width: 30,
+                height: 20,
+                color: '#FF0000'
+            });
+        }
+        
+        // Враги (на высоких платформах)
+        if (heightVariation < -20 && Math.random() > 0.8) {
+            enemies.push({
+                x: lastPlatformX + gap + 20,
+                y: 380 + heightVariation,
+                width: 30,
+                height: 30,
+                speed: 2 + difficulty * 0.05,
+                dir: 1,
+                color: '#FF0000',
+                update: function() {
+                    this.x += this.speed * this.dir;
+                    if (this.x > this.startX + 50 || this.x < this.startX - 50) this.dir *= -1;
+                },
+                startX: lastPlatformX + gap + 20
+            });
+        }
+        
+        lastPlatformX += gap + platformWidth;
+    }
+}
+
+// ===== ПАРАЛЛАКС-ФОН =====
+const layers = [];
+for (let i = 0; i < 3; i++) {
+    layers.push({
+        speed: 0.2 + i * 0.3,
+        elements: []
+    });
+}
+
+function generateBackground() {
+    layers.forEach(layer => {
+        layer.elements = [];
+        for (let j = 0; j < 10; j++) {
+            layer.elements.push({
+                x: j * 500,
+                y: Math.random() * 200 + 100,
+                width: 100,
+                height: 100,
+                color: `rgba(100, 150, 200, ${0.2 + layer.speed * 0.2})`
+            });
+        }
+    });
+}
+
+// ===== ОБНОВЛЁННЫЙ ИГРОВОЙ ЦИКЛ =====
+let score = 0;
+
+function gameLoop() {
+    // Генерация новых участков
+    if (player.x > lastPlatformX - 1000) {
+        generatePlatforms();
+    }
+    
+    // Удаление пройденных объектов (оптимизация)
+    platforms = platforms.filter(p => p.x + p.width > player.x - 500);
+    traps = traps.filter(t => t.x + t.width > player.x - 500);
+    enemies = enemies.filter(e => e.x + e.width > player.x - 500);
+    
+    // Обновление сложности
+    difficulty = Math.floor(player.x / 1000);
+    document.getElementById('score').textContent = `${Math.floor(player.x / 10)} м (Ур. ${difficulty + 1})`;
+    
+    // ... остальной код рендеринга ...
+    
+    // Отрисовка фона
+    ctx.save();
+    layers.forEach(layer => {
+        layer.elements.forEach(el => {
+            const x = (el.x - camera.x * layer.speed) % 5000;
+            ctx.fillStyle = el.color;
+            ctx.fillRect(x, el.y, el.width, el.height);
+        });
+    });
+    ctx.restore();
+    
+    requestAnimationFrame(gameLoop);
+}
+
+// Инициализация
+generateBackground();
+generatePlatforms();
+gameLoop();
