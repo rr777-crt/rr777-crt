@@ -187,7 +187,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-gameLoop();
+
 // ===== ГЕНЕРАЦИЯ УРОВНЯ =====
 let lastPlatformX = 0;
 let levelLength = 5000; // Длина уровня (можно увеличивать)
