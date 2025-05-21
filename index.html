@@ -1,79 +1,1236 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HARDCORE Platformer</title>
+    <title>Шарики: Эволюция</title>
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; }
-        canvas { display: block; background: #111; }
-        #controls {
-            position: fixed;
-            bottom: 20px;
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f0f0f0;
+            touch-action: none;
+            font-family: Arial, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background-color: #e0e0e0;
+            margin: 0 auto;
+        }
+        
+        #gameUI {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #333;
+            font-size: 18px;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            z-index: 5;
+        }
+        
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            z-index: 10;
+        }
+        
+        .menu-ball {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            z-index: 11;
+            pointer-events: none;
+        }
+        
+        .menu-title {
+            font-size: 32px;
+            margin-bottom: 120px;
+            z-index: 12;
+        }
+        
+        .button {
+            padding: 15px 30px;
+            font-size: 20px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            min-width: 200px;
+            z-index: 12;
+            position: relative;
+        }
+        
+        #startButton {
+            background-color: #4CAF50;
+            margin-top: 150px;
+        }
+        
+        #inventoryButton {
+            background-color: #3498db;
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+        }
+        
+        #shopButton {
+            background-color: #9b59b6;
+            position: fixed;
+            left: 20px;
+            bottom: 80px;
+        }
+        
+        #inventoryScreen, #shopScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 20;
+        }
+        
+        .shop-item {
+            padding: 15px;
+            margin: 10px;
+            border: 2px solid #444;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 300px;
             display: flex;
             justify-content: space-between;
-            padding: 0 20px;
-            box-sizing: border-box;
-        }
-        #arrows {
-            display: flex;
-            gap: 10px;
-        }
-        .arrow {
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            display: flex;
             align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            user-select: none;
+            background-color: #222;
         }
-        #jumpBtn {
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 50, 50, 0.3);
+        
+        .skin-preview {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            border: 2px solid white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 18px;
-            user-select: none;
+            margin-right: 15px;
         }
-        .parallax {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
-    }
-    #score {
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        color: white;
-        font-size: 24px;
-        font-family: Arial;
-    }
+        
+        .item-name {
+            flex-grow: 1;
+        }
+        
+        .item-price, .item-owned {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .item-price {
+            background-color: #f39c12;
+            color: #000;
+        }
+        
+        .item-owned {
+            background-color: #2ecc71;
+            color: #000;
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 21;
+        }
+        
+        .equip-button {
+            padding: 5px 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .buy-button {
+            padding: 5px 10px;
+            background-color: #f39c12;
+            color: black;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        #totalScore {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #f1c40f;
+            z-index: 12;
+        }
+        
+        .hearts {
+            display: flex;
+            margin-bottom: 10px;
+            z-index: 12;
+        }
+        
+        .heart {
+            width: 24px;
+            height: 24px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23e74c3c"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>');
+            background-repeat: no-repeat;
+            margin-right: 5px;
+        }
+        
+        .multiplier {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        
+        .level-bar {
+            width: 80%;
+            max-width: 300px;
+            height: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+            z-index: 12;
+        }
+        
+        .level-progress {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        @keyframes explode {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+        
+        .explosion {
+            position: absolute;
+            border-radius: 50%;
+            animation: explode 0.5s forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .rotation-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(transparent, rgba(255,255,255,0.5), transparent);
+            animation: rotate 5s linear infinite;
+            opacity: 0.3;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
-    <div id="controls">
-        <div id="arrows">
-            <div class="arrow" id="left">←</div>
-            <div class="arrow" id="right">→</div>
-        </div>
-        <div id="jumpBtn">Прыжок (x2)</div>
+    <div id="gameUI">
+        Очки: <span id="score">0</span> (<span class="multiplier">×1</span>) | Ур: <span id="level">1</span> | <span id="hearts"></span>
     </div>
-    <div class="parallax" id="parallax"></div>
-<div id="score">0 м</div>
-    <script src="game.js"></script>
+    
+    <div id="startScreen">
+        <div class="menu-title">Шарики: Эволюция</div>
+        <div class="menu-ball" id="menuBall"></div>
+        <div class="hearts" id="startHearts"></div>
+        <div id="totalScore">Всего очков: 0</div>
+        <div class="level-bar"><div class="level-progress" id="levelProgress"></div></div>
+        <div>Уровень: <span id="startLevel">1</span> (<span id="levelXP">0</span>/100)</div>
+        <button id="startButton" class="button">Играть</button>
+        <button id="inventoryButton" class="button">Инвентарь</button>
+        <button id="shopButton" class="button">Магазин</button>
+    </div>
+    
+    <div id="inventoryScreen">
+        <button class="back-button">Назад</button>
+        <h2>Инвентарь</h2>
+        <div id="inventoryItems"></div>
+    </div>
+    
+    <div id="shopScreen">
+        <button class="back-button">Назад</button>
+        <h2>Магазин</h2>
+        <div>Ваши очки: <span id="shopTotalScore">0</span></div>
+        <div id="shopItems"></div>
+    </div>
+
+    <script>
+        // Инициализация игры
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const levelElement = document.getElementById('level');
+        const startLevelElement = document.getElementById('startLevel');
+        const levelXPElement = document.getElementById('levelXP');
+        const levelProgressElement = document.getElementById('levelProgress');
+        const heartsElement = document.getElementById('hearts');
+        const startHeartsElement = document.getElementById('startHearts');
+        const multiplierElement = document.querySelector('.multiplier');
+        const totalScoreElement = document.getElementById('totalScore');
+        const shopTotalScoreElement = document.getElementById('shopTotalScore');
+        const startButton = document.getElementById('startButton');
+        const inventoryButton = document.getElementById('inventoryButton');
+        const shopButton = document.getElementById('shopButton');
+        const startScreen = document.getElementById('startScreen');
+        const inventoryScreen = document.getElementById('inventoryScreen');
+        const shopScreen = document.getElementById('shopScreen');
+        const inventoryItems = document.getElementById('inventoryItems');
+        const shopItems = document.getElementById('shopItems');
+        const menuBall = document.getElementById('menuBall');
+        
+        // Размеры canvas
+        let canvasWidth = window.innerWidth;
+        let canvasHeight = window.innerHeight;
+        
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        
+        // Игровые переменные
+        let score = 0;
+        let totalScore = 0;
+        let gameRunning = false;
+        let gameLoopInterval;
+        let difficulty = 1;
+        let goldenBallChance = 0.00000025;
+        let bombChance = 0.005;
+        let explodingBombChance = 0.003;
+        let lives = 3;
+        let scoreMultiplier = 1;
+        let level = 1;
+        let xp = 0;
+        let maxXP = 100;
+        let goldenEffectActive = false;
+        let goldenEffectEndTime = 0;
+        let lastX = 0;
+        let lastY = 0;
+        let velocity = 0;
+        let rotationSpeed = 0;
+        let rotationAngle = 0;
+        
+        // Анимация шарика в меню
+        let menuBallX = canvasWidth / 2;
+        let menuBallY = canvasHeight / 2 - 50;
+        let menuBallVX = 2;
+        let menuBallVY = 1.5;
+        let menuBallRotation = 0;
+        
+        function animateMenuBall() {
+            // Движение шарика
+            menuBallX += menuBallVX;
+            menuBallY += menuBallVY;
+            
+            // Отскок от границ
+            if (menuBallX < 50 || menuBallX > canvasWidth - 50) {
+                menuBallVX *= -1;
+            }
+            if (menuBallY < 50 || menuBallY > canvasHeight / 2) {
+                menuBallVY *= -1;
+            }
+            
+            // Вращение в зависимости от скорости
+            const speed = Math.sqrt(menuBallVX * menuBallVX + menuBallVY * menuBallVY);
+            menuBallRotation += speed * 0.05;
+            
+            // Позиционирование шарика
+            menuBall.style.left = (menuBallX - 50) + 'px';
+            menuBall.style.top = (menuBallY - 50) + 'px';
+            menuBall.style.transform = `rotate(${menuBallRotation}deg)`;
+            
+            requestAnimationFrame(animateMenuBall);
+        }
+        
+        // Загрузка сохраненных данных
+        function loadGameData() {
+            const savedData = localStorage.getItem('ballGameData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                totalScore = data.totalScore || 0;
+                player.skins = data.skins || [];
+                player.currentSkin = data.currentSkin || 'default';
+                lives = data.lives || 3;
+                scoreMultiplier = data.scoreMultiplier || 1;
+                level = data.level || 1;
+                xp = data.xp || 0;
+                maxXP = data.maxXP || 100;
+                updatePlayerColor();
+                updateMenuBallAppearance();
+            }
+            updateUI();
+        }
+        
+        // Сохранение данных игры
+        function saveGameData() {
+            const gameData = {
+                totalScore: totalScore,
+                skins: player.skins,
+                currentSkin: player.currentSkin,
+                lives: lives,
+                scoreMultiplier: scoreMultiplier,
+                level: level,
+                xp: xp,
+                maxXP: maxXP
+            };
+            localStorage.setItem('ballGameData', JSON.stringify(gameData));
+        }
+        
+        // Игровые объекты
+        const player = {
+            x: canvasWidth / 2,
+            y: canvasHeight - 50,
+            radius: 30,
+            color: '#3498db',
+            speed: 8,
+            skins: [],
+            currentSkin: 'default',
+            skinEffects: {},
+            rotation: 0
+        };
+        
+        let balls = [];
+        let skulls = [];
+        let goldenBalls = [];
+        let bombs = [];
+        let explodingBombs = [];
+        
+        // Магазин предметов
+        const shopItemsList = [
+            { type: 'skin', id: 'red', name: 'Красный', price: 1000, color: '#e74c3c', rarity: '50%' },
+            { type: 'skin', id: 'yellow', name: 'Жёлтый', price: 1000, color: '#f1c40f', rarity: '30%' },
+            { type: 'skin', id: 'rainbow', name: 'Радужный', price: 1000, color: 'rainbow', rarity: '15%' },
+            { type: 'skin', id: 'blinking', name: 'Мигающий', price: 1000, color: 'blinking', rarity: '5%' },
+            { type: 'skin', id: 'rainbow_disturb', name: 'Радужный+Мешающий', price: 3000, color: 'rainbow_disturb', rarity: '90%' },
+            { type: 'skin', id: 'eyes', name: 'Глазастый', price: 3000, color: 'eyes', rarity: '10%' },
+            { type: 'life', id: 'extra_life', name: '+1 жизнь', price: 2500, max: 5 }
+        ];
+        
+        // Обработчики событий
+        startButton.addEventListener('click', startGame);
+        inventoryButton.addEventListener('click', showInventory);
+        shopButton.addEventListener('click', showShop);
+        
+        document.querySelectorAll('.back-button').forEach(button => {
+            button.addEventListener('click', () => {
+                inventoryScreen.style.display = 'none';
+                shopScreen.style.display = 'none';
+                startScreen.style.display = 'flex';
+            });
+        });
+        
+        canvas.addEventListener('touchmove', function(e) {
+            if (!gameRunning) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            
+            // Вычисляем скорость для вращения
+            const newX = touch.clientX;
+            const newY = touch.clientY;
+            const dx = newX - player.x;
+            const dy = newY - player.y;
+            velocity = Math.sqrt(dx * dx + dy * dy);
+            
+            // Обновляем позицию
+            player.x = newX;
+            player.y = newY;
+            
+            // Вращение зависит от скорости
+            rotationSpeed = velocity * 0.2;
+        });
+        
+        canvas.addEventListener('mousemove', function(e) {
+            if (!gameRunning) return;
+            
+            // Вычисляем скорость для вращения
+            const newX = e.clientX;
+            const newY = e.clientY;
+            const dx = newX - player.x;
+            const dy = newY - player.y;
+            velocity = Math.sqrt(dx * dx + dy * dy);
+            
+            // Обновляем позицию
+            player.x = newX;
+            player.y = newY;
+            
+            // Вращение зависит от скорости
+            rotationSpeed = velocity * 0.2;
+        });
+        
+        // Функции интерфейса
+        function updateUI() {
+            scoreElement.textContent = score;
+            levelElement.textContent = level;
+            startLevelElement.textContent = level;
+            levelXPElement.textContent = xp;
+            levelProgressElement.style.width = `${(xp / maxXP) * 100}%`;
+            totalScoreElement.textContent = `Всего очков: ${totalScore}`;
+            shopTotalScoreElement.textContent = totalScore;
+            multiplierElement.textContent = scoreMultiplier;
+            
+            // Обновление сердец
+            heartsElement.innerHTML = '';
+            startHeartsElement.innerHTML = '';
+            for (let i = 0; i < lives; i++) {
+                heartsElement.innerHTML += '<div class="heart"></div>';
+                startHeartsElement.innerHTML += '<div class="heart"></div>';
+            }
+        }
+        
+        function updateMenuBallAppearance() {
+            if (player.currentSkin === 'default') {
+                menuBall.style.backgroundColor = '#3498db';
+                menuBall.innerHTML = '';
+            } else {
+                const skin = shopItemsList.find(item => item.type === 'skin' && item.id === player.currentSkin);
+                if (skin) {
+                    if (skin.color === 'rainbow') {
+                        menuBall.style.background = 'linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet)';
+                        menuBall.innerHTML = '<div class="rotation-effect"></div>';
+                    } else if (skin.color === 'blinking') {
+                        menuBall.style.backgroundColor = 'white';
+                        menuBall.style.animation = 'blink 0.5s infinite';
+                        menuBall.innerHTML = '';
+                    } else if (skin.color === 'rainbow_disturb') {
+                        menuBall.style.background = 'linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet)';
+                        menuBall.innerHTML = '<div class="rotation-effect" style="animation-direction: reverse;"></div>';
+                    } else if (skin.color === 'eyes') {
+                        menuBall.style.backgroundColor = '#9b59b6';
+                        menuBall.innerHTML = `
+                            <div style="position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 25px; left: 20px;"></div>
+                            <div style="position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 25px; right: 20px;"></div>
+                            <div style="position: absolute; width: 8px; height: 8px; background: black; border-radius: 50%; top: 29px; left: 24px;"></div>
+                            <div style="position: absolute; width: 8px; height: 8px; background: black; border-radius: 50%; top: 29px; right: 24px;"></div>
+                        `;
+                    } else {
+                        menuBall.style.backgroundColor = skin.color;
+                        menuBall.innerHTML = '';
+                    }
+                }
+            }
+        }
+        
+        function showInventory() {
+            startScreen.style.display = 'none';
+            inventoryScreen.style.display = 'flex';
+            
+            // Очистка инвентаря
+            inventoryItems.innerHTML = '';
+            
+            // Добавление стандартного скина
+            const defaultSkinItem = document.createElement('div');
+            defaultSkinItem.className = 'shop-item';
+            defaultSkinItem.innerHTML = `
+                <div class="skin-preview" style="background-color: #3498db;"></div>
+                <div class="item-name">Стандартный</div>
+                ${player.currentSkin === 'default' ? 
+                    '<div class="item-owned">Надет</div>' : 
+                    '<button class="equip-button" data-skin="default">Надеть</button>'}
+            `;
+            inventoryItems.appendChild(defaultSkinItem);
+            
+            // Добавление купленных скинов
+            player.skins.forEach(skinId => {
+                const skin = shopItemsList.find(item => item.type === 'skin' && item.id === skinId);
+                if (skin) {
+                    const skinItem = document.createElement('div');
+                    skinItem.className = 'shop-item';
+                    
+                    if (skin.color === 'rainbow') {
+                        skinItem.innerHTML = `
+                            <div class="skin-preview" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);"></div>
+                            <div class="item-name">${skin.name}</div>
+                            ${player.currentSkin === skin.id ? 
+                                '<div class="item-owned">Надет</div>' : 
+                                `<button class="equip-button" data-skin="${skin.id}">Надеть</button>`}
+                        `;
+                    } else if (skin.color === 'blinking') {
+                        skinItem.innerHTML = `
+                            <div class="skin-preview" style="background-color: white; animation: blink 0.5s infinite;"></div>
+                            <div class="item-name">${skin.name}</div>
+                            ${player.currentSkin === skin.id ? 
+                                '<div class="item-owned">Надет</div>' : 
+                                `<button class="equip-button" data-skin="${skin.id}">Надеть</button>`}
+                        `;
+                    } else if (skin.color === 'rainbow_disturb') {
+                        skinItem.innerHTML = `
+                            <div class="skin-preview" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);"></div>
+                            <div class="item-name">${skin.name}</div>
+                            ${player.currentSkin === skin.id ? 
+                                '<div class="item-owned">Надет</div>' : 
+                                `<button class="equip-button" data-skin="${skin.id}">Надеть</button>`}
+                        `;
+                    } else if (skin.color === 'eyes') {
+                        skinItem.innerHTML = `
+                            <div class="skin-preview" style="background-color: #9b59b6; position: relative;">
+                                <div style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; top: 12px; left: 8px;"></div>
+                                <div style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; top: 12px; right: 8px;"></div>
+                            </div>
+                            <div class="item-name">${skin.name}</div>
+                            ${player.currentSkin === skin.id ? 
+                                '<div class="item-owned">Надет</div>' : 
+                                `<button class="equip-button" data-skin="${skin.id}">Надеть</button>`}
+                        `;
+                    } else {
+                        skinItem.innerHTML = `
+                            <div class="skin-preview" style="background-color: ${skin.color};"></div>
+                            <div class="item-name">${skin.name}</div>
+                            ${player.currentSkin === skin.id ? 
+                                '<div class="item-owned">Надет</div>' : 
+                                `<button class="equip-button" data-skin="${skin.id}">Надеть</button>`}
+                        `;
+                    }
+                    
+                    inventoryItems.appendChild(skinItem);
+                }
+            });
+            
+            // Обработчики кнопок "Надеть"
+            document.querySelectorAll('.equip-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const skinId = this.getAttribute('data-skin');
+                    player.currentSkin = skinId;
+                    updatePlayerColor();
+                    updateMenuBallAppearance();
+                    saveGameData();
+                    showInventory();
+                });
+            });
+        }
+        
+        function showShop() {
+            startScreen.style.display = 'none';
+            shopScreen.style.display = 'flex';
+            shopTotalScoreElement.textContent = totalScore;
+            
+            // Очистка магазина
+            shopItems.innerHTML = '';
+            
+            // Добавление предметов в магазин
+            shopItemsList.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'shop-item';
+                
+                if (item.type === 'skin') {
+                    const alreadyOwned = player.skins.includes(item.id);
+                    if (!alreadyOwned) {
+                        if (item.color === 'rainbow') {
+                            itemElement.innerHTML = `
+                                <div class="skin-preview" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);"></div>
+                                <div class="item-name">${item.name} (${item.rarity})</div>
+                                <div class="item-price">${item.price}</div>
+                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
+                            `;
+                        } else if (item.color === 'blinking') {
+                            itemElement.innerHTML = `
+                                <div class="skin-preview" style="background-color: white; animation: blink 0.5s infinite;"></div>
+                                <div class="item-name">${item.name} (${item.rarity})</div>
+                                <div class="item-price">${item.price}</div>
+                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
+                            `;
+                        } else if (item.color === 'rainbow_disturb') {
+                            itemElement.innerHTML = `
+                                <div class="skin-preview" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);"></div>
+                                <div class="item-name">${item.name} (${item.rarity})</div>
+                                <div class="item-price">${item.price}</div>
+                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
+                            `;
+                        } else if (item.color === 'eyes') {
+                            itemElement.innerHTML = `
+                                <div class="skin-preview" style="background-color: #9b59b6; position: relative;">
+                                    <div style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; top: 12px; left: 8px;"></div>
+                                    <div style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; top: 12px; right: 8px;"></div>
+                                </div>
+                                <div class="item-name">${item.name} (${item.rarity})</div>
+                                <div class="item-price">${item.price}</div>
+                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
+                            `;
+                        } else {
+                            itemElement.innerHTML = `
+                                <div class="skin-preview" style="background-color: ${item.color};"></div>
+                                <div class="item-name">${item.name} (${item.rarity})</div>
+                                <div class="item-price">${item.price}</div>
+                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
+                            `;
+                        }
+                    }
+                } else if (item.type === 'life') {
+                    const canBuyMore = lives < item.max;
+                    itemElement.innerHTML = `
+                        <div class="skin-preview" style="background-color: #e74c3c; display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 16px; height: 16px; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%23ffffff\"><path d=\"M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z\"/></svg>');"></div>
+                        </div>
+                        <div class="item-name">${item.name} (макс. ${item.max})</div>
+                        <div class="item-price">${item.price}</div>
+                        ${canBuyMore ? 
+                            `<button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>` : 
+                            '<div class="item-owned">Максимум</div>'}
+                    `;
+                }
+                
+                if (itemElement.innerHTML) {
+                    shopItems.appendChild(itemElement);
+                }
+            });
+            
+            // Обработчики кнопок "Купить"
+            document.querySelectorAll('.buy-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const itemId = this.getAttribute('data-id');
+                    const price = parseInt(this.getAttribute('data-price'));
+                    
+                    if (totalScore >= price) {
+                        const item = shopItemsList.find(i => i.id === itemId);
+                        
+                        if (item.type === 'skin') {
+                            if (!player.skins.includes(itemId)) {
+                                totalScore -= price;
+                                player.skins.push(itemId);
+                                alert(`Вы получили ${item.name}!`);
+                                saveGameData();
+                                updateUI();
+                                showShop();
+                            }
+                        } else if (item.type === 'life') {
+                            if (lives < item.max) {
+                                totalScore -= price;
+                                lives++;
+                                alert(`Вы получили +1 жизнь! Теперь у вас ${lives} жизней.`);
+                                saveGameData();
+                                updateUI();
+                                showShop();
+                            }
+                        }
+                    } else {
+                        alert("Недостаточно очков!");
+                    }
+                });
+            });
+        }
+        
+        function createExplosion(x, y, radius, color) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.style.width = `${radius * 2}px`;
+            explosion.style.height = `${radius * 2}px`;
+            explosion.style.left = `${x - radius}px`;
+            explosion.style.top = `${y - radius}px`;
+            explosion.style.backgroundColor = color;
+            document.body.appendChild(explosion);
+            
+            setTimeout(() => {
+                explosion.remove();
+            }, 500);
+        }
+        
+        function gameLoop() {
+            // Увеличиваем сложность со временем
+            difficulty += 0.0005;
+            
+            // Очистка canvas
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            
+            // Генерация новых объектов
+            if (Math.random() < 0.05 * difficulty) {
+                createBall();
+            }
+            
+            if (Math.random() < goldenBallChance * difficulty) {
+                createGoldenBall();
+            }
+            
+            if (Math.random() < bombChance * difficulty) {
+                createBomb();
+            }
+            
+            if (Math.random() < explodingBombChance * difficulty) {
+                createExplodingBomb();
+            }
+            
+            // Обновление вращения игрока
+            player.rotation += rotationSpeed;
+            rotationSpeed *= 0.9; // Постепенно замедляем вращение
+            
+            // Обновление и отрисовка шариков
+            for (let i = 0; i < balls.length; i++) {
+                const ball = balls[i];
+                
+                // Движение шарика
+                ball.y += ball.speed * difficulty;
+                
+                // Проверка столкновения с игроком
+                const dx = player.x - ball.x;
+                const dy = player.y - ball.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < player.radius + ball.radius) {
+                    score += 10 * scoreMultiplier;
+                    xp += 1;
+                    if (xp >= maxXP) {
+                        levelUp();
+                    }
+                    scoreElement.textContent = score;
+                    balls.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                
+                // Удаление шариков за пределами экрана
+                if (ball.y - ball.radius > canvasHeight) {
+                    balls.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                
+                // Отрисовка шарика
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+            
+            // Обновление и отрисовка золотых шаров
+            for (let i = 0; i < goldenBalls.length; i++) {
+                const gBall = goldenBalls[i];
+                
+                // Движение золотого шара
+                gBall.y += gBall.speed * difficulty;
+                
+                // Проверка столкновения с игроком
+                const dx = player.x - gBall.x;
+                const dy = player.y - gBall.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < player.radius + gBall.radius) {
+                    score += 100 * scoreMultiplier;
+                    xp += 5;
+                    if (xp >= maxXP) {
+                        levelUp();
+                    }
+                    scoreElement.textContent = score;
+                    goldenBalls.splice(i, 1);
+                    i--;
+                    
+                    // Активируем золотой эффект
+                    goldenEffectActive = true;
+                    goldenEffectEndTime = Date.now() + 2000; // 2 секунды
+                    
+                    continue;
+                }
+                
+                // Удаление золотых шаров за пределами экрана
+                if (gBall.y - gBall.radius > canvasHeight) {
+                    goldenBalls.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                
+                // Отрисовка золотого шара
+                ctx.beginPath();
+                ctx.arc(gBall.x, gBall.y, gBall.radius, 0, Math.PI * 2);
+                
+                // Градиент для золотого шара
+                const gradient = ctx.createRadialGradient(
+                    gBall.x, gBall.y, 0,
+                    gBall.x, gBall.y, gBall.radius
+                );
+                gradient.addColorStop(0, '#FFD700');
+                gradient.addColorStop(0.5, '#FFA500');
+                gradient.addColorStop(1, '#FF8C00');
+                
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.closePath();
+            }
+            
+            // Обновление и отрисовка бомб (обычных)
+            for (let i = 0; i < bombs.length; i++) {
+                const bomb = bombs[i];
+                
+                // Движение бомбы
+                bomb.y += bomb.speed * difficulty;
+                
+                // Проверка столкновения с игроком
+                const dx = player.x - bomb.x;
+                const dy = player.y - bomb.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < player.radius + bomb.radius) {
+                    lives--;
+                    updateUI();
+                    
+                    if (lives <= 0) {
+                        endGame();
+                        return;
+                    }
+                    
+                    bombs.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                
+                // Удаление бомб за пределами экрана
+                if (bomb.y - bomb.radius > canvasHeight) {
+                    bombs.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                
+                // Отрисовка бомбы
+                ctx.beginPath();
+                ctx.arc(bomb.x, bomb.y, bomb.radius, 0, Math.PI * 2);
+                ctx.fillStyle = bomb.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+            
+            // Обновление и отрисовка взрывающихся бомб
+            for (let i = 0; i < explodingBombs.length; i++) {
+                const eBomb = explodingBombs[i];
+                
+                // Движение бомбы
+                eBomb.y += eBomb.speed * difficulty;
+                eBomb.timer--;
+                
+                // Взрыв бомбы по таймеру или при столкновении с игроком
+                const dx = player.x - eBomb.x;
+                const dy = player.y - eBomb.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < player.radius + eBomb.radius || eBomb.timer <= 0) {
+                    createExplosion(eBomb.x, eBomb.y, eBomb.radius * 3, '#ff0000');
+                    
+                    // Проверяем, попал ли взрыв в игрока
+                    if (distance < player.radius + eBomb.radius * 3) {
+                        lives--;
+                        updateUI();
+                        
+                        if (lives <= 0) {
+                            endGame();
+                            return;
+                        }
+                    }
+                    
+                    explodingBombs.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                
+                // Удаление бомб за пределами экрана
+                if (eBomb.y - eBomb.radius > canvasHeight) {
+                    explodingBombs.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                
+                // Отрисовка бомбы
+                ctx.beginPath();
+                ctx.arc(eBomb.x, eBomb.y, eBomb.radius, 0, Math.PI * 2);
+                ctx.fillStyle = eBomb.color;
+                ctx.fill();
+                ctx.closePath();
+                
+                // Отрисовка фитиля
+                ctx.beginPath();
+                ctx.moveTo(eBomb.x, eBomb.y - eBomb.radius);
+                ctx.lineTo(eBomb.x + eBomb.radius/2, eBomb.y - eBomb.radius * 1.5);
+                ctx.strokeStyle = '#8B4513';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.closePath();
+            }
+            
+            // Отрисовка игрока с эффектами скина и вращением
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(player.rotation * Math.PI / 180);
+            
+            if (goldenEffectActive) {
+                // Эффект золотого шара
+                const hue = 50 + Math.sin(Date.now() / 100) * 10;
+                const color = `hsl(${hue}, 100%, 50%)`;
+                ctx.beginPath();
+                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.closePath();
+                
+                if (Date.now() > goldenEffectEndTime) {
+                    goldenEffectActive = false;
+                }
+            } else if (player.skinEffects.rainbow) {
+                // Радужный эффект
+                const hue = (Date.now() / 50) % 360;
+                const color = player.skinEffects.disturb 
+                    ? `hsl(${(hue + 180) % 360}, 100%, 50%)`
+                    : `hsl(${hue}, 100%, 50%)`;
+                ctx.beginPath();
+                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.closePath();
+            } else if (player.skinEffects.blinking) {
+                // Мигающий эффект
+                const visible = Math.floor(Date.now() / 200) % 2 === 0;
+                if (visible) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            } else if (player.skinEffects.eyes) {
+                // Скин с глазами
+                ctx.beginPath();
+                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#9b59b6';
+                ctx.fill();
+                ctx.closePath();
+                
+                // Глаза
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(-player.radius/3, -player.radius/4, player.radius/5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.closePath();
+                
+                ctx.beginPath();
+                ctx.arc(player.radius/3, -player.radius/4, player.radius/5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.closePath();
+                
+                // Зрачки
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(-player.radius/3, -player.radius/4, player.radius/10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.closePath();
+                
+                ctx.beginPath();
+                ctx.arc(player.radius/3, -player.radius/4, player.radius/10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.closePath();
+            } else {
+                // Стандартный цвет
+                ctx.beginPath();
+                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+                ctx.fillStyle = player.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+            
+            ctx.restore();
+        }
+        
+        function levelUp() {
+            level++;
+            xp = 0;
+            maxXP = Math.floor(maxXP * 1.2);
+            updateUI();
+        }
+        
+        function createBall() {
+            const radius = 10 + Math.random() * 20;
+            const x = Math.random() * (canvasWidth - radius * 2) + radius;
+            const speed = 2 + Math.random() * 3;
+            const color = getRandomColor();
+            
+            balls.push({
+                x: x,
+                y: -radius,
+                radius: radius,
+                speed: speed,
+                color: color
+            });
+        }
+        
+        function createGoldenBall() {
+            const radius = 15 + Math.random() * 5;
+            const x = Math.random() * (canvasWidth - radius * 2) + radius;
+            const speed = 4 + Math.random() * 2;
+            
+            goldenBalls.push({
+                x: x,
+                y: -radius,
+                radius: radius,
+                speed: speed
+            });
+        }
+        
+        function createBomb() {
+            const radius = 15 + Math.random() * 15;
+            const x = Math.random() * (canvasWidth - radius * 2) + radius;
+            const speed = 3 + Math.random() * 2;
+            
+            bombs.push({
+                x: x,
+                y: -radius,
+                radius: radius,
+                speed: speed,
+                color: '#333'
+            });
+        }
+        
+        function createExplodingBomb() {
+            const radius = 15 + Math.random() * 15;
+            const x = Math.random() * (canvasWidth - radius * 2) + radius;
+            const speed = 3 + Math.random() * 2;
+            const timer = 100 + Math.floor(Math.random() * 100);
+            
+            explodingBombs.push({
+                x: x,
+                y: -radius,
+                radius: radius,
+                speed: speed,
+                color: '#333',
+                timer: timer
+            });
+        }
+        
+        function getRandomColor() {
+            const colors = [
+                '#e74c3c', // red
+                '#2ecc71', // green
+                '#f1c40f', // yellow
+                '#9b59b6', // purple
+                '#1abc9c', // turquoise
+                '#e67e22'  // orange
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        function updatePlayerColor() {
+            if (player.currentSkin === 'default') {
+                player.color = '#3498db';
+                player.skinEffects = {};
+                return;
+            }
+            
+            const skin = shopItemsList.find(item => item.type === 'skin' && item.id === player.currentSkin);
+            if (!skin) return;
+            
+            if (skin.color === 'rainbow') {
+                player.skinEffects.rainbow = true;
+                player.skinEffects.blinking = false;
+                player.skinEffects.disturb = false;
+                player.skinEffects.eyes = false;
+            } else if (skin.color === 'blinking') {
+                player.skinEffects.blinking = true;
+                player.skinEffects.rainbow = false;
+                player.skinEffects.disturb = false;
+                player.skinEffects.eyes = false;
+            } else if (skin.color === 'rainbow_disturb') {
+                player.skinEffects.rainbow = true;
+                player.skinEffects.disturb = true;
+                player.skinEffects.blinking = false;
+                player.skinEffects.eyes = false;
+            } else if (skin.color === 'eyes') {
+                player.skinEffects.eyes = true;
+                player.skinEffects.rainbow = false;
+                player.skinEffects.blinking = false;
+                player.skinEffects.disturb = false;
+            } else {
+                player.color = skin.color;
+                player.skinEffects = {};
+            }
+        }
+        
+        function startGame() {
+            score = 0;
+            difficulty = 1;
+            balls = [];
+            skulls = [];
+            goldenBalls = [];
+            bombs = [];
+            explodingBombs = [];
+            updateUI();
+            
+            startScreen.style.display = 'none';
+            inventoryScreen.style.display = 'none';
+            shopScreen.style.display = 'none';
+            gameRunning = true;
+            goldenEffectActive = false;
+            player.rotation = 0;
+            rotationSpeed = 0;
+            
+            // Запуск игрового цикла
+            clearInterval(gameLoopInterval);
+            gameLoopInterval = setInterval(gameLoop, 20);
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            clearInterval(gameLoopInterval);
+            
+            // Добавляем очки к общему счету (с учетом множителя)
+            totalScore += score * scoreMultiplier;
+            
+            // Проверяем достижения
+            if (totalScore >= 5000 && scoreMultiplier < 2) {
+                scoreMultiplier = 2;
+            }
+            
+            saveGameData();
+            updateUI();
+            
+            startScreen.style.display = 'flex';
+        }
+        
+        // Обработка изменения размера окна
+        window.addEventListener('resize', function() {
+            canvasWidth = window.innerWidth;
+            canvasHeight = window.innerHeight;
+            
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            
+            player.y = canvasHeight - 50;
+            
+            // Центрируем шарик в меню при изменении размера
+            menuBallX = canvasWidth / 2;
+            menuBallY = canvasHeight / 2 - 50;
+        });
+        
+        // Загрузка игры и запуск анимации меню
+        loadGameData();
+        animateMenuBall();
+    </script>
 </body>
 </html>
