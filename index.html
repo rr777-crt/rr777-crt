@@ -1605,6 +1605,11 @@ function updateGameEvents() {
     if (gameTime >= 30 && gameTime < 90) {
         // Темный режим
         document.body.classList.add('dark-mode');
+        if (!achievements.darkSurvival) {
+            achievements.darkSurvival = true;
+            showNotification('Достижение: Темно...');
+            saveGameData();
+        }
     } else {
         document.body.classList.remove('dark-mode');
     }
@@ -1614,104 +1619,81 @@ function updateGameEvents() {
         if (!meteorActive) {
             meteorActive = true;
             bombChance = 0.01;
+            if (!achievements.meteorsSurvival) {
+                achievements.meteorsSurvival = true;
+                showNotification('Достижение: МЕТЕОРИТЫ!!');
+                saveGameData();
+            }
+            
+            // Создаем специальные метеориты
+            if (Math.random() < 0.005 * difficulty) {
+                createMeteor();
+            }
         }
     } else {
         meteorActive = false;
+        bombChance = 0.005; // Возвращаем обычный шанс бомб
     }
     
     if (gameTime >= 150) {
         // Глюки
         if (!secretActive) {
             secretActive = true;
-            setInterval(() => {
-                // Случайные глюки
+            if (!achievements.secretSurvival) {
+                achievements.secretSurvival = true;
+                showNotification('Достижение: Секрета нет?');
+                saveGameData();
+            }
+            
+            // Глюки с интервалом
+            const glitchInterval = setInterval(() => {
+                if (!gameRunning) {
+                    clearInterval(glitchInterval);
+                    return;
+                }
+                
                 if (Math.random() < 0.1) {
-                    canvas.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
-                    setTimeout(() => {
-                        canvas.style.filter = 'none';
-                    }, 200);
+                    // Разные виды глюков
+                    const glitchType = Math.floor(Math.random() * 3);
+                    switch(glitchType) {
+                        case 0:
+                            canvas.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
+                            setTimeout(() => {
+                                canvas.style.filter = 'none';
+                            }, 200);
+                            break;
+                        case 1:
+                            canvas.style.transform = 'scale(1.1)';
+                            setTimeout(() => {
+                                canvas.style.transform = 'scale(1)';
+                            }, 100);
+                            break;
+                        case 2:
+                            const oldColor = ctx.fillStyle;
+                            ctx.fillStyle = 'rgba(255, 0, 255, 0.3)';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            ctx.fillStyle = oldColor;
+                            break;
+                    }
                 }
             }, 1000);
         }
     }
 }
-        // Новые обработчики кнопок
-document.getElementById('achievementsButton').addEventListener('click', showAchievements);
-document.getElementById('settingsButton').addEventListener('click', showSettings);
-document.getElementById('updatesButton').addEventListener('click', showUpdates);
 
-// Обработчики настроек
-document.getElementById('smallButtonsToggle').addEventListener('change', function() {
-    smallButtons = this.checked;
-    document.querySelectorAll('.button').forEach(btn => {
-        if (!btn.id.includes('startButton')) {
-            btn.style.transform = smallButtons ? 'scale(0.5)' : 'scale(1)';
-            btn.style.bottom = smallButtons ? 
-                (parseInt(btn.style.bottom) / 2 + 'px' : 
-                (parseInt(btn.style.bottom) * 2 + 'px';
-        }
+function createMeteor() {
+    const radius = 30 + Math.random() * 20;
+    const x = Math.random() * (canvasWidth - radius * 2) + radius;
+    const speed = 5 + Math.random() * 3;
+    
+    bombs.push({
+        x: x,
+        y: -radius,
+        radius: radius,
+        speed: speed,
+        color: '#8B0000',
+        isMeteor: true
     });
-    saveGameData();
-});
-
-document.getElementById('darkModeToggle').addEventListener('change', function() {
-    darkMode = this.checked;
-    if (darkMode) {
-        document.body.classList.add('dark-mode');
-    } else {
-        document.body.classList.remove('dark-mode');
-    }
-    saveGameData();
-});
-        function loadGameData() {
-    const savedData = localStorage.getItem('ballGameData');
-    if (savedData) {
-        const data = JSON.parse(savedData);
-        totalScore = data.totalScore || 0;
-        player.skins = data.skins || [];
-        player.currentSkin = data.currentSkin || 'default';
-        lives = data.lives || 3;
-        scoreMultiplier = data.scoreMultiplier || 1;
-        level = data.level || 1;
-        xp = data.xp || 0;
-        maxXP = data.maxXP || 100;
-        achievements = data.achievements || {
-            goldenBall: false,
-            darkSurvival: false,
-            meteorsSurvival: false,
-            secretSurvival: false,
-            rich: false
-        };
-        darkMode = data.darkMode || false;
-        smallButtons = data.smallButtons || false;
-        updatePlayerColor();
-        updateMenuBallAppearance();
-        
-        // Применяем настройки
-        if (darkMode) {
-            document.body.classList.add('dark-mode');
-        }
-        if (smallButtons) {
-            document.querySelectorAll('.button').forEach(btn => {
-                if (!btn.id.includes('startButton')) {
-                    btn.style.transform = 'scale(0.5)';
-                    btn.style.bottom = (parseInt(btn.style.bottom) / 2 + 'px';
-                }
-            });
-        }
-    }
-    updateUI();
-}
-            } else if (item.type === 'background') {
-    if (!player.backgrounds) player.backgrounds = [];
-    if (!player.backgrounds.includes(itemId)) {
-        totalScore -= price;
-        player.backgrounds.push(itemId);
-        alert(`Вы получили ${item.name}!`);
-        saveGameData();
-        updateUI();
-        showShop();
-    }
 }
         
         loadGameData();
