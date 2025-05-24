@@ -260,6 +260,145 @@
             animation: rotate 5s linear infinite;
             opacity: 0.3;
         }
+        /* Достижения */
+#achievementsButton {
+    background-color: #f39c12;
+    position: fixed;
+    left: 20px;
+    bottom: 140px;
+}
+
+#achievementsScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    z-index: 20;
+}
+
+.achievement {
+    padding: 15px;
+    margin: 10px;
+    border: 2px solid #444;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 300px;
+    background-color: #222;
+}
+
+.achievement.unlocked {
+    border-color: #2ecc71;
+    background-color: #2ecc7133;
+}
+
+/* Уведомления */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: #2ecc71;
+    color: white;
+    border-radius: 5px;
+    z-index: 100;
+    animation: slideIn 0.5s, fadeOut 0.5s 2.5s forwards;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* Настройки */
+#settingsButton {
+    background-color: #95a5a6;
+    position: fixed;
+    left: 20px;
+    bottom: 200px;
+}
+
+#settingsScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    z-index: 20;
+}
+
+.setting-item {
+    padding: 15px;
+    margin: 10px;
+    border: 2px solid #444;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 300px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #222;
+}
+
+/* Обновления */
+#updatesButton {
+    background-color: #1abc9c;
+    position: fixed;
+    left: 20px;
+    bottom: 260px;
+}
+
+#updatesScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    z-index: 20;
+}
+
+.update-item {
+    padding: 15px;
+    margin: 10px;
+    border: 2px solid #444;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 300px;
+    background-color: #222;
+}
+
+/* Темный режим */
+.dark-mode {
+    background-color: #111 !important;
+}
+
+/* Метеориты */
+.meteor {
+    background: linear-gradient(to bottom, #8B0000, #FF4500);
+}
     </style>
 </head>
 <body>
@@ -292,6 +431,51 @@
         <div>Ваши очки: <span id="shopTotalScore">0</span></div>
         <div id="shopItems"></div>
     </div>
+    <!-- Новые кнопки -->
+<button id="achievementsButton" class="button">Достижения</button>
+<button id="settingsButton" class="button">Настройки</button>
+<button id="updatesButton" class="button">Обновления</button>
+
+<!-- Экран достижений -->
+<div id="achievementsScreen">
+    <button class="back-button">Назад</button>
+    <h2>Достижения</h2>
+    <div id="achievementsList"></div>
+</div>
+
+<!-- Экран настроек -->
+<div id="settingsScreen">
+    <button class="back-button">Назад</button>
+    <h2>Настройки</h2>
+    <div class="setting-item">
+        <span>Маленькие кнопки (для телефонов)</span>
+        <label class="switch">
+            <input type="checkbox" id="smallButtonsToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+    <div class="setting-item">
+        <span>Темный фон</span>
+        <label class="switch">
+            <input type="checkbox" id="darkModeToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+</div>
+
+<!-- Экран обновлений -->
+<div id="updatesScreen">
+    <button class="back-button">Назад</button>
+    <h2>Обновления</h2>
+    <div id="updatesList">
+        <div class="update-item">
+            <h3>Версия 1.1</h3>
+            <p>- Добавлены достижения</p>
+            <p>- Новые события в игре</p>
+            <p>- Возможность менять фон</p>
+        </div>
+    </div>
+</div>
 
     <script>
         // Инициализация игры
@@ -325,6 +509,34 @@
         canvas.height = canvasHeight;
         
         // Игровые переменные
+        // Новые переменные
+let achievements = {
+    goldenBall: false,
+    darkSurvival: false,
+    meteorsSurvival: false,
+    secretSurvival: false,
+    rich: false
+};
+
+let gameTime = 0;
+let darkMode = false;
+let smallButtons = false;
+let meteorActive = false;
+let secretActive = false;
+
+// Фоны для покупки
+const backgrounds = [
+    { id: 'red', name: 'Красный', price: 2500, color: '#e74c3c' },
+    { id: 'rainbow', name: 'Радужный', price: 10000, color: 'rainbow' },
+    { id: 'neon', name: 'Неоновый', price: 20000, color: 'neon' }
+];
+
+// Добавьте в массив shopItemsList (после существующих предметов):
+shopItemsList.push(
+    { type: 'background', id: 'red', name: 'Красный фон', price: 2500 },
+    { type: 'background', id: 'rainbow', name: 'Радужный фон', price: 10000 },
+    { type: 'background', id: 'neon', name: 'Неоновый фон', price: 20000 }
+);
         let score = 0;
         let totalScore = 0;
         let gameRunning = false;
@@ -379,38 +591,63 @@
         }
         
         // Загрузка сохраненных данных
-        function loadGameData() {
-            const savedData = localStorage.getItem('ballGameData');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                totalScore = data.totalScore || 0;
-                player.skins = data.skins || [];
-                player.currentSkin = data.currentSkin || 'default';
-                lives = data.lives || 3;
-                scoreMultiplier = data.scoreMultiplier || 1;
-                level = data.level || 1;
-                xp = data.xp || 0;
-                maxXP = data.maxXP || 100;
-                updatePlayerColor();
-                updateMenuBallAppearance();
-            }
-            updateUI();
+       function loadGameData() {
+    const savedData = localStorage.getItem('ballGameData');
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        totalScore = data.totalScore || 0;
+        player.skins = data.skins || [];
+        player.currentSkin = data.currentSkin || 'default';
+        lives = data.lives || 3;
+        scoreMultiplier = data.scoreMultiplier || 1;
+        level = data.level || 1;
+        xp = data.xp || 0;
+        maxXP = data.maxXP || 100;
+        achievements = data.achievements || {
+            goldenBall: false,
+            darkSurvival: false,
+            meteorsSurvival: false,
+            secretSurvival: false,
+            rich: false
+        };
+        darkMode = data.darkMode || false;
+        smallButtons = data.smallButtons || false;
+        updatePlayerColor();
+        updateMenuBallAppearance();
+        
+        // Применяем настройки
+        if (darkMode) {
+            document.body.classList.add('dark-mode');
         }
+        if (smallButtons) {
+            document.querySelectorAll('.button').forEach(btn => {
+                if (!btn.id.includes('startButton')) {
+                    btn.style.transform = 'scale(0.5)';
+                    btn.style.bottom = (parseInt(btn.style.bottom) / 2 + 'px';
+                }
+            });
+        }
+    }
+    updateUI();
+}
         
         // Сохранение данных игры
-        function saveGameData() {
-            const gameData = {
-                totalScore: totalScore,
-                skins: player.skins,
-                currentSkin: player.currentSkin,
-                lives: lives,
-                scoreMultiplier: scoreMultiplier,
-                level: level,
-                xp: xp,
-                maxXP: maxXP
-            };
-            localStorage.setItem('ballGameData', JSON.stringify(gameData));
-        }
+     function saveGameData() {
+    const gameData = {
+        totalScore: totalScore,
+        skins: player.skins,
+        currentSkin: player.currentSkin,
+        lives: lives,
+        scoreMultiplier: scoreMultiplier,
+        level: level,
+        xp: xp,
+        maxXP: maxXP,
+        achievements: achievements,
+        darkMode: darkMode,
+        smallButtons: smallButtons
+    };
+    localStorage.setItem('ballGameData', JSON.stringify(gameData));
+}
         
         // Игровые объекты
         const player = {
@@ -702,6 +939,20 @@
                             `<button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>` : 
                             '<div class="item-owned">Максимум</div>'}
                     `;
+                    } else if (item.type === 'background') {
+    const alreadyOwned = player.backgrounds && player.backgrounds.includes(item.id);
+    itemElement.innerHTML = `
+        <div class="skin-preview" style="background-color: ${item.color === 'rainbow' ? 
+            'linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet)' : 
+            item.color === 'neon' ? '#000' : item.color}; 
+            ${item.color === 'neon' ? 'box-shadow: 0 0 10px #00f, 0 0 20px #00f;' : ''}"></div>
+        <div class="item-name">${item.name}</div>
+        ${alreadyOwned ? 
+            '<div class="item-owned">Куплено</div>' : 
+            `<div class="item-price">${item.price}</div>
+            <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>`}
+    `;
+}
                 }
                 
                 if (itemElement.innerHTML) {
@@ -760,6 +1011,14 @@
         }
         
         function gameLoop() {
+               gameTime += 0.02;
+    
+   
+              checkAchievements();
+    
+
+              updateGameEvents();
+    
             // Увеличиваем сложность со временем
             difficulty += 0.0005;
             
@@ -782,6 +1041,11 @@
             if (Math.random() < explodingBombChance * difficulty) {
                 createExplodingBomb();
             }
+           
+ 
+ 
+   
+
             
             // Обновление вращения игрока
             player.rotation += rotationSpeed;
@@ -879,6 +1143,14 @@
                 ctx.fill();
                 ctx.closePath();
             }
+            if (distance < player.radius + gBall.radius) {
+    if (!achievements.goldenBall) {
+        achievements.goldenBall = true;
+        showNotification('Достижение: Золотой!');
+        saveGameData();
+    }
+
+}
             
             // Обновление и отрисовка бомб (обычных)
             for (let i = 0; i < bombs.length; i++) {
@@ -1194,6 +1466,7 @@
             clearInterval(gameLoopInterval);
             gameLoopInterval = setInterval(gameLoop, 20);
         }
+       
         
         function endGame() {
             gameRunning = false;
@@ -1206,7 +1479,7 @@
             if (totalScore >= 5000 && scoreMultiplier < 2) {
                 scoreMultiplier = 2;
             }
-            
+     
             saveGameData();
             updateUI();
             
@@ -1229,8 +1502,201 @@
         });
         
         // Загрузка игры и запуск анимации меню
+       function showAchievements() {
+    startScreen.style.display = 'none';
+    achievementsScreen.style.display = 'flex';
+    
+    achievementsList.innerHTML = '';
+    
+    const achievementList = [
+        { id: 'goldenBall', title: 'Золотой!', description: 'Получите золотой шар', unlocked: achievements.goldenBall },
+        { id: 'darkSurvival', title: 'Темно...', description: 'Выживите 30 сек в игре', unlocked: achievements.darkSurvival },
+        { id: 'meteorsSurvival', title: 'МЕТЕОРИТЫ!!', description: 'Выживите 90 сек в игре', unlocked: achievements.meteorsSurvival },
+        { id: 'secretSurvival', title: 'Секрета нет?', description: 'Выживите 150 сек в игре', unlocked: achievements.secretSurvival },
+        { id: 'rich', title: 'БОГАТ!', description: 'Получите 20000 очков', unlocked: achievements.rich }
+    ];
+    
+    achievementList.forEach(ach => {
+        const achElement = document.createElement('div');
+        achElement.className = `achievement ${ach.unlocked ? 'unlocked' : ''}`;
+        achElement.innerHTML = `
+            <h3>${ach.title}</h3>
+            <p>${ach.description}</p>
+            ${ach.unlocked ? '<div class="item-owned">Получено!</div>' : '<div class="item-price">Не получено</div>'}
+        `;
+        achievementsList.appendChild(achElement);
+    });
+}
+
+function showSettings() {
+    startScreen.style.display = 'none';
+    settingsScreen.style.display = 'flex';
+    
+    // Установка текущих значений
+    document.getElementById('smallButtonsToggle').checked = smallButtons;
+    document.getElementById('darkModeToggle').checked = darkMode;
+}
+
+function showUpdates() {
+    startScreen.style.display = 'none';
+    updatesScreen.style.display = 'flex';
+}
+
+function showNotification(text) {
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = text;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+function checkAchievements() {
+    // Проверка достижений
+    if (score >= 20000 && !achievements.rich) {
+        achievements.rich = true;
+        showNotification('Достижение: БОГАТ!');
+        saveGameData();
+    }
+    
+    if (gameTime >= 30 && !achievements.darkSurvival) {
+        achievements.darkSurvival = true;
+        showNotification('Достижение: Темно...');
+        saveGameData();
+    }
+    
+    if (gameTime >= 90 && !achievements.meteorsSurvival) {
+        achievements.meteorsSurvival = true;
+        showNotification('Достижение: МЕТЕОРИТЫ!!');
+        saveGameData();
+    }
+    
+    if (gameTime >= 150 && !achievements.secretSurvival) {
+        achievements.secretSurvival = true;
+        showNotification('Достижение: Секрета нет?');
+        saveGameData();
+    }
+}
+
+function updateGameEvents() {
+    // События в игре
+    if (gameTime >= 30 && gameTime < 90) {
+        // Темный режим
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+    
+    if (gameTime >= 90 && gameTime < 150) {
+        // Метеориты
+        if (!meteorActive) {
+            meteorActive = true;
+            bombChance = 0.01;
+        }
+    } else {
+        meteorActive = false;
+    }
+    
+    if (gameTime >= 150) {
+        // Глюки
+        if (!secretActive) {
+            secretActive = true;
+            setInterval(() => {
+                // Случайные глюки
+                if (Math.random() < 0.1) {
+                    canvas.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
+                    setTimeout(() => {
+                        canvas.style.filter = 'none';
+                    }, 200);
+                }
+            }, 1000);
+        }
+    }
+}
+        // Новые обработчики кнопок
+document.getElementById('achievementsButton').addEventListener('click', showAchievements);
+document.getElementById('settingsButton').addEventListener('click', showSettings);
+document.getElementById('updatesButton').addEventListener('click', showUpdates);
+
+// Обработчики настроек
+document.getElementById('smallButtonsToggle').addEventListener('change', function() {
+    smallButtons = this.checked;
+    document.querySelectorAll('.button').forEach(btn => {
+        if (!btn.id.includes('startButton')) {
+            btn.style.transform = smallButtons ? 'scale(0.5)' : 'scale(1)';
+            btn.style.bottom = smallButtons ? 
+                (parseInt(btn.style.bottom) / 2 + 'px' : 
+                (parseInt(btn.style.bottom) * 2 + 'px';
+        }
+    });
+    saveGameData();
+});
+
+document.getElementById('darkModeToggle').addEventListener('change', function() {
+    darkMode = this.checked;
+    if (darkMode) {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+    saveGameData();
+});
+        function loadGameData() {
+    const savedData = localStorage.getItem('ballGameData');
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        totalScore = data.totalScore || 0;
+        player.skins = data.skins || [];
+        player.currentSkin = data.currentSkin || 'default';
+        lives = data.lives || 3;
+        scoreMultiplier = data.scoreMultiplier || 1;
+        level = data.level || 1;
+        xp = data.xp || 0;
+        maxXP = data.maxXP || 100;
+        achievements = data.achievements || {
+            goldenBall: false,
+            darkSurvival: false,
+            meteorsSurvival: false,
+            secretSurvival: false,
+            rich: false
+        };
+        darkMode = data.darkMode || false;
+        smallButtons = data.smallButtons || false;
+        updatePlayerColor();
+        updateMenuBallAppearance();
+        
+        // Применяем настройки
+        if (darkMode) {
+            document.body.classList.add('dark-mode');
+        }
+        if (smallButtons) {
+            document.querySelectorAll('.button').forEach(btn => {
+                if (!btn.id.includes('startButton')) {
+                    btn.style.transform = 'scale(0.5)';
+                    btn.style.bottom = (parseInt(btn.style.bottom) / 2 + 'px';
+                }
+            });
+        }
+    }
+    updateUI();
+}
+            } else if (item.type === 'background') {
+    if (!player.backgrounds) player.backgrounds = [];
+    if (!player.backgrounds.includes(itemId)) {
+        totalScore -= price;
+        player.backgrounds.push(itemId);
+        alert(`Вы получили ${item.name}!`);
+        saveGameData();
+        updateUI();
+        showShop();
+    }
+}
+        
         loadGameData();
         animateMenuBall();
     </script>
+    
 </body>
 </html>
