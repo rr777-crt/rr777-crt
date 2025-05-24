@@ -599,6 +599,7 @@ shopItemsList.push(
             totalScore = data.totalScore || 0;
             player.skins = data.skins || [];
             player.currentSkin = data.currentSkin || 'default';
+            player.backgrounds = data.backgrounds || [];
             lives = data.lives || 3;
             scoreMultiplier = data.scoreMultiplier || 1;
             level = data.level || 1;
@@ -625,7 +626,7 @@ shopItemsList.push(
             if (smallButtons) {
                 document.querySelectorAll('.button').forEach(btn => {
                     if (!btn.id.includes('startButton')) {
-                        const currentBottom = parseInt(btn.style.bottom || getComputedStyle(btn).bottom) || 20;
+                        const currentBottom = parseInt(btn.style.bottom || window.getComputedStyle(btn).bottom.replace('px', '') || 20);
                         btn.style.transform = 'scale(0.5)';
                         btn.style.bottom = `${currentBottom / 2}px`;
                     }
@@ -633,7 +634,7 @@ shopItemsList.push(
             }
         } catch (e) {
             console.error('Ошибка загрузки данных:', e);
-            // Восстановление значений по умолчанию
+            // Сброс к значениям по умолчанию при ошибке
             resetGameData();
         }
     }
