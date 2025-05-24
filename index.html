@@ -525,18 +525,20 @@ let meteorActive = false;
 let secretActive = false;
 
 // Фоны для покупки
-const backgrounds = [
-    { id: 'red', name: 'Красный', price: 2500, color: '#e74c3c' },
-    { id: 'rainbow', name: 'Радужный', price: 10000, color: 'rainbow' },
-    { id: 'neon', name: 'Неоновый', price: 20000, color: 'neon' }
-];
-
-// Добавьте в массив shopItemsList (после существующих предметов):
-shopItemsList.push(
-    { type: 'background', id: 'red', name: 'Красный фон', price: 2500 },
-    { type: 'background', id: 'rainbow', name: 'Радужный фон', price: 10000 },
-    { type: 'background', id: 'neon', name: 'Неоновый фон', price: 20000 }
-);
+} else if (item.type === 'background') {
+    const alreadyOwned = player.backgrounds && player.backgrounds.includes(item.id);
+    itemElement.innerHTML = `
+        <div class="skin-preview" style="background: ${item.color === 'rainbow' ? 
+            'linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet)' : 
+            item.color === 'neon' ? '#000' : item.color}; 
+            ${item.color === 'neon' ? 'box-shadow: 0 0 10px #00f, 0 0 20px #00f;' : ''}"></div>
+        <div class="item-name">${item.name}</div>
+        ${alreadyOwned ? 
+            '<div class="item-owned">Куплено</div>' : 
+            `<div class="item-price">${item.price}</div>
+            <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>`}
+    `;
+}
         let score = 0;
         let totalScore = 0;
         let gameRunning = false;
