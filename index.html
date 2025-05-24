@@ -881,130 +881,140 @@ shopItemsList.push(
             });
         }
         
-        function showShop() {
-            startScreen.style.display = 'none';
-            shopScreen.style.display = 'flex';
-            shopTotalScoreElement.textContent = totalScore;
-            
-            // Очистка магазина
-            shopItems.innerHTML = '';
-            
-            // Добавление предметов в магазин
-            shopItemsList.forEach(item => {
-                const itemElement = document.createElement('div');
-                itemElement.className = 'shop-item';
-                
-                if (item.type === 'skin') {
-                    const alreadyOwned = player.skins.includes(item.id);
-                    if (!alreadyOwned) {
-                        if (item.color === 'rainbow') {
-                            itemElement.innerHTML = `
-                                <div class="skin-preview" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);"></div>
-                                <div class="item-name">${item.name} (${item.rarity})</div>
-                                <div class="item-price">${item.price}</div>
-                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
-                            `;
-                        } else if (item.color === 'blinking') {
-                            itemElement.innerHTML = `
-                                <div class="skin-preview" style="background-color: white; animation: blink 0.5s infinite;"></div>
-                                <div class="item-name">${item.name} (${item.rarity})</div>
-                                <div class="item-price">${item.price}</div>
-                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
-                            `;
-                        } else if (item.color === 'rainbow_disturb') {
-                            itemElement.innerHTML = `
-                                <div class="skin-preview" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);"></div>
-                                <div class="item-name">${item.name} (${item.rarity})</div>
-                                <div class="item-price">${item.price}</div>
-                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
-                            `;
-                        } else if (item.color === 'eyes') {
-                            itemElement.innerHTML = `
-                                <div class="skin-preview" style="background-color: #9b59b6; position: relative;">
-                                    <div style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; top: 12px; left: 8px;"></div>
-                                    <div style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; top: 12px; right: 8px;"></div>
-                                </div>
-                                <div class="item-name">${item.name} (${item.rarity})</div>
-                                <div class="item-price">${item.price}</div>
-                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
-                            `;
-                        } else {
-                            itemElement.innerHTML = `
-                                <div class="skin-preview" style="background-color: ${item.color};"></div>
-                                <div class="item-name">${item.name} (${item.rarity})</div>
-                                <div class="item-price">${item.price}</div>
-                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
-                            `;
-                        }
-                    }
-                } else if (item.type === 'life') {
-                    const canBuyMore = lives < item.max;
+      function showShop() {
+    startScreen.style.display = 'none';
+    shopScreen.style.display = 'flex';
+    shopTotalScoreElement.textContent = totalScore;
+    
+    // Очистка магазина
+    shopItems.innerHTML = '';
+    
+    // Добавление предметов в магазин
+    shopItemsList.forEach(item => {
+        const itemElement = document.createElement('div');
+        itemElement.className = 'shop-item';
+        
+        if (item.type === 'skin') {
+            const alreadyOwned = player.skins.includes(item.id);
+            if (!alreadyOwned) {
+                if (item.color === 'rainbow') {
                     itemElement.innerHTML = `
-                        <div class="skin-preview" style="background-color: #e74c3c; display: flex; justify-content: center; align-items: center;">
-                            <div style="width: 16px; height: 16px; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%23ffffff\"><path d=\"M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z\"/></svg>');"></div>
-                        </div>
-                        <div class="item-name">${item.name} (макс. ${item.max})</div>
+                        <div class="skin-preview" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);"></div>
+                        <div class="item-name">${item.name} (${item.rarity})</div>
                         <div class="item-price">${item.price}</div>
-                        ${canBuyMore ? 
-                            `<button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>` : 
-                            '<div class="item-owned">Максимум</div>'}
+                        <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
                     `;
-                    } else if (item.type === 'background') {
-    const alreadyOwned = player.backgrounds && player.backgrounds.includes(item.id);
-    itemElement.innerHTML = `
-        <div class="skin-preview" style="background-color: ${item.color === 'rainbow' ? 
-            'linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet)' : 
-            item.color === 'neon' ? '#000' : item.color}; 
-            ${item.color === 'neon' ? 'box-shadow: 0 0 10px #00f, 0 0 20px #00f;' : ''}"></div>
-        <div class="item-name">${item.name}</div>
-        ${alreadyOwned ? 
-            '<div class="item-owned">Куплено</div>' : 
-            `<div class="item-price">${item.price}</div>
-            <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>`}
-    `;
-}
+                } else if (item.color === 'blinking') {
+                    itemElement.innerHTML = `
+                        <div class="skin-preview" style="background-color: white; animation: blink 0.5s infinite;"></div>
+                        <div class="item-name">${item.name} (${item.rarity})</div>
+                        <div class="item-price">${item.price}</div>
+                        <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
+                    `;
+                } else if (item.color === 'rainbow_disturb') {
+                    itemElement.innerHTML = `
+                        <div class="skin-preview" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);"></div>
+                        <div class="item-name">${item.name} (${item.rarity})</div>
+                        <div class="item-price">${item.price}</div>
+                        <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
+                    `;
+                } else if (item.color === 'eyes') {
+                    itemElement.innerHTML = `
+                        <div class="skin-preview" style="background-color: #9b59b6; position: relative;">
+                            <div style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; top: 12px; left: 8px;"></div>
+                            <div style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; top: 12px; right: 8px;"></div>
+                        </div>
+                        <div class="item-name">${item.name} (${item.rarity})</div>
+                        <div class="item-price">${item.price}</div>
+                        <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
+                    `;
+                } else {
+                    itemElement.innerHTML = `
+                        <div class="skin-preview" style="background-color: ${item.color};"></div>
+                        <div class="item-name">${item.name} (${item.rarity})</div>
+                        <div class="item-price">${item.price}</div>
+                        <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
+                    `;
                 }
-                
-                if (itemElement.innerHTML) {
-                    shopItems.appendChild(itemElement);
-                }
-            });
-            
-            // Обработчики кнопок "Купить"
-            document.querySelectorAll('.buy-button').forEach(button => {
-                button.addEventListener('click', function() {
-                    const itemId = this.getAttribute('data-id');
-                    const price = parseInt(this.getAttribute('data-price'));
-                    
-                    if (totalScore >= price) {
-                        const item = shopItemsList.find(i => i.id === itemId);
-                        
-                        if (item.type === 'skin') {
-                            if (!player.skins.includes(itemId)) {
-                                totalScore -= price;
-                                player.skins.push(itemId);
-                                alert(`Вы получили ${item.name}!`);
-                                saveGameData();
-                                updateUI();
-                                showShop();
-                            }
-                        } else if (item.type === 'life') {
-                            if (lives < item.max) {
-                                totalScore -= price;
-                                lives++;
-                                alert(`Вы получили +1 жизнь! Теперь у вас ${lives} жизней.`);
-                                saveGameData();
-                                updateUI();
-                                showShop();
-                            }
-                        }
-                    } else {
-                        alert("Недостаточно очков!");
-                    }
-                });
-            });
+            }
+        } else if (item.type === 'life') {
+            const canBuyMore = lives < item.max;
+            itemElement.innerHTML = `
+                <div class="skin-preview" style="background-color: #e74c3c; display: flex; justify-content: center; align-items: center;">
+                    <div style="width: 16px; height: 16px; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%23ffffff\"><path d=\"M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z\"/></svg>');"></div>
+                </div>
+                <div class="item-name">${item.name} (макс. ${item.max})</div>
+                <div class="item-price">${item.price}</div>
+                ${canBuyMore ? 
+                    `<button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>` : 
+                    '<div class="item-owned">Максимум</div>'}
+            `;
+        } else if (item.type === 'background') {
+            const alreadyOwned = player.backgrounds && player.backgrounds.includes(item.id);
+            itemElement.innerHTML = `
+                <div class="skin-preview" style="background-color: ${item.color === 'rainbow' ? 
+                    'linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet)' : 
+                    item.color === 'neon' ? '#000' : item.color}; 
+                    ${item.color === 'neon' ? 'box-shadow: 0 0 10px #00f, 0 0 20px #00f;' : ''}"></div>
+                <div class="item-name">${item.name}</div>
+                ${alreadyOwned ? 
+                    '<div class="item-owned">Куплено</div>' : 
+                    `<div class="item-price">${item.price}</div>
+                    <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>`}
+            `;
         }
         
+        if (itemElement.innerHTML) {
+            shopItems.appendChild(itemElement);
+        }
+    });
+    
+    // Обработчики кнопок "Купить"
+    document.querySelectorAll('.buy-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-id');
+            const price = parseInt(this.getAttribute('data-price'));
+            
+            if (totalScore >= price) {
+                const item = shopItemsList.find(i => i.id === itemId);
+                
+                if (item.type === 'skin') {
+                    if (!player.skins.includes(itemId)) {
+                        totalScore -= price;
+                        player.skins.push(itemId);
+                        alert(`Вы получили ${item.name}!`);
+                        saveGameData();
+                        updateUI();
+                        showShop();
+                    }
+                } else if (item.type === 'life') {
+                    if (lives < item.max) {
+                        totalScore -= price;
+                        lives++;
+                        alert(`Вы получили +1 жизнь! Теперь у вас ${lives} жизней.`);
+                        saveGameData();
+                        updateUI();
+                        showShop();
+                    }
+                } else if (item.type === 'background') {
+                    if (!player.backgrounds) player.backgrounds = [];
+                    if (!player.backgrounds.includes(itemId)) {
+                        totalScore -= price;
+                        player.backgrounds.push(itemId);
+                        alert(`Вы получили ${item.name}!`);
+                        saveGameData();
+                        updateUI();
+                        showShop();
+                    }
+                }
+            } else {
+                alert("Недостаточно очков!");
+            }
+        });
+    });
+}
+            
+          
         function createExplosion(x, y, radius, color) {
             const explosion = document.createElement('div');
             explosion.className = 'explosion';
