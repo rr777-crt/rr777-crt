@@ -591,45 +591,55 @@ shopItemsList.push(
         }
         
         // Загрузка сохраненных данных
-       function loadGameData() {
+     function loadGameData() {
     const savedData = localStorage.getItem('ballGameData');
     if (savedData) {
-        const data = JSON.parse(savedData);
-        totalScore = data.totalScore || 0;
-        player.skins = data.skins || [];
-        player.currentSkin = data.currentSkin || 'default';
-        lives = data.lives || 3;
-        scoreMultiplier = data.scoreMultiplier || 1;
-        level = data.level || 1;
-        xp = data.xp || 0;
-        maxXP = data.maxXP || 100;
-        achievements = data.achievements || {
-            goldenBall: false,
-            darkSurvival: false,
-            meteorsSurvival: false,
-            secretSurvival: false,
-            rich: false
-        };
-        darkMode = data.darkMode || false;
-        smallButtons = data.smallButtons || false;
-        updatePlayerColor();
-        updateMenuBallAppearance();
-        
-        // Применяем настройки
-        if (darkMode) {
-            document.body.classList.add('dark-mode');
-        }
-        if (smallButtons) {
-            document.querySelectorAll('.button').forEach(btn => {
-                if (!btn.id.includes('startButton')) {
-                    btn.style.transform = 'scale(0.5)';
-                    btn.style.bottom = (parseInt(btn.style.bottom) / 2 + 'px' 
-                
-            });
+        try {
+            const data = JSON.parse(savedData);
+            totalScore = data.totalScore || 0;
+            player.skins = data.skins || [];
+            player.currentSkin = data.currentSkin || 'default';
+            lives = data.lives || 3;
+            scoreMultiplier = data.scoreMultiplier || 1;
+            level = data.level || 1;
+            xp = data.xp || 0;
+            maxXP = data.maxXP || 100;
+            achievements = data.achievements || {
+                goldenBall: false,
+                darkSurvival: false,
+                meteorsSurvival: false,
+                secretSurvival: false,
+                rich: false
+            };
+            darkMode = data.darkMode || false;
+            smallButtons = data.smallButtons || false;
+
+            updatePlayerColor();
+            updateMenuBallAppearance();
+
+            // Применяем настройки
+            if (darkMode) {
+                document.body.classList.add('dark-mode');
+            }
+            
+            if (smallButtons) {
+                document.querySelectorAll('.button').forEach(btn => {
+                    if (!btn.id.includes('startButton')) {
+                        const currentBottom = parseInt(btn.style.bottom || getComputedStyle(btn).bottom) || 20;
+                        btn.style.transform = 'scale(0.5)';
+                        btn.style.bottom = `${currentBottom / 2}px`;
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Ошибка загрузки данных:', e);
+            // Восстановление значений по умолчанию
+            resetGameData();
         }
     }
     updateUI();
 }
+
         
         // Сохранение данных игры
      function saveGameData() {
