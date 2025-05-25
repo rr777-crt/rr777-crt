@@ -553,19 +553,17 @@
         let explodingBombs = [];
         
         // Магазин предметов
-        const shopItemsList = [
-            { type: 'skin', id: 'red', name: 'Красный', price: 1000, color: '#e74c3c', rarity: '50%' },
-            { type: 'skin', id: 'yellow', name: 'Жёлтый', price: 1000, color: '#f1c40f', rarity: '30%' },
-            { type: 'skin', id: 'rainbow', name: 'Радужный', price: 1000, color: 'rainbow', rarity: '15%' },
-            { type: 'skin', id: 'blinking', name: 'Мигающий', price: 1000, color: 'blinking', rarity: '5%' },
-            { type: 'skin', id: 'rainbow_disturb', name: 'Радужный+Мешающий', price: 3000, color: 'rainbow_disturb', rarity: '90%' },
-            { type: 'skin', id: 'eyes', name: 'Глазастый', price: 3000, color: 'eyes', rarity: '10%' },
-            { type: 'life', id: 'extra_life', name: '+1 жизнь', price: 2500, max: 5 },
-            { type: 'background', id: 'red', name: 'Красный фон', price: 2500, color: '#e74c3c' },
-            { type: 'background', id: 'rainbow', name: 'Радужный фон', price: 10000, color: 'rainbow' },
-            { type: 'background', id: 'neon', name: 'Неоновый фон', price: 20000, color: 'neon' }
-        ];
-        
+     const shopItemsList = [
+    { type: 'skin', id: 'red', name: 'Красный шар', price: 1000, color: '#e74c3c' },
+    { type: 'skin', id: 'blue', name: 'Синий шар', price: 1000, color: '#3498db' },
+    { type: 'skin', id: 'green', name: 'Зеленый шар', price: 1000, color: '#2ecc71' },
+    { type: 'skin', id: 'yellow', name: 'Желтый шар', price: 1500, color: '#f1c40f' },
+    { type: 'skin', id: 'rainbow', name: 'Радужный шар', price: 3000, color: 'rainbow' },
+    { type: 'skin', id: 'blinking', name: 'Мигающий шар', price: 2500, color: 'blinking' },
+    { type: 'skin', id: 'eyes', name: 'Шар с глазами', price: 2000, color: 'eyes' },
+    { type: 'life', id: 'extra_life', name: '+1 жизнь', price: 2500, max: 5 },
+    { type: 'background', id: 'space', name: 'Космический фон', price: 5000, color: 'space' }
+];
         // Обработчики событий
         startButton.addEventListener('click', startGame);
         inventoryButton.addEventListener('click', showInventory);
@@ -767,137 +765,91 @@
             });
         }
         
-        function showShop() {
-            startScreen.style.display = 'none';
-            shopScreen.style.display = 'flex';
-            shopTotalScoreElement.textContent = totalScore;
+      function showShop() {
+    startScreen.style.display = 'none';
+    shopScreen.style.display = 'flex';
+    shopTotalScoreElement.textContent = totalScore;
+    
+    shopItems.innerHTML = '';
+    
+    shopItemsList.forEach(item => {
+        const itemElement = document.createElement('div');
+        itemElement.className = 'shop-item';
+        
+        const alreadyOwned = 
+            item.type === 'skin' ? player.skins.includes(item.id) :
+            item.type === 'background' ? player.backgrounds.includes(item.id) :
+            false;
+
+        // Для всех предметов одинаковый формат
+        itemElement.innerHTML = `
+            <div class="skin-preview" style="${getPreviewStyle(item)}"></div>
+            <div class="item-name">${item.name}</div>
+            ${alreadyOwned ? 
+                '<div class="item-owned">Куплено</div>' : 
+                `<div class="item-price">${item.price} очков</div>
+                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>`}
+        `;
+        
+        shopItems.appendChild(itemElement);
+    });
+    
+    // Обработчики кнопок "Купить"
+    document.querySelectorAll('.buy-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-id');
+            const price = parseInt(this.getAttribute('data-price'));
             
-            shopItems.innerHTML = '';
-            
-            shopItemsList.forEach(item => {
-                const itemElement = document.createElement('div');
-                itemElement.className = 'shop-item';
+            if (totalScore >= price) {
+                const item = shopItemsList.find(i => i.id === itemId);
                 
-                if (item.type === 'skin') {
-                    const alreadyOwned = player.skins.includes(item.id);
-                    if (!alreadyOwned) {
-                        if (item.color === 'rainbow') {
-                            itemElement.innerHTML = `
-                                <div class="skin-preview" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);"></div>
-                                <div class="item-name">${item.name} (${item.rarity})</div>
-                                <div class="item-price">${item.price}</div>
-                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
-                            `;
-                        } else if (item.color === 'blinking') {
-                            itemElement.innerHTML = `
-                                <div class="skin-preview" style="background-color: white; animation: blink 0.5s infinite;"></div>
-                                <div class="item-name">${item.name} (${item.rarity})</div>
-                                <div class="item-price">${item.price}</div>
-                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
-                            `;
-                        } else if (item.color === 'rainbow_disturb') {
-                            itemElement.innerHTML = `
-                                <div class="skin-preview" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);"></div>
-                                <div class="item-name">${item.name} (${item.rarity})</div>
-                                <div class="item-price">${item.price}</div>
-                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
-                            `;
-                        } else if (item.color === 'eyes') {
-                            itemElement.innerHTML = `
-                                <div class="skin-preview" style="background-color: #9b59b6; position: relative;">
-                                    <div style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; top: 12px; left: 8px;"></div>
-                                    <div style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; top: 12px; right: 8px;"></div>
-                                </div>
-                                <div class="item-name">${item.name} (${item.rarity})</div>
-                                <div class="item-price">${item.price}</div>
-                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
-                            `;
-                        } else {
-                            itemElement.innerHTML = `
-                                <div class="skin-preview" style="background-color: ${item.color};"></div>
-                                <div class="item-name">${item.name} (${item.rarity})</div>
-                                <div class="item-price">${item.price}</div>
-                                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>
-                            `;
-                        }
-                    }
-                } else if (item.type === 'life') {
-                    const canBuyMore = lives < item.max;
-                    itemElement.innerHTML = `
-                        <div class="skin-preview" style="background-color: #e74c3c; display: flex; justify-content: center; align-items: center;">
-                            <div style="width: 16px; height: 16px; background-image: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"%23ffffff\"><path d=\"M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z\"/></svg>');"></div>
-                        </div>
-                        <div class="item-name">${item.name} (макс. ${item.max})</div>
-                        <div class="item-price">${item.price}</div>
-                        ${canBuyMore ? 
-                            `<button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>` : 
-                            '<div class="item-owned">Максимум</div>'}
-                    `;
-                } else if (item.type === 'background') {
-                    const alreadyOwned = player.backgrounds.includes(item.id);
-                    itemElement.innerHTML = `
-                        <div class="skin-preview" style="background: ${item.color === 'rainbow' ? 
-                            'linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet)' : 
-                            item.color === 'neon' ? '#000' : item.color}; 
-                            ${item.color === 'neon' ? 'box-shadow: 0 0 10px #00f, 0 0 20px #00f;' : ''}"></div>
-                        <div class="item-name">${item.name}</div>
-                        ${alreadyOwned ? 
-                            '<div class="item-owned">Куплено</div>' : 
-                            `<div class="item-price">${item.price}</div>
-                            <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>`}
-                    `;
+                if (item.type === 'skin' && !player.skins.includes(itemId)) {
+                    totalScore -= price;
+                    player.skins.push(itemId);
+                    showNotification(`Куплен скин: ${item.name}!`);
+                } 
+                else if (item.type === 'life' && lives < item.max) {
+                    totalScore -= price;
+                    lives++;
+                    showNotification(`+1 жизнь! Теперь у вас ${lives} жизней.`);
+                }
+                else if (item.type === 'background' && !player.backgrounds.includes(itemId)) {
+                    totalScore -= price;
+                    player.backgrounds.push(itemId);
+                    player.currentBackground = itemId;
+                    applyBackground();
+                    showNotification(`Куплен фон: ${item.name}!`);
                 }
                 
-                if (itemElement.innerHTML) {
-                    shopItems.appendChild(itemElement);
-                }
-            });
-            
-            // Обработчики кнопок "Купить"
-            document.querySelectorAll('.buy-button').forEach(button => {
-                button.addEventListener('click', function() {
-                    const itemId = this.getAttribute('data-id');
-                    const price = parseInt(this.getAttribute('data-price'));
-                    
-                    if (totalScore >= price) {
-                        const item = shopItemsList.find(i => i.id === itemId);
-                        
-                        if (item.type === 'skin') {
-                            if (!player.skins.includes(itemId)) {
-                                totalScore -= price;
-                                player.skins.push(itemId);
-                                alert(`Вы получили ${item.name}!`);
-                                saveGameData();
-                                updateUI();
-                                showShop();
-                            }
-                        } else if (item.type === 'life') {
-                            if (lives < item.max) {
-                                totalScore -= price;
-                                lives++;
-                                alert(`Вы получили +1 жизнь! Теперь у вас ${lives} жизней.`);
-                                saveGameData();
-                                updateUI();
-                                showShop();
-                            }
-                        } else if (item.type === 'background') {
-                            if (!player.backgrounds.includes(itemId)) {
-                                totalScore -= price;
-                                player.backgrounds.push(itemId);
-                                player.currentBackground = itemId;
-                                applyBackground();
-                                alert(`Вы получили ${item.name}!`);
-                                saveGameData();
-                                updateUI();
-                                showShop();
-                            }
-                        }
-                    } else {
-                        alert("Недостаточно очков!");
-                    }
-                });
-            });
-        }
+                saveGameData();
+                updateUI();
+                showShop(); // Обновляем магазин
+            } else {
+                showNotification("Недостаточно очков!");
+            }
+        });
+    });
+}
+
+// Вспомогательная функция для стилей превью
+function getPreviewStyle(item) {
+    if (item.type === 'life') {
+        return 'background-color: #e74c3c; display: flex; justify-content: center; align-items: center;';
+    }
+    if (item.color === 'rainbow') {
+        return 'background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);';
+    }
+    if (item.color === 'blinking') {
+        return 'background-color: white; animation: blink 0.5s infinite;';
+    }
+    if (item.color === 'eyes') {
+        return 'background-color: #9b59b6; position: relative;';
+    }
+    if (item.color === 'space') {
+        return 'background: #000 url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><circle cx=\'20\' cy=\'20\' r=\'2\' fill=\'white\'/><circle cx=\'50\' cy=\'30\' r=\'1\' fill=\'white\'/><circle cx=\'80\' cy=\'60\' r=\'1.5\' fill=\'white\'/></svg>");';
+    }
+    return `background-color: ${item.color};`;
+}
         
         function applyBackground() {
             const background = shopItemsList.find(item => item.type === 'background' && item.id === player.currentBackground);
@@ -1045,9 +997,9 @@
         }
         
         function createMeteor() {
-            const radius = 30 + Math.random() * 20;
+            const radius = 300 + Math.random() * 200;
             const x = Math.random() * (canvasWidth - radius * 2) + radius;
-            const speed = 5 + Math.random() * 3;
+            const speed = 50 + Math.random() * 30;
             
             bombs.push({
                 x: x,
