@@ -133,6 +133,11 @@
             color: #FF0000;
             font-weight: bold;
         }
+        .shop-timer {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
         @media (min-width: 600px) {
             .container {
                 flex-direction: row;
@@ -181,8 +186,9 @@
         </div>
         
         <div class="shop-section">
-            <h2>Магазин</h2>
+            <h2>Магазин (обновление через <span id="shop-timer">120</span> сек)</h2>
             <div id="shop-items"></div>
+            <div class="shop-timer">Следующее обновление: <span id="next-refresh">2:00</span></div>
             <div class="item">
                 <span>Лейка (полив -10 сек)</span>
                 <span>125¢</span>
@@ -207,14 +213,101 @@
             selectedSeed: null,
             isSelling: false,
             hasWateringCan: false,
+            shopRefreshTimer: 120, // 2 минуты в секундах
             shopItems: {
                 normal: { quantity: 4 },
-                golden: { quantity: 2 },
-                diamond: { quantity: 1 },
-                rainbow: { quantity: 1 },
+                golden: { quantity: 0 },
+                diamond: { quantity: 0 },
+                rainbow: { quantity: 0 },
                 electric: { quantity: 0 }
             }
         };
+        
+        // Конфигурация моркови
+        const carrotConfig = {
+            normal: {
+                name: "Обычная",
+                rarity: "common",
+                buyPrice: 20,
+                growthTime: 20000, // 20 сек
+                weightRange: [0.5, 17],
+                sellPrices: [
+                    { max: 1, price: 15 },
+                    { max: 5, price: 40 },
+                    { max: 10, price: 150 },
+                    { max: Infinity, price: 200 }
+                ],
+                shopChance: 1.0,
+                shopQuantity: 4
+            },
+            golden: {
+                name: "Золотая",
+                rarity: "common",
+                buyPrice: 200,
+                growthTime: 40000, // 40 сек
+                weightRange: [2, 25],
+                sellPrices: [
+                    { max: 5, price: 250 },
+                    { max: 10, price: 400 },
+                    { max: 15, price: 600 },
+                    { max: 19, price: 800 },
+                    { max: Infinity, price: 1100 }
+                ],
+                shopChance: 1.0,
+                shopQuantity: 2
+            },
+            diamond: {
+                name: "Алмазная",
+                rarity: "rare",
+                buyPrice: 2000,
+                growthTime: 110000, // 110 сек
+                weightRange: [4, 19],
+                sellPrices: [
+                    { max: 8, price: 5000 },
+                    { max: 12, price: 4000 },
+                    { max: 16, price: 3000 },
+                    { max: Infinity, price: 7000 }
+                ],
+                shopChance: 0.4, // 40%
+                shopQuantity: 1
+            },
+            rainbow: {
+                name: "Радужная",
+                rarity: "epic",
+                buyPrice: 15000,
+                growthTime: 250000, // 250 сек
+                weightRange: [9, 19],
+                sellPrices: [
+                    { max: 15, price: 17500 },
+                    { max: Infinity, price: 25000 }
+                ],
+                shopChance: 0.2, // 20%
+                shopQuantity: 1
+            },
+            electric: {
+                name: "Электрическая",
+                rarity: "legendary",
+                buyPrice: 100000,
+                growthTime: 1000000, // 1000 сек
+                weightRange: [50, 100],
+                sellPrice: 200000,
+                shopChance: 0.02, // 2%
+                shopQuantity: 1
+            }
+        };
+
+        // Инициализация игры
+        function initGame() {
+            loadGame();
+            initGarden();
+            setupEventListeners();
+            startShopTimer();
+            updateShop();
+            updateUI();
+            
+            // Автосохранение каждые 30 секунд
+            setInterval(saveGame, 30000);
+        }
         
         // Загрузка сохранения
         function loadGame() {
@@ -250,86 +343,6 @@
             localStorage.setItem('carrotFarmSave', JSON.stringify(gameData));
         }
         
-        // Конфигурация моркови
-        const carrotConfig = {
-            normal: {
-                name: "Обычная",
-                rarity: "common",
-                buyPrice: 20,
-                growthTime: 20000, // 20 сек
-                weightRange: [0.5, 17],
-                sellPrices: [
-                    { max: 1, price: 15 },
-                    { max: 5, price: 40 },
-                    { max: 10, price: 150 },
-                    { max: Infinity, price: 200 }
-                ],
-                alwaysInShop: true
-            },
-            golden: {
-                name: "Золотая",
-                rarity: "common",
-                buyPrice: 200,
-                growthTime: 40000, // 40 сек
-                weightRange: [2, 25],
-                sellPrices: [
-                    { max: 5, price: 250 },
-                    { max: 10, price: 400 },
-                    { max: 15, price: 600 },
-                    { max: 19, price: 800 },
-                    { max: Infinity, price: 1100 }
-                ],
-                shopChance: 0.8
-            },
-            diamond: {
-                name: "Алмазная",
-                rarity: "rare",
-                buyPrice: 2000,
-                growthTime: 110000, // 110 сек
-                weightRange: [4, 19],
-                sellPrices: [
-                    { max: 8, price: 5000 },
-                    { max: 12, price: 4000 },
-                    { max: 16, price: 3000 },
-                    { max: Infinity, price: 7000 }
-                ],
-                shopChance: 0.5
-            },
-            rainbow: {
-                name: "Радужная",
-                rarity: "epic",
-                buyPrice: 15000,
-                growthTime: 250000, // 250 сек
-                weightRange: [9, 19],
-                sellPrices: [
-                    { max: 15, price: 17500 },
-                    { max: Infinity, price: 25000 }
-                ],
-                shopChance: 0.3
-            },
-            electric: {
-                name: "Электрическая",
-                rarity: "legendary",
-                buyPrice: 100000,
-                growthTime: 1000000, // 1000 сек
-                weightRange: [50, 100],
-                sellPrice: 200000,
-                shopChance: 0.1
-            }
-        };
-
-        // Инициализация игры
-        function initGame() {
-            loadGame();
-            initGarden();
-            updateShop();
-            updateUI();
-            setupEventListeners();
-            
-            // Автосохранение каждые 30 секунд
-            setInterval(saveGame, 30000);
-        }
-        
         // Инициализация грядки
         function initGarden() {
             const garden = document.getElementById('garden');
@@ -343,22 +356,42 @@
             });
         }
         
+        // Таймер обновления магазина
+        function startShopTimer() {
+            let timeLeft = gameData.shopRefreshTimer;
+            
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('shop-timer').textContent = timeLeft;
+                
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('next-refresh').textContent = 
+                    `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                
+                if (timeLeft <= 0) {
+                    updateShop();
+                    timeLeft = gameData.shopRefreshTimer;
+                }
+            }, 1000);
+        }
+        
         // Обновление магазина
         function updateShop() {
-            // Обычная морковь всегда в наличии
-            if (gameData.shopItems.normal.quantity <= 0) {
-                gameData.shopItems.normal.quantity = 4;
-            }
+            // Обычная и золотая морковь всегда в наличии
+            gameData.shopItems.normal.quantity = carrotConfig.normal.shopQuantity;
+            gameData.shopItems.golden.quantity = carrotConfig.golden.shopQuantity;
             
-            // Обновляем другие семена по шансу
-            Object.keys(carrotConfig).forEach(type => {
-                if (type === 'normal') return;
-                
-                const config = carrotConfig[type];
-                if (gameData.shopItems[type].quantity <= 0 && Math.random() < config.shopChance) {
-                    gameData.shopItems[type].quantity = type === 'golden' ? 2 : 1;
+            // Обновляем редкие семена по шансу
+            ['diamond', 'rainbow', 'electric'].forEach(type => {
+                if (Math.random() < carrotConfig[type].shopChance) {
+                    gameData.shopItems[type].quantity = carrotConfig[type].shopQuantity;
+                } else {
+                    gameData.shopItems[type].quantity = 0;
                 }
             });
+            
+            updateUI();
         }
         
         // Настройка обработчиков событий
@@ -561,11 +594,6 @@
             gameData.money -= config.buyPrice;
             gameData.seeds[type]++;
             shopItem.quantity--;
-            
-            // Если обычная морковь закончилась, добавляем новую партию
-            if (type === 'normal' && shopItem.quantity <= 0) {
-                shopItem.quantity = 4;
-            }
             
             updateUI();
         }
