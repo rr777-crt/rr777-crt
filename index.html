@@ -1,1584 +1,741 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Шарики: Эволюция</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Морковная ферма PRO</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #f0f0f0;
-            touch-action: none;
             font-family: Arial, sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
-            transition: background-color 0.5s;
-        }
-        
-        .dark-mode {
-            background-color: #111 !important;
-        }
-        
-        #gameCanvas {
-            display: block;
-            background-color: #e0e0e0;
-            margin: 0 auto;
-            transition: filter 0.2s, transform 0.1s;
-        }
-        
-        #gameUI {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #333;
-            font-size: 18px;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 5px 10px;
-            border-radius: 5px;
-            z-index: 5;
-        }
-        
-        #startScreen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
             text-align: center;
-            z-index: 10;
+            background: #f0f8ff;
+            padding: 10px;
+            margin: 0;
+            touch-action: manipulation;
         }
-        
-        .menu-ball {
-            position: absolute;
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            z-index: 11;
-            pointer-events: none;
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
         }
-        
-        .menu-title {
-            font-size: 32px;
-            margin-bottom: 120px;
-            z-index: 12;
+        .garden {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 10px 0;
         }
-        
-        .button {
-            padding: 15px 30px;
-            font-size: 20px;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-            min-width: 200px;
-            z-index: 12;
+        .plot {
+            aspect-ratio: 1/1;
+            border: 2px dashed #aaa;
             position: relative;
-            transition: transform 0.3s, bottom 0.3s;
-        }
-        
-        #startButton {
-            background-color: #4CAF50;
-            margin-top: 150px;
-        }
-        
-        #inventoryButton {
-            background-color: #3498db;
-            position: fixed;
-            left: 20px;
-            bottom: 20px;
-        }
-        
-        #shopButton {
-            background-color: #9b59b6;
-            position: fixed;
-            left: 20px;
-            bottom: 80px;
-        }
-        
-        #achievementsButton {
-            background-color: #f39c12;
-            position: fixed;
-            left: 20px;
-            bottom: 140px;
-        }
-        
-        #settingsButton {
-            background-color: #95a5a6;
-            position: fixed;
-            left: 20px;
-            bottom: 200px;
-        }
-        
-        #updatesButton {
-            background-color: #1abc9c;
-            position: fixed;
-            left: 20px;
-            bottom: 260px;
-        }
-        
-        #inventoryScreen, #shopScreen, #achievementsScreen, #settingsScreen, #updatesScreen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            display: none;
+            cursor: pointer;
+            background: #e9f5e9;
+            border-radius: 8px;
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: white;
-            z-index: 20;
         }
-        
-        .shop-item, .achievement, .update-item, .setting-item {
-            padding: 15px;
-            margin: 10px;
-            border: 2px solid #444;
-            border-radius: 5px;
-            width: 80%;
-            max-width: 300px;
-            background-color: #222;
+        .plant-icon {
+            font-size: 30px;
+            margin-bottom: 5px;
         }
-        
-        .achievement.unlocked {
-            border-color: #2ecc71;
-            background-color: rgba(46, 204, 113, 0.2);
-        }
-        
-        .skin-preview {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 15px;
-        }
-        
-        .item-name {
-            flex-grow: 1;
-        }
-        
-        .item-price, .item-owned {
-            padding: 5px 10px;
-            border-radius: 3px;
-            font-weight: bold;
-        }
-        
-        .item-price {
-            background-color: #f39c12;
-            color: #000;
-        }
-        
-        .item-owned {
-            background-color: #2ecc71;
-            color: #000;
-        }
-        
-        .back-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            padding: 10px 20px;
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 21;
-        }
-        
-        .equip-button, .buy-button {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-        
-        .equip-button {
-            background-color: #3498db;
-            color: white;
-        }
-        
-        .buy-button {
-            background-color: #f39c12;
-            color: black;
-        }
-        
-        #totalScore {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #f1c40f;
-            z-index: 12;
-        }
-        
-        .hearts {
-            display: flex;
-            margin-bottom: 10px;
-            z-index: 12;
-        }
-        
-        .heart {
-            width: 24px;
-            height: 24px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23e74c3c"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>');
-            background-repeat: no-repeat;
-            margin-right: 5px;
-        }
-        
-        .multiplier {
-            color: #2ecc71;
-            font-weight: bold;
-        }
-        
-        .level-bar {
-            width: 80%;
-            max-width: 300px;
-            height: 20px;
-            background-color: #333;
-            border-radius: 10px;
+        .inventory-section, .shop-section {
+            border: 2px solid #4CAF50;
+            padding: 10px;
             margin: 10px 0;
-            overflow: hidden;
-            z-index: 12;
+            border-radius: 10px;
+            background: white;
         }
-        
-        .level-progress {
-            height: 100%;
-            background-color: #3498db;
-            width: 0%;
-            transition: width 0.3s;
-        }
-        
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-        
-        @keyframes explode {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(3); opacity: 0; }
-        }
-        
-        .explosion {
-            position: absolute;
-            border-radius: 50%;
-            animation: explode 0.5s forwards;
-            pointer-events: none;
-        }
-        
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        .rotation-effect {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: conic-gradient(transparent, rgba(255,255,255,0.5), transparent);
-            animation: rotate 5s linear infinite;
-            opacity: 0.3;
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background-color: #2ecc71;
-            color: white;
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px;
+            background: #f8f8f8;
             border-radius: 5px;
-            z-index: 100;
-            animation: slideIn 0.5s, fadeOut 0.5s 2.5s forwards;
         }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
-        }
-        
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-        
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-        
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .slider {
-            position: absolute;
+        button {
+            padding: 8px 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
+            font-size: 14px;
+            min-width: 80px;
         }
-        
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
+        button:disabled {
+            background: #cccccc;
         }
-        
-        input:checked + .slider {
-            background-color: #2196F3;
+        .stats {
+            font-size: 18px;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
         }
-        
-        input:checked + .slider:before {
-            transform: translateX(26px);
+        .carrot-type {
+            font-weight: bold;
+        }
+        .normal { color: #2E8B57; }
+        .rare { color: #4169E1; }
+        .epic { color: #9370DB; }
+        .legendary { color: #FF8C00; }
+        .progress-container {
+            width: 80%;
+            height: 6px;
+            background: #ddd;
+            margin-top: 5px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: #4CAF50;
+            width: 0%;
+        }
+        .selected {
+            box-shadow: 0 0 0 3px #4CAF50;
+        }
+        .sell-all-btn {
+            background: #FF6347;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .water-btn {
+            background: #1E90FF;
+            margin-top: 5px;
+        }
+        .rarity-tag {
+            font-size: 12px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-left: 5px;
+        }
+        .common { background: #808080; color: white; }
+        .rare { background: #4169E1; color: white; }
+        .epic { background: #9370DB; color: white; }
+        .legendary { background: #FF8C00; color: white; }
+        .shop-quantity {
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        .sold-out {
+            color: #FF0000;
+            font-weight: bold;
+        }
+        @media (min-width: 600px) {
+            .container {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .garden-container {
+                order: 1;
+                width: 60%;
+            }
+            .inventory-section {
+                order: 2;
+                width: 35%;
+            }
+            .shop-section {
+                order: 3;
+                width: 100%;
+            }
+            .garden {
+                grid-template-columns: repeat(3, 120px);
+            }
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-    <div id="gameUI">
-        Очки: <span id="score">0</span> (<span class="multiplier">×1</span>) | Ур: <span id="level">1</span> | <span id="hearts"></span>
-    </div>
-    
-    <div id="startScreen">
-        <div class="menu-title">Шарики: Эволюция</div>
-        <div class="menu-ball" id="menuBall"></div>
-        <div class="hearts" id="startHearts"></div>
-        <div id="totalScore">Всего очков: 0</div>
-        <div class="level-bar"><div class="level-progress" id="levelProgress"></div></div>
-        <div>Уровень: <span id="startLevel">1</span> (<span id="levelXP">0</span>/100)</div>
-        <button id="startButton" class="button">Играть</button>
-        <button id="inventoryButton" class="button">Инвентарь</button>
-        <button id="shopButton" class="button">Магазин</button>
-        <button id="achievementsButton" class="button">Достижения</button>
-        <button id="settingsButton" class="button">Настройки</button>
-        <button id="updatesButton" class="button">Обновления</button>
-    </div>
-    
-    <div id="inventoryScreen">
-        <button class="back-button">Назад</button>
-        <h2>Инвентарь</h2>
-        <div id="inventoryItems"></div>
-    </div>
-    
-    <div id="shopScreen">
-        <button class="back-button">Назад</button>
-        <h2>Магазин</h2>
-        <div>Ваши очки: <span id="shopTotalScore">0</span></div>
-        <div id="shopItems"></div>
-    </div>
-    
-    <div id="achievementsScreen">
-        <button class="back-button">Назад</button>
-        <h2>Достижения</h2>
-        <div id="achievementsList"></div>
-    </div>
-    
-    <div id="settingsScreen">
-        <button class="back-button">Назад</button>
-        <h2>Настройки</h2>
-        <div class="setting-item">
-            <span>Маленькие кнопки (для телефонов)</span>
-            <label class="switch">
-                <input type="checkbox" id="smallButtonsToggle">
-                <span class="slider"></span>
-            </label>
+    <div class="container">
+        <div class="garden-container">
+            <h2>Грядка</h2>
+            <div class="garden" id="garden"></div>
         </div>
-        <div class="setting-item">
-            <span>Темный фон</span>
-            <label class="switch">
-                <input type="checkbox" id="darkModeToggle">
-                <span class="slider"></span>
-            </label>
+        
+        <div class="stats">
+            <span>Баланс: <span id="money">50</span>¢</span>
+            <span>Лейка: <span id="watering-can">нет</span></span>
+            <button class="sell-all-btn" onclick="startSellingAll()">Быстрая продажа (10 сек)</button>
         </div>
-    </div>
-    
-    <div id="updatesScreen">
-        <button class="back-button">Назад</button>
-        <h2>Обновления</h2>
-        <div id="updatesList">
-            <div class="update-item">
-                <h3>Версия 1.1</h3>
-                <p>- Добавлены достижения</p>
-                <p>-  события в игре!</p>
-                <p>- СКИНЫ НА фон!!!</p>
-                
+        
+        <div class="inventory-section">
+            <h2>Инвентарь</h2>
+            <h3>Семена</h3>
+            <div id="seed-inventory"></div>
+            <h3>Морковь</h3>
+            <div id="carrot-inventory"></div>
+            <h3>Инструменты</h3>
+            <div id="tools-inventory"></div>
+        </div>
+        
+        <div class="shop-section">
+            <h2>Магазин</h2>
+            <div id="shop-items"></div>
+            <div class="item">
+                <span>Лейка (полив -10 сек)</span>
+                <span>125¢</span>
+                <button id="buy-watering-can" onclick="buyWateringCan()">Купить</button>
             </div>
         </div>
     </div>
-
+    
     <script>
-        // Инициализация игры
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreElement = document.getElementById('score');
-        const levelElement = document.getElementById('level');
-        const startLevelElement = document.getElementById('startLevel');
-        const levelXPElement = document.getElementById('levelXP');
-        const levelProgressElement = document.getElementById('levelProgress');
-        const heartsElement = document.getElementById('hearts');
-        const startHeartsElement = document.getElementById('startHearts');
-        const multiplierElement = document.querySelector('.multiplier');
-        const totalScoreElement = document.getElementById('totalScore');
-        const shopTotalScoreElement = document.getElementById('shopTotalScore');
-        const startButton = document.getElementById('startButton');
-        const inventoryButton = document.getElementById('inventoryButton');
-        const shopButton = document.getElementById('shopButton');
-        const achievementsButton = document.getElementById('achievementsButton');
-        const settingsButton = document.getElementById('settingsButton');
-        const updatesButton = document.getElementById('updatesButton');
-        const startScreen = document.getElementById('startScreen');
-        const inventoryScreen = document.getElementById('inventoryScreen');
-        const shopScreen = document.getElementById('shopScreen');
-        const achievementsScreen = document.getElementById('achievementsScreen');
-        const settingsScreen = document.getElementById('settingsScreen');
-        const updatesScreen = document.getElementById('updatesScreen');
-        const inventoryItems = document.getElementById('inventoryItems');
-        const shopItems = document.getElementById('shopItems');
-        const achievementsList = document.getElementById('achievementsList');
-        const menuBall = document.getElementById('menuBall');
-        
-        // Размеры canvas
-        let canvasWidth = window.innerWidth;
-        let canvasHeight = window.innerHeight;
-        
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-        
-        // Игровые переменные
-        let score = 0;
-        let totalScore = 0;
-        let gameRunning = false;
-        let gameLoopInterval;
-        let difficulty = 1;
-        let goldenBallChance = 0.00025;
-        let bombChance = 0.005;
-        let explodingBombChance = 0.003;
-        let lives = 3;
-        let scoreMultiplier = 1;
-        let level = 1;
-        let xp = 0;
-        let maxXP = 100;
-        let goldenEffectActive = false;
-        let goldenEffectEndTime = 0;
-        let lastX = 0;
-        let lastY = 0;
-        let velocity = 0;
-        let rotationSpeed = 0;
-        let rotationAngle = 0;
-        let gameTime = 0;
-        let meteorActive = false;
-        let secretActive = false;
-        let darkMode = false;
-        let smallButtons = false;
-        
-        // Достижения
-        let achievements = {
-            goldenBall: false,
-            darkSurvival: false,
-            meteorsSurvival: false,
-            secretSurvival: false,
-            rich: false
+        // Игровые данные
+        const gameData = {
+            money: 50,
+            seeds: {
+                normal: 0,
+                golden: 0,
+                diamond: 0,
+                rainbow: 0,
+                electric: 0
+            },
+            carrots: [],
+            plots: Array(9).fill(null),
+            selectedSeed: null,
+            isSelling: false,
+            hasWateringCan: false,
+            shopItems: {
+                normal: { quantity: 4 },
+                golden: { quantity: 2 },
+                diamond: { quantity: 1 },
+                rainbow: { quantity: 1 },
+                electric: { quantity: 0 }
+            }
         };
         
-        // Анимация шарика в меню
-        let menuBallX = canvasWidth / 2;
-        let menuBallY = canvasHeight / 2 - 50;
-        let menuBallVX = 2;
-        let menuBallVY = 1.5;
-        let menuBallRotation = 0;
-        
-        function animateMenuBall() {
-            menuBallX += menuBallVX;
-            menuBallY += menuBallVY;
-            
-            if (menuBallX < 50 || menuBallX > canvasWidth - 50) {
-                menuBallVX *= -1;
-            }
-            if (menuBallY < 50 || menuBallY > canvasHeight / 2) {
-                menuBallVY *= -1;
-            }
-            
-            const speed = Math.sqrt(menuBallVX * menuBallVX + menuBallVY * menuBallVY);
-            menuBallRotation += speed * 0.05;
-            
-            menuBall.style.left = (menuBallX - 50) + 'px';
-            menuBall.style.top = (menuBallY - 50) + 'px';
-            menuBall.style.transform = `rotate(${menuBallRotation}deg)`;
-            
-            requestAnimationFrame(animateMenuBall);
-        }
-        
-        // Игровые объекты
-        const player = {
-            x: canvasWidth / 2,
-            y: canvasHeight - 50,
-            radius: 30,
-            color: '#3498db',
-            speed: 8,
-            skins: [],
-            backgrounds: [],
-            currentSkin: 'default',
-            currentBackground: 'default',
-            skinEffects: {},
-            rotation: 0
-        };
-        
-        let balls = [];
-        let goldenBalls = [];
-        let bombs = [];
-        let explodingBombs = [];
-        
-        // Магазин предметов
-     const shopItemsList = [
-    { type: 'skin', id: 'red', name: 'Красный шар', price: 1000, color: '#e74c3c' },
-    { type: 'skin', id: 'blue', name: 'Синий шар', price: 1000, color: '#3498db' },
-    { type: 'skin', id: 'green', name: 'Зеленый шар', price: 1000, color: '#2ecc71' },
-    { type: 'skin', id: 'yellow', name: 'Желтый шар', price: 1500, color: '#f1c40f' },
-    { type: 'skin', id: 'rainbow', name: 'Радужный шар', price: 3000, color: 'rainbow' },
-    { type: 'skin', id: 'blinking', name: 'Мигающий шар', price: 2500, color: 'blinking' },
-    { type: 'skin', id: 'eyes', name: 'Шар с глазами', price: 2000, color: 'eyes' },
-    { type: 'life', id: 'extra_life', name: '+1 жизнь', price: 2500, max: 5 },
-    { type: 'background', id: 'space', name: 'Космический фон', price: 5000, color: 'space' }
-];
-        // Обработчики событий
-        startButton.addEventListener('click', startGame);
-        inventoryButton.addEventListener('click', showInventory);
-        shopButton.addEventListener('click', showShop);
-        achievementsButton.addEventListener('click', showAchievements);
-        settingsButton.addEventListener('click', showSettings);
-        updatesButton.addEventListener('click', showUpdates);
-        
-        document.querySelectorAll('.back-button').forEach(button => {
-            button.addEventListener('click', () => {
-                inventoryScreen.style.display = 'none';
-                shopScreen.style.display = 'none';
-                achievementsScreen.style.display = 'none';
-                settingsScreen.style.display = 'none';
-                updatesScreen.style.display = 'none';
-                startScreen.style.display = 'flex';
-            });
-        });
-        
-        canvas.addEventListener('touchmove', function(e) {
-            if (!gameRunning) return;
-            e.preventDefault();
-            const touch = e.touches[0];
-            
-            const newX = touch.clientX;
-            const newY = touch.clientY;
-            const dx = newX - player.x;
-            const dy = newY - player.y;
-            velocity = Math.sqrt(dx * dx + dy * dy);
-            
-            player.x = newX;
-            player.y = newY;
-            
-            rotationSpeed = velocity * 0.2;
-        });
-        
-        canvas.addEventListener('mousemove', function(e) {
-            if (!gameRunning) return;
-            
-            const newX = e.clientX;
-            const newY = e.clientY;
-            const dx = newX - player.x;
-            const dy = newY - player.y;
-            velocity = Math.sqrt(dx * dx + dy * dy);
-            
-            player.x = newX;
-            player.y = newY;
-            
-            rotationSpeed = velocity * 0.2;
-        });
-        
-        // Функции интерфейса
-        function updateUI() {
-            scoreElement.textContent = score;
-            levelElement.textContent = level;
-            startLevelElement.textContent = level;
-            levelXPElement.textContent = xp;
-            levelProgressElement.style.width = `${(xp / maxXP) * 100}%`;
-            totalScoreElement.textContent = `Всего очков: ${totalScore}`;
-            shopTotalScoreElement.textContent = totalScore;
-            multiplierElement.textContent = scoreMultiplier;
-            
-            heartsElement.innerHTML = '';
-            startHeartsElement.innerHTML = '';
-            for (let i = 0; i < lives; i++) {
-                heartsElement.innerHTML += '<div class="heart"></div>';
-                startHeartsElement.innerHTML += '<div class="heart"></div>';
-            }
-        }
-        
-        function updateMenuBallAppearance() {
-            if (player.currentSkin === 'default') {
-                menuBall.style.backgroundColor = '#3498db';
-                menuBall.innerHTML = '';
-            } else {
-                const skin = shopItemsList.find(item => item.type === 'skin' && item.id === player.currentSkin);
-                if (skin) {
-                    if (skin.color === 'rainbow') {
-                        menuBall.style.background = 'linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet)';
-                        menuBall.innerHTML = '<div class="rotation-effect"></div>';
-                    } else if (skin.color === 'blinking') {
-                        menuBall.style.backgroundColor = 'white';
-                        menuBall.style.animation = 'blink 0.5s infinite';
-                        menuBall.innerHTML = '';
-                    } else if (skin.color === 'rainbow_disturb') {
-                        menuBall.style.background = 'linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet)';
-                        menuBall.innerHTML = '<div class="rotation-effect" style="animation-direction: reverse;"></div>';
-                    } else if (skin.color === 'eyes') {
-                        menuBall.style.backgroundColor = '#9b59b6';
-                        menuBall.innerHTML = `
-                            <div style="position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 25px; left: 20px;"></div>
-                            <div style="position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 25px; right: 20px;"></div>
-                            <div style="position: absolute; width: 8px; height: 8px; background: black; border-radius: 50%; top: 29px; left: 24px;"></div>
-                            <div style="position: absolute; width: 8px; height: 8px; background: black; border-radius: 50%; top: 29px; right: 24px;"></div>
-                        `;
-                    } else {
-                        menuBall.style.backgroundColor = skin.color;
-                        menuBall.innerHTML = '';
-                    }
-                }
-            }
-        }
-        
-        function showNotification(text) {
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.textContent = text;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-        
-        function showInventory() {
-            startScreen.style.display = 'none';
-            inventoryScreen.style.display = 'flex';
-            
-            inventoryItems.innerHTML = '';
-            
-            // Добавление стандартного скина
-            const defaultSkinItem = document.createElement('div');
-            defaultSkinItem.className = 'shop-item';
-            defaultSkinItem.innerHTML = `
-                <div class="skin-preview" style="background-color: #3498db;"></div>
-                <div class="item-name">Стандартный</div>
-                ${player.currentSkin === 'default' ? 
-                    '<div class="item-owned">Надет</div>' : 
-                    '<button class="equip-button" data-skin="default">Надеть</button>'}
-            `;
-            inventoryItems.appendChild(defaultSkinItem);
-            
-            // Добавление купленных скинов
-            player.skins.forEach(skinId => {
-                const skin = shopItemsList.find(item => item.type === 'skin' && item.id === skinId);
-                if (skin) {
-                    const skinItem = document.createElement('div');
-                    skinItem.className = 'shop-item';
-                    
-                    if (skin.color === 'rainbow') {
-                        skinItem.innerHTML = `
-                            <div class="skin-preview" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);"></div>
-                            <div class="item-name">${skin.name}</div>
-                            ${player.currentSkin === skin.id ? 
-                                '<div class="item-owned">Надет</div>' : 
-                                `<button class="equip-button" data-skin="${skin.id}">Надеть</button>`}
-                        `;
-                    } else if (skin.color === 'blinking') {
-                        skinItem.innerHTML = `
-                            <div class="skin-preview" style="background-color: white; animation: blink 0.5s infinite;"></div>
-                            <div class="item-name">${skin.name}</div>
-                            ${player.currentSkin === skin.id ? 
-                                '<div class="item-owned">Надет</div>' : 
-                                `<button class="equip-button" data-skin="${skin.id}">Надеть</button>`}
-                        `;
-                    } else if (skin.color === 'rainbow_disturb') {
-                        skinItem.innerHTML = `
-                            <div class="skin-preview" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);"></div>
-                            <div class="item-name">${skin.name}</div>
-                            ${player.currentSkin === skin.id ? 
-                                '<div class="item-owned">Надет</div>' : 
-                                `<button class="equip-button" data-skin="${skin.id}">Надеть</button>`}
-                        `;
-                    } else if (skin.color === 'eyes') {
-                        skinItem.innerHTML = `
-                            <div class="skin-preview" style="background-color: #9b59b6; position: relative;">
-                                <div style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; top: 12px; left: 8px;"></div>
-                                <div style="position: absolute; width: 8px; height: 8px; background: white; border-radius: 50%; top: 12px; right: 8px;"></div>
-                            </div>
-                            <div class="item-name">${skin.name}</div>
-                            ${player.currentSkin === skin.id ? 
-                                '<div class="item-owned">Надет</div>' : 
-                                `<button class="equip-button" data-skin="${skin.id}">Надеть</button>`}
-                        `;
-                    } else {
-                        skinItem.innerHTML = `
-                            <div class="skin-preview" style="background-color: ${skin.color};"></div>
-                            <div class="item-name">${skin.name}</div>
-                            ${player.currentSkin === skin.id ? 
-                                '<div class="item-owned">Надет</div>' : 
-                                `<button class="equip-button" data-skin="${skin.id}">Надеть</button>`}
-                        `;
-                    }
-                    
-                    inventoryItems.appendChild(skinItem);
-                }
-            });
-            
-            // Обработчики кнопок "Надеть"
-            document.querySelectorAll('.equip-button').forEach(button => {
-                button.addEventListener('click', function() {
-                    const skinId = this.getAttribute('data-skin');
-                    player.currentSkin = skinId;
-                    updatePlayerColor();
-                    updateMenuBallAppearance();
-                    saveGameData();
-                    showInventory();
-                });
-            });
-        }
-        
-      function showShop() {
-    startScreen.style.display = 'none';
-    shopScreen.style.display = 'flex';
-    shopTotalScoreElement.textContent = totalScore;
-    
-    shopItems.innerHTML = '';
-    
-    shopItemsList.forEach(item => {
-        const itemElement = document.createElement('div');
-        itemElement.className = 'shop-item';
-        
-        const alreadyOwned = 
-            item.type === 'skin' ? player.skins.includes(item.id) :
-            item.type === 'background' ? player.backgrounds.includes(item.id) :
-            false;
-
-        // Для всех предметов одинаковый формат
-        itemElement.innerHTML = `
-            <div class="skin-preview" style="${getPreviewStyle(item)}"></div>
-            <div class="item-name">${item.name}</div>
-            ${alreadyOwned ? 
-                '<div class="item-owned">Куплено</div>' : 
-                `<div class="item-price">${item.price} очков</div>
-                <button class="buy-button" data-id="${item.id}" data-price="${item.price}">Купить</button>`}
-        `;
-        
-        shopItems.appendChild(itemElement);
-    });
-    
-    // Обработчики кнопок "Купить"
-    document.querySelectorAll('.buy-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const itemId = this.getAttribute('data-id');
-            const price = parseInt(this.getAttribute('data-price'));
-            
-            if (totalScore >= price) {
-                const item = shopItemsList.find(i => i.id === itemId);
-                
-                if (item.type === 'skin' && !player.skins.includes(itemId)) {
-                    totalScore -= price;
-                    player.skins.push(itemId);
-                    showNotification(`Куплен скин: ${item.name}!`);
-                } 
-                else if (item.type === 'life' && lives < item.max) {
-                    totalScore -= price;
-                    lives++;
-                    showNotification(`+1 жизнь! Теперь у вас ${lives} жизней.`);
-                }
-                else if (item.type === 'background' && !player.backgrounds.includes(itemId)) {
-                    totalScore -= price;
-                    player.backgrounds.push(itemId);
-                    player.currentBackground = itemId;
-                    applyBackground();
-                    showNotification(`Куплен фон: ${item.name}!`);
-                }
-                
-                saveGameData();
-                updateUI();
-                showShop(); // Обновляем магазин
-            } else {
-                showNotification("Недостаточно очков!");
-            }
-        });
-    });
-}
-
-// Вспомогательная функция для стилей превью
-function getPreviewStyle(item) {
-    if (item.type === 'life') {
-        return 'background-color: #e74c3c; display: flex; justify-content: center; align-items: center;';
-    }
-    if (item.color === 'rainbow') {
-        return 'background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);';
-    }
-    if (item.color === 'blinking') {
-        return 'background-color: white; animation: blink 0.5s infinite;';
-    }
-    if (item.color === 'eyes') {
-        return 'background-color: #9b59b6; position: relative;';
-    }
-    if (item.color === 'space') {
-        return 'background: #000 url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><circle cx=\'20\' cy=\'20\' r=\'2\' fill=\'white\'/><circle cx=\'50\' cy=\'30\' r=\'1\' fill=\'white\'/><circle cx=\'80\' cy=\'60\' r=\'1.5\' fill=\'white\'/></svg>");';
-    }
-    return `background-color: ${item.color};`;
-}
-        
-        function applyBackground() {
-            const background = shopItemsList.find(item => item.type === 'background' && item.id === player.currentBackground);
-            if (!background) {
-                canvas.style.background = '#e0e0e0';
-                return;
-            }
-            
-            if (background.color === 'rainbow') {
-                canvas.style.background = 'linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet)';
-            } else if (background.color === 'neon') {
-                canvas.style.background = '#000';
-                canvas.style.boxShadow = '0 0 20px #00f inset';
-            } else {
-                canvas.style.background = background.color;
-            }
-        }
-        
-        function showAchievements() {
-            startScreen.style.display = 'none';
-            achievementsScreen.style.display = 'flex';
-            
-            achievementsList.innerHTML = '';
-            
-            const achievementList = [
-                { id: 'goldenBall', title: 'Золотой!', description: 'Получите золотой шар', unlocked: achievements.goldenBall },
-                { id: 'darkSurvival', title: 'Темно...', description: 'Выживите 30 сек в игре', unlocked: achievements.darkSurvival },
-                { id: 'meteorsSurvival', title: 'МЕТЕОРИТЫ!!', description: 'Выживите 90 сек в игре', unlocked: achievements.meteorsSurvival },
-                { id: 'secretSurvival', title: 'Секрета нет?', description: 'Выживите 150 сек в игре', unlocked: achievements.secretSurvival },
-                { id: 'rich', title: 'БОГАТ!', description: 'Получите 20000 очков', unlocked: achievements.rich }
-            ];
-            
-            achievementList.forEach(ach => {
-                const achElement = document.createElement('div');
-                achElement.className = `achievement ${ach.unlocked ? 'unlocked' : ''}`;
-                achElement.innerHTML = `
-                    <h3>${ach.title}</h3>
-                    <p>${ach.description}</p>
-                    ${ach.unlocked ? '<div class="item-owned">Получено!</div>' : '<div class="item-price">Не получено</div>'}
-                `;
-                achievementsList.appendChild(achElement);
-            });
-        }
-        
-        function showSettings() {
-            startScreen.style.display = 'none';
-            settingsScreen.style.display = 'flex';
-            
-            document.getElementById('smallButtonsToggle').checked = smallButtons;
-            document.getElementById('darkModeToggle').checked = darkMode;
-        }
-        
-        function showUpdates() {
-            startScreen.style.display = 'none';
-            updatesScreen.style.display = 'flex';
-        }
-        
-        function createExplosion(x, y, radius, color) {
-            const explosion = document.createElement('div');
-            explosion.className = 'explosion';
-            explosion.style.width = `${radius * 2}px`;
-            explosion.style.height = `${radius * 2}px`;
-            explosion.style.left = `${x - radius}px`;
-            explosion.style.top = `${y - radius}px`;
-            explosion.style.backgroundColor = color;
-            document.body.appendChild(explosion);
-            
-            setTimeout(() => {
-                explosion.remove();
-            }, 500);
-        }
-        
-        function updateGameEvents() {
-            if (gameTime >= 30 && gameTime < 90) {
-                document.body.classList.add('dark-mode');
-                if (!achievements.darkSurvival) {
-                    achievements.darkSurvival = true;
-                    showNotification('Достижение: Темно...');
-                    saveGameData();
-                }
-            } else {
-                document.body.classList.remove('dark-mode');
-            }
-            
-            if (gameTime >= 90 && gameTime < 150) {
-                if (!meteorActive) {
-                    meteorActive = true;
-                    bombChance = 0.01;
-                    if (!achievements.meteorsSurvival) {
-                        achievements.meteorsSurvival = true;
-                        showNotification('Достижение: МЕТЕОРИТЫ!!');
-                        saveGameData();
-                    }
-                    
-                    if (Math.random() < 0.005 * difficulty) {
-                        createMeteor();
-                    }
-                }
-            } else {
-                meteorActive = false;
-                bombChance = 0.005;
-            }
-            
-            if (gameTime >= 150) {
-                if (!secretActive) {
-                    secretActive = true;
-                    if (!achievements.secretSurvival) {
-                        achievements.secretSurvival = true;
-                        showNotification('Достижение: Секрета нет?');
-                        saveGameData();
-                    }
-                    
-                    const glitchInterval = setInterval(() => {
-                        if (!gameRunning) {
-                            clearInterval(glitchInterval);
-                            return;
-                        }
-                        
-                        if (Math.random() < 0.1) {
-                            const glitchType = Math.floor(Math.random() * 3);
-                            switch(glitchType) {
-                                case 0:
-                                    canvas.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
-                                    setTimeout(() => {
-                                        canvas.style.filter = 'none';
-                                    }, 200);
-                                    break;
-                                case 1:
-                                    canvas.style.transform = 'scale(1.1)';
-                                    setTimeout(() => {
-                                        canvas.style.transform = 'scale(1)';
-                                    }, 100);
-                                    break;
-                                case 2:
-                                    const oldColor = ctx.fillStyle;
-                                    ctx.fillStyle = 'rgba(255, 0, 255, 0.3)';
-                                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                                    ctx.fillStyle = oldColor;
-                                    break;
-                            }
-                        }
-                    }, 1000);
-                }
-            }
-        }
-        
-        function createMeteor() {
-            const radius = 300 + Math.random() * 200;
-            const x = Math.random() * (canvasWidth - radius * 2) + radius;
-            const speed = 50 + Math.random() * 30;
-            
-            bombs.push({
-                x: x,
-                y: -radius,
-                radius: radius,
-                speed: speed,
-                color: '#8B0000',
-                isMeteor: true
-            });
-        }
-        
-        function gameLoop() {
-            gameTime += 0.02;
-            
-            if (score >= 20000 && !achievements.rich) {
-                achievements.rich = true;
-                showNotification('Достижение: БОГАТ!');
-                saveGameData();
-            }
-            
-            updateGameEvents();
-            
-            difficulty += 0.0005;
-            
-            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-            
-            if (Math.random() < 0.05 * difficulty) {
-                createBall();
-            }
-            
-            if (Math.random() < goldenBallChance * difficulty) {
-                createGoldenBall();
-            }
-            
-            if (Math.random() < bombChance * difficulty) {
-                createBomb();
-            }
-            
-            if (Math.random() < explodingBombChance * difficulty) {
-                createExplodingBomb();
-            }
-            
-            player.rotation += rotationSpeed;
-            rotationSpeed *= 0.9;
-            
-            for (let i = 0; i < balls.length; i++) {
-                const ball = balls[i];
-                ball.y += ball.speed * difficulty;
-                
-                const dx = player.x - ball.x;
-                const dy = player.y - ball.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < player.radius + ball.radius) {
-                    score += 10 * scoreMultiplier;
-                    xp += 1;
-                    if (xp >= maxXP) {
-                        levelUp();
-                    }
-                    scoreElement.textContent = score;
-                    balls.splice(i, 1);
-                    i--;
-                    continue;
-                }
-                
-                if (ball.y - ball.radius > canvasHeight) {
-                    balls.splice(i, 1);
-                    i--;
-                    continue;
-                }
-                
-                ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-                ctx.fillStyle = ball.color;
-                ctx.fill();
-                ctx.closePath();
-            }
-            
-            for (let i = 0; i < goldenBalls.length; i++) {
-                const gBall = goldenBalls[i];
-                gBall.y += gBall.speed * difficulty;
-                
-                const dx = player.x - gBall.x;
-                const dy = player.y - gBall.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < player.radius + gBall.radius) {
-                    if (!achievements.goldenBall) {
-                        achievements.goldenBall = true;
-                        showNotification('Достижение: Золотой!');
-                        saveGameData();
-                    }
-                    score += 100 * scoreMultiplier;
-                    xp += 5;
-                    if (xp >= maxXP) {
-                        levelUp();
-                    }
-                    scoreElement.textContent = score;
-                    goldenBalls.splice(i, 1);
-                    i--;
-                    
-                    goldenEffectActive = true;
-                    goldenEffectEndTime = Date.now() + 2000;
-                    continue;
-                }
-                
-                if (gBall.y - gBall.radius > canvasHeight) {
-                    goldenBalls.splice(i, 1);
-                    i--;
-                    continue;
-                }
-                
-                ctx.beginPath();
-                ctx.arc(gBall.x, gBall.y, gBall.radius, 0, Math.PI * 2);
-                
-                const gradient = ctx.createRadialGradient(
-                    gBall.x, gBall.y, 0,
-                    gBall.x, gBall.y, gBall.radius
-                );
-                gradient.addColorStop(0, '#FFD700');
-                gradient.addColorStop(0.5, '#FFA500');
-                gradient.addColorStop(1, '#FF8C00');
-                
-                ctx.fillStyle = gradient;
-                ctx.fill();
-                ctx.closePath();
-            }
-            
-            for (let i = 0; i < bombs.length; i++) {
-                const bomb = bombs[i];
-                bomb.y += bomb.speed * difficulty;
-                
-                const dx = player.x - bomb.x;
-                const dy = player.y - bomb.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < player.radius + bomb.radius) {
-                    lives--;
-                    updateUI();
-                    
-                    if (lives <= 0) {
-                        endGame();
-                        return;
-                    }
-                    
-                    if (bomb.isMeteor) {
-                        createExplosion(bomb.x, bomb.y, bomb.radius * 3, '#ff4500');
-                    }
-                    
-                    bombs.splice(i, 1);
-                    i--;
-                    continue;
-                }
-                
-                if (bomb.y - bomb.radius > canvasHeight) {
-                    bombs.splice(i, 1);
-                    i--;
-                    continue;
-                }
-                
-                ctx.beginPath();
-                ctx.arc(bomb.x, bomb.y, bomb.radius, 0, Math.PI * 2);
-                ctx.fillStyle = bomb.color;
-                ctx.fill();
-                ctx.closePath();
-            }
-            
-            for (let i = 0; i < explodingBombs.length; i++) {
-                const eBomb = explodingBombs[i];
-                eBomb.y += eBomb.speed * difficulty;
-                eBomb.timer--;
-                
-                const dx = player.x - eBomb.x;
-                const dy = player.y - eBomb.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < player.radius + eBomb.radius || eBomb.timer <= 0) {
-                    createExplosion(eBomb.x, eBomb.y, eBomb.radius * 3, '#ff0000');
-                    
-                    if (distance < player.radius + eBomb.radius * 3) {
-                        lives--;
-                        updateUI();
-                        
-                        if (lives <= 0) {
-                            endGame();
-                            return;
-                        }
-                    }
-                    
-                    explodingBombs.splice(i, 1);
-                    i--;
-                    continue;
-                }
-                
-                if (eBomb.y - eBomb.radius > canvasHeight) {
-                    explodingBombs.splice(i, 1);
-                    i--;
-                    continue;
-                }
-                
-                ctx.beginPath();
-                ctx.arc(eBomb.x, eBomb.y, eBomb.radius, 0, Math.PI * 2);
-                ctx.fillStyle = eBomb.color;
-                ctx.fill();
-                ctx.closePath();
-                
-                ctx.beginPath();
-                ctx.moveTo(eBomb.x, eBomb.y - eBomb.radius);
-                ctx.lineTo(eBomb.x + eBomb.radius/2, eBomb.y - eBomb.radius * 1.5);
-                ctx.strokeStyle = '#8B4513';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                ctx.closePath();
-            }
-            
-            ctx.save();
-            ctx.translate(player.x, player.y);
-            ctx.rotate(player.rotation * Math.PI / 180);
-            
-            if (goldenEffectActive) {
-                const hue = 50 + Math.sin(Date.now() / 100) * 10;
-                const color = `hsl(${hue}, 100%, 50%)`;
-                ctx.beginPath();
-                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
-                ctx.fillStyle = color;
-                ctx.fill();
-                ctx.closePath();
-                
-                if (Date.now() > goldenEffectEndTime) {
-                    goldenEffectActive = false;
-                }
-            } else if (player.skinEffects.rainbow) {
-                const hue = (Date.now() / 50) % 360;
-                const color = player.skinEffects.disturb 
-                    ? `hsl(${(hue + 180) % 360}, 100%, 50%)`
-                    : `hsl(${hue}, 100%, 50%)`;
-                ctx.beginPath();
-                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
-                ctx.fillStyle = color;
-                ctx.fill();
-                ctx.closePath();
-            } else if (player.skinEffects.blinking) {
-                const visible = Math.floor(Date.now() / 200) % 2 === 0;
-                if (visible) {
-                    ctx.beginPath();
-                    ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fill();
-                    ctx.closePath();
-                }
-            } else if (player.skinEffects.eyes) {
-                ctx.beginPath();
-                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
-                ctx.fillStyle = '#9b59b6';
-                ctx.fill();
-                ctx.closePath();
-                
-                ctx.fillStyle = '#fff';
-                ctx.beginPath();
-                ctx.arc(-player.radius/3, -player.radius/4, player.radius/5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.closePath();
-                
-                ctx.beginPath();
-                ctx.arc(player.radius/3, -player.radius/4, player.radius/5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.closePath();
-                
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(-player.radius/3, -player.radius/4, player.radius/10, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.closePath();
-                
-                ctx.beginPath();
-                ctx.arc(player.radius/3, -player.radius/4, player.radius/10, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.closePath();
-            } else {
-                ctx.beginPath();
-                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
-                ctx.fillStyle = player.color;
-                ctx.fill();
-                ctx.closePath();
-            }
-            
-            ctx.restore();
-        }
-        
-        function levelUp() {
-            level++;
-            xp = 0;
-            maxXP = Math.floor(maxXP * 1.2);
-            updateUI();
-        }
-        
-        function createBall() {
-            const radius = 10 + Math.random() * 20;
-            const x = Math.random() * (canvasWidth - radius * 2) + radius;
-            const speed = 2 + Math.random() * 3;
-            const color = getRandomColor();
-            
-            balls.push({
-                x: x,
-                y: -radius,
-                radius: radius,
-                speed: speed,
-                color: color
-            });
-        }
-        
-        function createGoldenBall() {
-            const radius = 15 + Math.random() * 5;
-            const x = Math.random() * (canvasWidth - radius * 2) + radius;
-            const speed = 4 + Math.random() * 2;
-            
-            goldenBalls.push({
-                x: x,
-                y: -radius,
-                radius: radius,
-                speed: speed
-            });
-        }
-        
-        function createBomb() {
-            const radius = 15 + Math.random() * 15;
-            const x = Math.random() * (canvasWidth - radius * 2) + radius;
-            const speed = 3 + Math.random() * 2;
-            
-            bombs.push({
-                x: x,
-                y: -radius,
-                radius: radius,
-                speed: speed,
-                color: '#333',
-                isMeteor: false
-            });
-        }
-        
-        function createExplodingBomb() {
-            const radius = 15 + Math.random() * 15;
-            const x = Math.random() * (canvasWidth - radius * 2) + radius;
-            const speed = 3 + Math.random() * 2;
-            const timer = 100 + Math.floor(Math.random() * 100);
-            
-            explodingBombs.push({
-                x: x,
-                y: -radius,
-                radius: radius,
-                speed: speed,
-                color: '#333',
-                timer: timer
-            });
-        }
-        
-        function getRandomColor() {
-            const colors = [
-                '#e74c3c', // red
-                '#2ecc71', // green
-                '#f1c40f', // yellow
-                '#9b59b6', // purple
-                '#1abc9c', // turquoise
-                '#e67e22'  // orange
-            ];
-            return colors[Math.floor(Math.random() * colors.length)];
-        }
-        
-        function updatePlayerColor() {
-            if (player.currentSkin === 'default') {
-                player.color = '#3498db';
-                player.skinEffects = {};
-                return;
-            }
-            
-            const skin = shopItemsList.find(item => item.type === 'skin' && item.id === player.currentSkin);
-            if (!skin) return;
-            
-            if (skin.color === 'rainbow') {
-                player.skinEffects.rainbow = true;
-                player.skinEffects.blinking = false;
-                player.skinEffects.disturb = false;
-                player.skinEffects.eyes = false;
-            } else if (skin.color === 'blinking') {
-                player.skinEffects.blinking = true;
-                player.skinEffects.rainbow = false;
-                player.skinEffects.disturb = false;
-                player.skinEffects.eyes = false;
-            } else if (skin.color === 'rainbow_disturb') {
-                player.skinEffects.rainbow = true;
-                player.skinEffects.disturb = true;
-                player.skinEffects.blinking = false;
-                player.skinEffects.eyes = false;
-            } else if (skin.color === 'eyes') {
-                player.skinEffects.eyes = true;
-                player.skinEffects.rainbow = false;
-                player.skinEffects.blinking = false;
-                player.skinEffects.disturb = false;
-            } else {
-                player.color = skin.color;
-                player.skinEffects = {};
-            }
-        }
-        
-        function startGame() {
-            score = 0;
-            difficulty = 1;
-            gameTime = 0;
-            meteorActive = false;
-            secretActive = false;
-            balls = [];
-            goldenBalls = [];
-            bombs = [];
-            explodingBombs = [];
-            updateUI();
-            
-            startScreen.style.display = 'none';
-            inventoryScreen.style.display = 'none';
-            shopScreen.style.display = 'none';
-            achievementsScreen.style.display = 'none';
-            settingsScreen.style.display = 'none';
-            updatesScreen.style.display = 'none';
-            gameRunning = true;
-            goldenEffectActive = false;
-            player.rotation = 0;
-            rotationSpeed = 0;
-            
-            applyBackground();
-            
-            clearInterval(gameLoopInterval);
-            gameLoopInterval = setInterval(gameLoop, 20);
-        }
-        
-        function endGame() {
-            gameRunning = false;
-            clearInterval(gameLoopInterval);
-            
-            totalScore += score * scoreMultiplier;
-            
-            if (totalScore >= 5000 && scoreMultiplier < 2) {
-                scoreMultiplier = 2;
-            }
-            
-            saveGameData();
-            updateUI();
-            
-            startScreen.style.display = 'flex';
-        }
-        
-        function loadGameData() {
-            const savedData = localStorage.getItem('ballGameData');
+        // Загрузка сохранения
+        function loadGame() {
+            const savedData = localStorage.getItem('carrotFarmSave');
             if (savedData) {
-                try {
-                    const data = JSON.parse(savedData);
-                    totalScore = data.totalScore || 0;
-                    player.skins = data.skins || [];
-                    player.backgrounds = data.backgrounds || [];
-                    player.currentSkin = data.currentSkin || 'default';
-                    player.currentBackground = data.currentBackground || 'default';
-                    lives = data.lives || 3;
-                    scoreMultiplier = data.scoreMultiplier || 1;
-                    level = data.level || 1;
-                    xp = data.xp || 0;
-                    maxXP = data.maxXP || 100;
-                    achievements = data.achievements || {
-                        goldenBall: false,
-                        darkSurvival: false,
-                        meteorsSurvival: false,
-                        secretSurvival: false,
-                        rich: false
-                    };
-                    darkMode = data.darkMode || false;
-                    smallButtons = data.smallButtons || false;
-
-                    updatePlayerColor();
-                    updateMenuBallAppearance();
-                    applyBackground();
-
-                    if (darkMode) {
-                        document.body.classList.add('dark-mode');
+                const parsedData = JSON.parse(savedData);
+                Object.assign(gameData, parsedData);
+                
+                // Восстановление таймеров роста
+                gameData.plots.forEach((plot, index) => {
+                    if (plot && plot.growing) {
+                        const elapsed = Date.now() - plot.startTime;
+                        if (elapsed >= plot.growthTime) {
+                            // Морковь уже выросла
+                            gameData.plots[index].growing = false;
+                        } else {
+                            // Продолжаем рост
+                            const remainingTime = plot.growthTime - elapsed;
+                            setTimeout(() => {
+                                if (gameData.plots[index]) {
+                                    gameData.plots[index].growing = false;
+                                    updateUI();
+                                }
+                            }, remainingTime);
+                        }
                     }
-                    
-                    if (smallButtons) {
-                        document.querySelectorAll('.button').forEach(btn => {
-                            if (!btn.id.includes('startButton')) {
-                                const currentBottom = parseInt(btn.style.bottom || window.getComputedStyle(btn).bottom.replace('px', '') || 20);
-                                btn.style.transform = 'scale(0.5)';
-                                btn.style.bottom = `${currentBottom / 2}px`;
-                            }
-                        });
-                    }
-                } catch (e) {
-                    console.error('Ошибка загрузки данных:', e);
-                    resetGameData();
-                }
+                });
             }
+        }
+        
+        // Сохранение игры
+        function saveGame() {
+            localStorage.setItem('carrotFarmSave', JSON.stringify(gameData));
+        }
+        
+        // Конфигурация моркови
+        const carrotConfig = {
+            normal: {
+                name: "Обычная",
+                rarity: "common",
+                buyPrice: 20,
+                growthTime: 20000, // 20 сек
+                weightRange: [0.5, 17],
+                sellPrices: [
+                    { max: 1, price: 15 },
+                    { max: 5, price: 40 },
+                    { max: 10, price: 150 },
+                    { max: Infinity, price: 200 }
+                ],
+                alwaysInShop: true
+            },
+            golden: {
+                name: "Золотая",
+                rarity: "common",
+                buyPrice: 200,
+                growthTime: 40000, // 40 сек
+                weightRange: [2, 25],
+                sellPrices: [
+                    { max: 5, price: 250 },
+                    { max: 10, price: 400 },
+                    { max: 15, price: 600 },
+                    { max: 19, price: 800 },
+                    { max: Infinity, price: 1100 }
+                ],
+                shopChance: 0.8
+            },
+            diamond: {
+                name: "Алмазная",
+                rarity: "rare",
+                buyPrice: 2000,
+                growthTime: 110000, // 110 сек
+                weightRange: [4, 19],
+                sellPrices: [
+                    { max: 8, price: 5000 },
+                    { max: 12, price: 4000 },
+                    { max: 16, price: 3000 },
+                    { max: Infinity, price: 7000 }
+                ],
+                shopChance: 0.5
+            },
+            rainbow: {
+                name: "Радужная",
+                rarity: "epic",
+                buyPrice: 15000,
+                growthTime: 250000, // 250 сек
+                weightRange: [9, 19],
+                sellPrices: [
+                    { max: 15, price: 17500 },
+                    { max: Infinity, price: 25000 }
+                ],
+                shopChance: 0.3
+            },
+            electric: {
+                name: "Электрическая",
+                rarity: "legendary",
+                buyPrice: 100000,
+                growthTime: 1000000, // 1000 сек
+                weightRange: [50, 100],
+                sellPrice: 200000,
+                shopChance: 0.1
+            }
+        };
+
+        // Инициализация игры
+        function initGame() {
+            loadGame();
+            initGarden();
+            updateShop();
+            updateUI();
+            setupEventListeners();
+            
+            // Автосохранение каждые 30 секунд
+            setInterval(saveGame, 30000);
+        }
+        
+        // Инициализация грядки
+        function initGarden() {
+            const garden = document.getElementById('garden');
+            garden.innerHTML = '';
+            
+            gameData.plots.forEach((plot, index) => {
+                const plotEl = document.createElement('div');
+                plotEl.className = 'plot';
+                plotEl.dataset.index = index;
+                garden.appendChild(plotEl);
+            });
+        }
+        
+        // Обновление магазина
+        function updateShop() {
+            // Обычная морковь всегда в наличии
+            if (gameData.shopItems.normal.quantity <= 0) {
+                gameData.shopItems.normal.quantity = 4;
+            }
+            
+            // Обновляем другие семена по шансу
+            Object.keys(carrotConfig).forEach(type => {
+                if (type === 'normal') return;
+                
+                const config = carrotConfig[type];
+                if (gameData.shopItems[type].quantity <= 0 && Math.random() < config.shopChance) {
+                    gameData.shopItems[type].quantity = type === 'golden' ? 2 : 1;
+                }
+            });
+        }
+        
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            document.querySelectorAll('.plot').forEach(plot => {
+                // Для мобильных устройств
+                plot.addEventListener('touchstart', handlePlotTouch, { passive: false });
+                // Для десктопов
+                plot.addEventListener('click', handlePlotClick);
+            });
+        }
+        
+        // Обработка касания на грядке (мобильные)
+        function handlePlotTouch(e) {
+            e.preventDefault();
+            const plotIndex = parseInt(e.currentTarget.dataset.index);
+            handlePlotAction(plotIndex);
+        }
+        
+        // Обработка клика на грядке (десктоп)
+        function handlePlotClick(e) {
+            const plotIndex = parseInt(e.currentTarget.dataset.index);
+            handlePlotAction(plotIndex);
+        }
+        
+        // Основная логика взаимодействия с грядкой
+        function handlePlotAction(plotIndex) {
+            const plot = gameData.plots[plotIndex];
+            
+            if (!plot) {
+                // Пустая грядка - попытка посадить
+                if (gameData.selectedSeed) {
+                    plantCarrot(plotIndex, gameData.selectedSeed);
+                } else {
+                    alert("Сначала выберите семена в инвентаре!");
+                }
+            } else if (plot.growing && gameData.hasWateringCan) {
+                // Полив растущей моркови
+                waterCarrot(plotIndex);
+            } else if (!plot.growing) {
+                // Готовая морковь - сбор
+                harvestCarrot(plotIndex);
+            } else {
+                // Морковь растет - информация
+                const elapsed = Date.now() - plot.startTime;
+                const remaining = Math.ceil((plot.growthTime - elapsed) / 1000);
+                alert(`Морковь растет! Осталось: ${remaining} сек`);
+            }
+        }
+        
+        // Обновление интерфейса
+        function updateUI() {
+            // Деньги
+            document.getElementById('money').textContent = gameData.money;
+            
+            // Лейка
+            const wateringCanText = gameData.hasWateringCan ? 'есть' : 'нет';
+            document.getElementById('watering-can').textContent = wateringCanText;
+            document.getElementById('buy-watering-can').textContent = 
+                gameData.hasWateringCan ? 'Куплено' : 'Купить';
+            document.getElementById('buy-watering-can').disabled = gameData.hasWateringCan;
+            
+            // Инвентарь семян
+            const seedInventory = document.getElementById('seed-inventory');
+            seedInventory.innerHTML = '';
+            
+            Object.entries(gameData.seeds).forEach(([type, count]) => {
+                if (count > 0) {
+                    const config = carrotConfig[type];
+                    const seedItem = document.createElement('div');
+                    seedItem.className = `item ${type === gameData.selectedSeed ? 'selected' : ''}`;
+                    seedItem.innerHTML = `
+                        <span class="carrot-type ${config.rarity}">
+                            ${config.name}
+                            <span class="rarity-tag ${config.rarity}">${config.rarity}</span>
+                            : ${count}
+                        </span>
+                        <button onclick="selectSeed('${type}')">Выбрать</button>
+                    `;
+                    seedInventory.appendChild(seedItem);
+                }
+            });
+            
+            if (Object.values(gameData.seeds).every(count => count === 0)) {
+                seedInventory.innerHTML = '<div>Нет семян</div>';
+            }
+            
+            // Инвентарь моркови
+            const carrotInventory = document.getElementById('carrot-inventory');
+            if (gameData.carrots.length > 0) {
+                carrotInventory.innerHTML = gameData.carrots.map((carrot, index) => {
+                    const config = carrotConfig[carrot.type];
+                    return `
+                        <div class="item">
+                            <span class="carrot-type ${config.rarity}">
+                                ${getCarrotIcon(carrot.type)} ${carrot.weight}кг 
+                                (${config.name})
+                                <span class="rarity-tag ${config.rarity}">${config.rarity}</span>
+                            </span>
+                            <button onclick="sellCarrot(${index})">${carrot.price}¢</button>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                carrotInventory.innerHTML = '<div>Нет моркови</div>';
+            }
+            
+            // Инвентарь инструментов
+            const toolsInventory = document.getElementById('tools-inventory');
+            toolsInventory.innerHTML = `
+                <div class="item">
+                    <span>Лейка</span>
+                    <span>${wateringCanText}</span>
+                    ${gameData.hasWateringCan ? '<button class="water-btn" onclick="selectWateringCan()">Выбрать</button>' : ''}
+                </div>
+            `;
+            
+            // Обновление грядки
+            gameData.plots.forEach((plot, index) => {
+                const plotEl = document.querySelector(`.plot[data-index="${index}"]`);
+                if (plot) {
+                    plotEl.innerHTML = `
+                        <div class="plant-icon">${getGrowthIcon(plot.type, plot.growing)}</div>
+                        <div>${plot.growing ? 'Растёт...' : 'Готово!'}</div>
+                        ${plot.growing ? `
+                            <div class="progress-container">
+                                <div class="progress" id="progress-${index}"></div>
+                            </div>
+                            ${gameData.hasWateringCan ? '<button class="water-btn" onclick="waterCarrot(${index})">Полить (-10 сек)</button>' : ''}
+                        ` : ''}
+                    `;
+                    
+                    if (plot.growing) {
+                        const elapsed = Date.now() - plot.startTime;
+                        const progress = (elapsed / plot.growthTime) * 100;
+                        const progressEl = document.getElementById(`progress-${index}`);
+                        if (progressEl) {
+                            progressEl.style.width = `${Math.min(progress, 100)}%`;
+                        }
+                    }
+                } else {
+                    plotEl.innerHTML = '<div>Пусто</div>';
+                }
+            });
+            
+            // Обновление магазина
+            const shopItems = document.getElementById('shop-items');
+            shopItems.innerHTML = '';
+            
+            Object.entries(gameData.shopItems).forEach(([type, item]) => {
+                const config = carrotConfig[type];
+                const shopItem = document.createElement('div');
+                shopItem.className = 'item';
+                
+                if (item.quantity > 0) {
+                    shopItem.innerHTML = `
+                        <span class="carrot-type ${config.rarity}">
+                            ${config.name} <span class="rarity-tag ${config.rarity}">${config.rarity}</span>
+                            <span class="shop-quantity">×${item.quantity}</span>
+                        </span>
+                        <span>${config.buyPrice}¢</span>
+                        <button onclick="buySeedFromShop('${type}')" ${gameData.money < config.buyPrice ? 'disabled' : ''}>
+                            ${gameData.money < config.buyPrice ? 'Не хватает' : 'Купить'}
+                        </button>
+                    `;
+                } else {
+                    shopItem.innerHTML = `
+                        <span class="sold-out">${config.name} - ПРОДАНО</span>
+                        <span>-</span>
+                        <button disabled>ПРОДАНО</button>
+                    `;
+                }
+                
+                shopItems.appendChild(shopItem);
+            });
+            
+            saveGame();
+        }
+        
+        // Выбор семян
+        function selectSeed(type) {
+            gameData.selectedSeed = type;
             updateUI();
         }
         
-        function resetGameData() {
-            totalScore = 0;
-            player.skins = [];
-            player.backgrounds = [];
-            player.currentSkin = 'default';
-            player.currentBackground = 'default';
-            lives = 3;
-            scoreMultiplier = 1;
-            level = 1;
-            xp = 0;
-            maxXP = 100;
-            achievements = {
-                goldenBall: false,
-                darkSurvival: false,
-                meteorsSurvival: false,
-                secretSurvival: false,
-                rich: false
-            };
-            darkMode = false;
-            smallButtons = false;
+        // Выбор лейки
+        function selectWateringCan() {
+            gameData.selectedSeed = null;
+            updateUI();
         }
         
-        function saveGameData() {
-            const gameData = {
-                totalScore: totalScore,
-                skins: player.skins,
-                backgrounds: player.backgrounds,
-                currentSkin: player.currentSkin,
-                currentBackground: player.currentBackground,
-                lives: lives,
-                scoreMultiplier: scoreMultiplier,
-                level: level,
-                xp: xp,
-                maxXP: maxXP,
-                achievements: achievements,
-                darkMode: darkMode,
-                smallButtons: smallButtons
-            };
-            localStorage.setItem('ballGameData', JSON.stringify(gameData));
-        }
-        
-        // Обработка изменения размера окна
-        window.addEventListener('resize', function() {
-            canvasWidth = window.innerWidth;
-            canvasHeight = window.innerHeight;
+        // Покупка семян в магазине
+        function buySeedFromShop(type) {
+            const config = carrotConfig[type];
+            const shopItem = gameData.shopItems[type];
             
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
+            if (shopItem.quantity <= 0) return;
+            if (gameData.money < config.buyPrice) return;
             
-            player.y = canvasHeight - 50;
+            gameData.money -= config.buyPrice;
+            gameData.seeds[type]++;
+            shopItem.quantity--;
             
-            menuBallX = canvasWidth / 2;
-            menuBallY = canvasHeight / 2 - 50;
-        });
-        
-        // Обработчики настроек
-        document.getElementById('smallButtonsToggle').addEventListener('change', function() {
-            smallButtons = this.checked;
-            document.querySelectorAll('.button').forEach(btn => {
-                if (!btn.id.includes('startButton')) {
-                    const currentBottom = parseInt(btn.style.bottom || window.getComputedStyle(btn).bottom.replace('px', '') || 20);
-                    btn.style.transform = smallButtons ? 'scale(0.5)' : 'scale(1)';
-                    btn.style.bottom = smallButtons ? `${currentBottom / 2}px` : `${currentBottom * 2}px`;
-                }
-            });
-            saveGameData();
-        });
-        
-        document.getElementById('darkModeToggle').addEventListener('change', function() {
-            darkMode = this.checked;
-            if (darkMode) {
-                document.body.classList.add('dark-mode');
-            } else {
-                document.body.classList.remove('dark-mode');
+            // Если обычная морковь закончилась, добавляем новую партию
+            if (type === 'normal' && shopItem.quantity <= 0) {
+                shopItem.quantity = 4;
             }
-            saveGameData();
-        });
+            
+            updateUI();
+        }
         
-        // Загрузка игры и запуск анимации меню
-        loadGameData();
-        animateMenuBall();
+        // Покупка лейки
+        function buyWateringCan() {
+            if (gameData.hasWateringCan || gameData.money < 125) return;
+            
+            gameData.money -= 125;
+            gameData.hasWateringCan = true;
+            updateUI();
+        }
+        
+        // Посадка моркови
+        function plantCarrot(plotIndex, type) {
+            if (gameData.seeds[type] <= 0) return;
+            
+            gameData.seeds[type]--;
+            const growthTime = carrotConfig[type].growthTime;
+            
+            gameData.plots[plotIndex] = {
+                type: type,
+                growing: true,
+                startTime: Date.now(),
+                growthTime: growthTime,
+                originalGrowthTime: growthTime
+            };
+            
+            updateUI();
+            
+            // Проверка завершения роста
+            const growthInterval = setInterval(() => {
+                if (!gameData.plots[plotIndex]) {
+                    clearInterval(growthInterval);
+                    return;
+                }
+                
+                const plot = gameData.plots[plotIndex];
+                const elapsed = Date.now() - plot.startTime;
+                
+                if (elapsed >= plot.growthTime) {
+                    gameData.plots[plotIndex].growing = false;
+                    clearInterval(growthInterval);
+                    updateUI();
+                }
+            }, 1000);
+        }
+        
+        // Полив моркови
+        function waterCarrot(plotIndex) {
+            const plot = gameData.plots[plotIndex];
+            if (!plot || !plot.growing) return;
+            
+            // Уменьшаем время роста, но не меньше 10 секунд
+            const newGrowthTime = Math.max(10000, plot.growthTime - 10000);
+            
+            // Сохраняем пропорции прогресса
+            const progress = (Date.now() - plot.startTime) / plot.growthTime;
+            plot.growthTime = newGrowthTime;
+            plot.startTime = Date.now() - (progress * newGrowthTime);
+            
+            updateUI();
+        }
+        
+        // Сбор урожая
+        function harvestCarrot(plotIndex) {
+            const plot = gameData.plots[plotIndex];
+            if (!plot || plot.growing) return;
+            
+            const type = plot.type;
+            let weight = getRandomWeight(type);
+            
+            // Особые правила для редких морковок
+            if (type === 'rainbow' && Math.random() < 0.05) { // 5% шанс на 10+ кг
+                weight = (Math.random() * 9 + 10).toFixed(1); // 10-19 кг
+            }
+            
+            const price = calculatePrice(type, weight);
+            
+            gameData.carrots.push({
+                type: type,
+                weight: weight,
+                price: price
+            });
+            
+            gameData.plots[plotIndex] = null;
+            updateUI();
+        }
+        
+        // Продажа одной моркови
+        function sellCarrot(index) {
+            gameData.money += gameData.carrots[index].price;
+            gameData.carrots.splice(index, 1);
+            updateUI();
+        }
+        
+        // Быстрая продажа всего (10 сек)
+        function startSellingAll() {
+            if (gameData.isSelling || gameData.carrots.length === 0) return;
+            
+            gameData.isSelling = true;
+            const sellBtn = document.querySelector('.sell-all-btn');
+            sellBtn.disabled = true;
+            sellBtn.textContent = "Продажа...";
+            
+            const totalValue = gameData.carrots.reduce((sum, carrot) => sum + carrot.price, 0);
+            const carrotsCount = gameData.carrots.length;
+            const stepTime = 10000 / carrotsCount; // 10 сек на все
+            
+            let sold = 0;
+            const sellInterval = setInterval(() => {
+                if (gameData.carrots.length > 0) {
+                    gameData.money += gameData.carrots[0].price;
+                    gameData.carrots.shift();
+                    sold++;
+                    updateUI();
+                }
+                
+                if (sold >= carrotsCount) {
+                    clearInterval(sellInterval);
+                    gameData.isSelling = false;
+                    sellBtn.disabled = false;
+                    sellBtn.textContent = "Быстрая продажа (10 сек)";
+                    alert(`Продано ${carrotsCount} морковок за ${totalValue}¢!`);
+                }
+            }, stepTime);
+        }
+        
+        // Генерация случайного веса
+        function getRandomWeight(type) {
+            const [min, max] = carrotConfig[type].weightRange;
+            return (Math.random() * (max - min) + min).toFixed(1);
+        }
+        
+        // Расчет цены
+        function calculatePrice(type, weight) {
+            weight = parseFloat(weight);
+            
+            if (type === 'electric') {
+                return carrotConfig.electric.sellPrice;
+            }
+            
+            const priceTable = carrotConfig[type].sellPrices;
+            
+            for (const tier of priceTable) {
+                if (weight <= tier.max) {
+                    return tier.price;
+                }
+            }
+            return priceTable[priceTable.length - 1].price;
+        }
+        
+        // Получение иконки моркови
+        function getCarrotIcon(type) {
+            switch (type) {
+                case 'golden': return '🥕✨';
+                case 'diamond': return '💎🥕';
+                case 'rainbow': return '🌈🥕';
+                case 'electric': return '⚡🥕';
+                default: return '🥕';
+            }
+        }
+        
+        // Получение иконки роста
+        function getGrowthIcon(type, growing) {
+            return growing ? '🌱' : getCarrotIcon(type);
+        }
+        
+        // Запуск игры
+        window.onload = initGame;
     </script>
 </body>
 </html>
